@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Equipo — ATLANTIS Animation</title>
+<style>
+  :root {
+    --black:   #0f0f0f;
+    --white:   #f5f4f0;
+    --ocean:   #0d3b5e;
+    --ocean2:  #1a5f8a;
+    --sand:    #c9b99a;
+    --accent:  #00b4d8;
+    --muted:   #6b7280;
+    --surface: #1c2a36;
+    --card:    #162130;
+    --border:  rgba(255,255,255,0.08);
+    --radius:  10px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--black); color: var(--white); font-family: 'Inter', system-ui, sans-serif; font-size: 15px; line-height: 1.6; min-height: 100vh; }
+
+  /* Header */
+  header { background: var(--ocean); padding: 28px 40px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .logo { display: flex; align-items: center; gap: 14px; }
+  .logo-mark { width: 42px; height: 42px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; color: var(--black); }
+  .logo-text strong { display: block; font-size: 17px; letter-spacing: 0.04em; }
+  .logo-text span   { font-size: 12px; color: var(--sand); letter-spacing: 0.08em; text-transform: uppercase; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  #btn-refresh { background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: var(--white); padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: background 0.2s; }
+  #btn-refresh:hover { background: rgba(255,255,255,0.16); }
+  #btn-refresh.loading { opacity: 0.5; pointer-events: none; }
+  #last-update { font-size: 12px; color: var(--muted); }
+
+  /* Controls */
+  .controls { padding: 20px 40px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
+  #search { flex: 1; min-width: 200px; background: var(--surface); border: 1px solid var(--border); color: var(--white); padding: 10px 16px; border-radius: var(--radius); font-size: 14px; outline: none; transition: border-color 0.2s; }
+  #search:focus { border-color: var(--accent); }
+  #search::placeholder { color: var(--muted); }
+  .filter-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 7px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .filter-btn:hover { border-color: var(--accent); color: var(--white); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: var(--black); font-weight: 600; }
+
+  /* Stats */
+  .stats-bar { padding: 20px 40px; display: flex; gap: 32px; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
+  .stat { display: flex; flex-direction: column; }
+  .stat-value { font-size: 28px; font-weight: 700; color: var(--accent); line-height: 1; }
+  .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* Chart */
+  .chart-section { padding: 20px 40px; border-bottom: 1px solid var(--border); }
+  .chart-title { font-size: 12px; color: var(--muted); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .bars { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .bar-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .bar-fill { width: 48px; background: var(--ocean2); border-radius: 4px 4px 0 0; transition: height 0.4s ease; min-height: 4px; }
+  .bar-fill:hover { background: var(--accent); }
+  .bar-label { font-size: 11px; color: var(--muted); text-align: center; max-width: 60px; line-height: 1.2; }
+  .bar-count { font-size: 12px; color: var(--white); font-weight: 600; }
+
+  /* Table */
+  main { padding: 24px 40px; }
+  #results-count { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  thead th { text-align: left; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 10px 14px; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; white-space: nowrap; }
+  thead th:hover { color: var(--white); }
+  thead th.sorted { color: var(--accent); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:hover { background: var(--surface); }
+  tbody td { padding: 13px 14px; vertical-align: middle; }
+
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--ocean2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: var(--accent); flex-shrink: 0; }
+  .name-cell { display: flex; align-items: center; gap: 12px; }
+  .name-cell strong { display: block; font-weight: 500; }
+  .name-cell span { font-size: 12px; color: var(--muted); }
+
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; background: rgba(0,180,216,0.12); color: var(--accent); border: 1px solid rgba(0,180,216,0.25); white-space: nowrap; }
+  .badge-level { background: rgba(201,185,154,0.12); color: var(--sand); border-color: rgba(201,185,154,0.25); }
+
+  a.email-link { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  a.email-link:hover { color: var(--accent); }
+
+  .date-cell { font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .date-end   { color: #f59e0b; }
+
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty strong { display: block; font-size: 18px; color: var(--white); margin-bottom: 8px; }
+
+  @media (max-width: 640px) {
+    header, .controls, .stats-bar, .chart-section, main { padding-left: 20px; padding-right: 20px; }
+    table { display: block; overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">A</div>
+    <div class="logo-text">
+      <strong>ATLANTIS Animation</strong>
+      <span>Directorio interno</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <span id="last-update"></span>
+    <button id="btn-refresh" onclick="loadData()">↻ Actualizar</button>
+  </div>
+</header>
+
+<div class="controls">
+  <input id="search" type="text" placeholder="Buscar por nombre, departamento, ubicación…" oninput="render()">
+  <div class="filter-group" id="filter-group"></div>
+</div>
+
+<div class="stats-bar" id="stats-bar"></div>
+
+<div class="chart-section">
+  <div class="chart-title">Personas por departamento</div>
+  <div class="bars" id="chart"></div>
+</div>
+
+<main>
+  <div id="results-count"></div>
+  <table>
+    <thead>
+      <tr>
+        <th onclick="sortBy('nombre')">Nombre</th>
+        <th onclick="sortBy('departamento')">Departamento</th>
+        <th onclick="sortBy('nivel')">Nivel</th>
+        <th>Email</th>
+        <th onclick="sortBy('ubicacion')">Ubicación</th>
+        <th onclick="sortBy('inicio')">Inicio</th>
+        <th onclick="sortBy('finEstimado')">Fin estimado</th>
+        <th onclick="sortBy('contacto')">Contacto N+1</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div id="empty" class="empty" style="display:none">
+    <strong>Sin resultados</strong>
+    Prueba con otro término de búsqueda o filtro.
+  </div>
+</main>
+
+<script>
+// ── CONFIGURACIÓN ────────────────────────────────────────────
+// Reemplaza con la URL de tu Web App desplegada en Apps Script
+const APPS_SCRIPT_URL = "https://script.google.com/a/macros/atlantisanimation.com/s/AKfycbzqYZB00Q5F-iqThBM3yOSORX8AWL0Q2JR22YuKakl9Lb1aF5BzSINXf45rg7_3XJml/exec";
+
+let allData      = [];
+let sortCol      = "nombre";
+let sortAsc      = true;
+let activeFilter = "Todos";
+
+async function loadData() {
+  const btn = document.getElementById("btn-refresh");
+  btn.classList.add("loading");
+  btn.textContent = "Cargando…";
+  try {
+    const res  = await fetch(APPS_SCRIPT_URL);
+    const json = await res.json();
+    if (!json.ok) throw new Error("Respuesta inesperada del script");
+    allData = json.equipo;
+    buildFilters();
+    buildStats();
+    buildChart();
+    render();
+    document.getElementById("last-update").textContent =
+      "Actualizado: " + new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+  } catch (err) {
+    document.getElementById("tbody").innerHTML =
+      `<tr><td colspan="8" style="text-align:center;padding:40px;color:#ef4444">
+        Error al cargar datos. Verifica la URL del script.<br>
+        <small style="color:var(--muted)">${err.message}</small>
+       </td></tr>`;
+    document.querySelector("table").style.display = "table";
+  } finally {
+    btn.classList.remove("loading");
+    btn.textContent = "↻ Actualizar";
+  }
+}
+
+function buildFilters() {
+  const depts = ["Todos", ...new Set(allData.map(p => p.departamento).filter(Boolean))].sort();
+  document.getElementById("filter-group").innerHTML = depts.map(d =>
+    `<button class="filter-btn ${d === 'Todos' ? 'active' : ''}" data-dept="${d}" onclick="setFilter(this)">${d}</button>`
+  ).join("");
+}
+
+function setFilter(btn) {
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  activeFilter = btn.dataset.dept;
+  render();
+}
+
+function buildStats() {
+  const total  = allData.length;
+  const depts  = new Set(allData.map(p => p.departamento).filter(Boolean)).size;
+  const locs   = new Set(allData.map(p => p.ubicacion).filter(Boolean)).size;
+
+  // Contratos que terminan en los próximos 60 días
+  const hoy    = new Date();
+  const pronto = allData.filter(p => {
+    if (!p.finEstimado) return false;
+    const d = new Date(p.finEstimado);
+    const diff = (d - hoy) / (1000 * 60 * 60 * 24);
+    return diff >= 0 && diff <= 60;
+  }).length;
+
+  document.getElementById("stats-bar").innerHTML = `
+    <div class="stat"><span class="stat-value">${total}</span><span class="stat-label">Personas</span></div>
+    <div class="stat"><span class="stat-value">${depts}</span><span class="stat-label">Departamentos</span></div>
+    <div class="stat"><span class="stat-value">${locs}</span><span class="stat-label">Ubicaciones</span></div>
+    ${pronto > 0 ? `<div class="stat"><span class="stat-value" style="color:#f59e0b">${pronto}</span><span class="stat-label">Contratos próx. 60d</span></div>` : ""}
+  `;
+}
+
+function buildChart() {
+  const counts = {};
+  allData.forEach(p => {
+    const d = p.departamento || "Sin dept.";
+    counts[d] = (counts[d] || 0) + 1;
+  });
+  const max   = Math.max(...Object.values(counts));
+  const MAX_H = 80;
+  document.getElementById("chart").innerHTML = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([dept, n]) => `
+      <div class="bar-item">
+        <span class="bar-count">${n}</span>
+        <div class="bar-fill" style="height:${Math.round((n / max) * MAX_H)}px" title="${dept}: ${n}"></div>
+        <span class="bar-label">${dept}</span>
+      </div>
+    `).join("");
+}
+
+function sortBy(col) {
+  sortAsc = sortCol === col ? !sortAsc : true;
+  sortCol = col;
+  document.querySelectorAll("thead th").forEach(th => th.classList.remove("sorted"));
+  event.target.classList.add("sorted");
+  render();
+}
+
+function formatDate(val) {
+  if (!val) return "—";
+  const d = new Date(val);
+  if (isNaN(d)) return val;
+  return d.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function render() {
+  const query = document.getElementById("search").value.toLowerCase().trim();
+  let filtered = allData.filter(p => {
+    const matchDept   = activeFilter === "Todos" || p.departamento === activeFilter;
+    const matchSearch = !query || Object.values(p).some(v => String(v).toLowerCase().includes(query));
+    return matchDept && matchSearch;
+  });
+
+  filtered.sort((a, b) => {
+    const va = String(a[sortCol] || "").toLowerCase();
+    const vb = String(b[sortCol] || "").toLowerCase();
+    return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+
+  document.getElementById("results-count").textContent =
+    `${filtered.length} persona${filtered.length !== 1 ? "s" : ""}`;
+
+  const empty = document.getElementById("empty");
+  const table = document.querySelector("table");
+
+  if (filtered.length === 0) {
+    empty.style.display = "block"; table.style.display = "none"; return;
+  }
+  empty.style.display = "none"; table.style.display = "table";
+
+  // Alerta contratos próximos a vencer (≤60 días)
+  const hoy = new Date();
+
+  document.getElementById("tbody").innerHTML = filtered.map(p => {
+    const initials = p.nombre.split(" ").slice(0, 2).map(w => w[0] || "").join("").toUpperCase() || "?";
+
+    let finClass = "date-cell";
+    if (p.finEstimado) {
+      const diff = (new Date(p.finEstimado) - hoy) / (1000 * 60 * 60 * 24);
+      if (diff >= 0 && diff <= 60) finClass += " date-end";
+    }
+
+    return `<tr>
+      <td>
+        <div class="name-cell">
+          <div class="avatar">${initials}</div>
+          <div><strong>${p.nombre || "—"}</strong></div>
+        </div>
+      </td>
+      <td>${p.departamento ? `<span class="badge">${p.departamento}</span>` : "—"}</td>
+      <td>${p.nivel ? `<span class="badge badge-level">${p.nivel}</span>` : "—"}</td>
+      <td>${p.emailPro ? `<a class="email-link" href="mailto:${p.emailPro}">${p.emailPro}</a>` : "—"}</td>
+      <td>${p.ubicacion || "—"}</td>
+      <td class="date-cell">${formatDate(p.inicio)}</td>
+      <td class="${finClass}">${formatDate(p.finEstimado)}</td>
+      <td style="font-size:13px;color:var(--muted)">${p.contacto || "—"}</td>
+    </tr>`;
+  }).join("");
+}
+
+loadData();
+</script>
+</body>
+</html>
