@@ -314,6 +314,27 @@
     <input id="search" type="text" placeholder="Buscar por nombre, departamento, nacionalidad…" oninput="renderDir()">
     <div class="filter-group" id="filter-group"></div>
   </div>
+
+  <!-- Panel estadísticas por departamento — aparece arriba cuando se filtra -->
+  <div id="dept-stats-panel" style="display:none;margin-bottom:24px">
+    <div class="section-title" id="dept-stats-title" style="margin-bottom:16px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
+      <div class="chart-card"><div class="chart-title">Location</div><canvas id="ds-location" style="max-height:180px"></canvas></div>
+      <div class="chart-card"><div class="chart-title">Nivel</div><canvas id="ds-nivel" style="max-height:180px"></canvas></div>
+      <div class="chart-card"><div class="chart-title">Nacionalidad</div><canvas id="ds-nac" style="max-height:180px"></canvas></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+      <div class="prox-card">
+        <div class="prox-header green">Por ingresar — próximos 30 días</div>
+        <div id="ds-ingresar"></div>
+      </div>
+      <div class="prox-card">
+        <div class="prox-header amber">Por finalizar — próximos 30 días</div>
+        <div id="ds-finalizar"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="results-count"></div>
   <div class="table-wrap">
     <table class="main">
@@ -337,25 +358,7 @@
   </div>
   <div id="empty" class="empty" style="display:none"><strong>Sin resultados</strong>Prueba con otro término.</div>
 
-  <!-- Panel estadísticas por departamento -->
-  <div id="dept-stats-panel" style="display:none;margin-top:28px">
-    <div class="section-title" id="dept-stats-title"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
-      <div class="chart-card"><div class="chart-title">Location</div><canvas id="ds-location" style="max-height:180px"></canvas></div>
-      <div class="chart-card"><div class="chart-title">Nivel</div><canvas id="ds-nivel" style="max-height:180px"></canvas></div>
-      <div class="chart-card"><div class="chart-title">Nacionalidad</div><canvas id="ds-nac" style="max-height:180px"></canvas></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <div class="prox-card">
-        <div class="prox-header green">Por ingresar — próximos 30 días</div>
-        <div id="ds-ingresar"></div>
-      </div>
-      <div class="prox-card">
-        <div class="prox-header amber">Por finalizar — próximos 30 días</div>
-        <div id="ds-finalizar"></div>
-      </div>
-    </div>
-  </div>
+
 </div>
 
 <!-- PRÓXIMOS EVENTOS -->
@@ -554,9 +557,17 @@ function antLabel(m) {
   if (m < 36) return "2-3 años";
   return "+ 3 años";
 }
+const MONTH_NAMES = ["ene","feb","mar","abr","may","jun","jul","ago","sept","oct","nov","dic"];
+
 function monthKey(v) {
   const d = parseDate(v); if (!d) return null;
-  return `${d.getFullYear()}-${["ene","feb","mar","abr","may","jun","jul","ago","sept","oct","nov","dic"][d.getMonth()]}`;
+  // sortable key: YYYY-MM (for sorting) but display as YYYY-mes
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function monthLabel(key) {
+  const [y, m] = key.split('-');
+  return `${y}-${MONTH_NAMES[parseInt(m)-1]}`;
 }
 function pct(n, total) { return total ? Math.round(n / total * 100) : 0; }
 
@@ -907,7 +918,7 @@ function sortBy(col) {
 }
 function renderDir() {
   const query=(document.getElementById("search").value||"").toLowerCase().trim();
-  let filtered=allData.filter(p=>{
+  let filtered=activos.filter(p=>{
     const md=activeFilter==="Todos"||p.departamento===activeFilter;
     const ms=!query||Object.values(p).some(v=>String(v).toLowerCase().includes(query));
     return md&&ms;
@@ -976,7 +987,7 @@ function renderPendientes() {
   document.getElementById("pending-summary").innerHTML = ONBOARDING_KEYS_UI.map(({key, label}) => {
     const n  = base.filter(p => isPending(key, p.onboarding)).length;
     const nd = base.filter(p => isDone(key, p.onboarding)).length;
-    return `<div class="pending-item" onclick="openPendingModal('${key}','${label}')">
+    return `<div class="pending-item" onclick="openPendingModal('${label}','${key}')">
       <div class="pending-label">${label}</div>
       <div class="pending-count">${n}</div>
       <div class="pending-pct">${pct(n,total)}% pendiente · ${nd} ok</div>
@@ -1068,12 +1079,15 @@ function buildTimeline() {
   const sal = window._salidas  || {};
   let keys = [...new Set([...Object.keys(ing),...Object.keys(sal)])].sort();
   if (activeYear !== 'todos') keys = keys.filter(k=>k.startsWith(activeYear+'-'));
-  makeBar("chart-timeline", keys, [
+  const displayLabels = keys.map(k => monthLabel(k));
+  makeBar("chart-timeline", displayLabels, [
     {label:"Ingresos", data:keys.map(k=>ing[k]||0), backgroundColor:"rgba(0,180,216,0.75)", borderRadius:3},
     {label:"Salidas",  data:keys.map(k=>sal[k]||0), backgroundColor:"rgba(139,26,74,0.75)",  borderRadius:3}
   ], false, (mes, dsIdx) => {
-    if(dsIdx===0) openModal(`Ingresos: ${mes}`, allData.filter(p=>monthKey(p.inicio)===mes), "inicio");
-    else          openModal(`Salidas: ${mes}`,  allData.filter(p=>monthKey(p.finEstimado)===mes), "finEstimado");
+    const keyIdx = displayLabels.indexOf(mes);
+    const rawKey = keyIdx >= 0 ? keys[keyIdx] : mes;
+    if(dsIdx===0) openModal(`Ingresos: ${mes}`, allData.filter(p=>monthKey(p.inicio)===rawKey), "inicio");
+    else          openModal(`Salidas: ${mes}`,  allData.filter(p=>monthKey(p.finEstimado)===rawKey), "finEstimado");
   });
 }
 
@@ -1210,8 +1224,9 @@ loadData();
 
 function openPendingModal(label, key) {
   const base = activos;
-  const pendientes = base.filter(p => p.onboarding && !p.onboarding[key]);
-  const completados = base.filter(p => p.onboarding && p.onboarding[key]);
+  const sort = arr => [...arr].sort((a,b) => (parseDate(b.inicio)||0) - (parseDate(a.inicio)||0));
+  const pendientes = sort(base.filter(p => isPending(key, p.onboarding)));
+  const completados = sort(base.filter(p => isDone(key, p.onboarding)));
 
   document.getElementById("modal-title").textContent = label;
   document.getElementById("modal-count").textContent = `${pendientes.length} pendiente${pendientes.length!==1?'s':''} · ${completados.length} completado${completados.length!==1?'s':''}`;
