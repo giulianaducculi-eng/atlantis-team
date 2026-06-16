@@ -196,6 +196,7 @@
     <button class="nav-btn" onclick="showPage('directorio', this)">Departamentos</button>
     <button class="nav-btn" onclick="showPage('proximos', this)">Próximos eventos</button>
     <button class="nav-btn" onclick="showPage('pendientes', this)">Pendientes</button>
+    <button class="nav-btn" onclick="showPage('universo', this)">🌊 Universo</button>
     <button class="nav-btn" onclick="showPage('chats', this)">Chats</button>
   </nav>
   <div class="header-right">
@@ -323,7 +324,11 @@
       <div class="chart-card"><div class="chart-title">Nivel</div><canvas id="ds-nivel" style="max-height:180px"></canvas></div>
       <div class="chart-card"><div class="chart-title">Nacionalidad</div><canvas id="ds-nac" style="max-height:180px"></canvas></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px">
+      <div class="prox-card">
+        <div class="prox-header" style="background:rgba(139,26,74,0.15);color:var(--wine2);border-bottom:1px solid rgba(139,26,74,0.2)">Finalizados</div>
+        <div id="ds-finalizados"></div>
+      </div>
       <div class="prox-card">
         <div class="prox-header green">Por ingresar — próximos 30 días</div>
         <div id="ds-ingresar"></div>
@@ -513,6 +518,7 @@ async function loadData() {
     renderPendientes();
     buildProximosKPIs();
     buildPendientesKPIs();
+    buildUniverso();
     document.getElementById("last-update").textContent =
       "Actualizado: " + new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
   } catch(err) { alert("Error: " + err.message); }
@@ -1213,11 +1219,414 @@ function buildDeptStatsPanel(dept) {
   const row=(p,f)=>`<div class="prox-row"><div><div style="font-weight:500">${p.nombre}</div><div style="font-size:11px;color:var(--muted)">${p.nivel}</div></div><div class="prox-date">${fmtDate(p[f])}</div></div>`;
   const none=t=>`<div class="prox-row" style="color:var(--muted)">${t}</div>`;
 
+  const now = new Date();
+  const fin  = deptAll.filter(p=>{const f=parseDate(p.finEstimado);return f&&f<now;}).sort((a,b)=>new Date(b.finEstimado)-new Date(a.finEstimado));
   const entr = deptAll.filter(p=>{const d=daysFrom(p.inicio);return d!==null&&d>0&&d<=30;}).sort((a,b)=>new Date(a.inicio)-new Date(b.inicio));
   const sal  = deptAll.filter(p=>{const d=daysFrom(p.finEstimado);return d!==null&&d>=0&&d<=30;}).sort((a,b)=>new Date(a.finEstimado)-new Date(b.finEstimado));
 
-  document.getElementById("ds-ingresar").innerHTML  = entr.length ? entr.map(p=>row(p,"inicio")).join("") : none("Ninguno próximos 30 días");
-  document.getElementById("ds-finalizar").innerHTML = sal.length  ? sal.map(p=>row(p,"finEstimado")).join("") : none("Ninguno próximos 30 días");
+  document.getElementById("ds-finalizados").innerHTML = fin.length  ? fin.map(p=>row(p,"finEstimado")).join("") : none("Ninguno");
+  document.getElementById("ds-ingresar").innerHTML    = entr.length ? entr.map(p=>row(p,"inicio")).join("")     : none("Ninguno próximos 30 días");
+  document.getElementById("ds-finalizar").innerHTML   = sal.length  ? sal.map(p=>row(p,"finEstimado")).join("") : none("Ninguno próximos 30 días");
+}
+
+loadData();
+
+function openPendingModal(label, key) {
+  const base = activos;
+  const sort = arr => [...arr].sort((a,b) => (parseDate(b.inicio)||0) - (parseDate(a.inicio)||0));
+  const pendientes = sort(base.filter(p => isPending(key, p.onboarding)));
+  const completados = sort(base.filter(p => isDone(key, p.onboarding)));
+
+  document.getElementById("modal-title").textContent = label;
+  document.getElementById("modal-count").textContent = `${pendientes.length} pendiente${pendientes.length!==1?'s':''} · ${completados.length} completado${completados.length!==1?'s':''}`;
+
+  const section = (title, rows, color) => rows.length ? `
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:${color};padding:12px 0 6px">${title}</div>
+    ${rows.map(r => `
+      <div class="modal-row">
+        <div class="modal-row-left">
+          <strong>${r.nombre}</strong>
+          <span>${[r.departamento, r.nivel, r.location].filter(Boolean).join(' · ')}</span>
+        </div>
+        <div class="modal-date">${fmtDate(r.inicio)}</div>
+      </div>`).join('')}` : '';
+
+  document.getElementById("modal-body").innerHTML =
+    section('Pendientes', pendientes, 'var(--amber)') +
+    section('Completados', completados, 'var(--green)') ||
+    '<div class="modal-empty">Sin datos</div>';
+
+  document.getElementById("modal").classList.add("open");
+}
+
+// ── UNIVERSO ──────────────────────────────────────────────────
+function buildUniverso() {
+  if (!allData.length) return;
+
+  const now = new Date();
+  const depts = [...new Set(allData.map(p=>p.departamento).filter(Boolean))].sort();
+
+  // BASE COLORS per dept (vivid)
+  const BASE_COLORS = [
+    "#00b4d8","#10b981","#f59e0b","#8b1a4a","#6366f1",
+    "#ec4899","#14b8a6","#f97316","#a855f7","#84cc16",
+    "#ef4444","#06b6d4","#e11d48","#0ea5e9","#d97706",
+    "#7c3aed","#059669","#dc2626","#2563eb","#d946ef",
+    "#16a34a","#ea580c","#9333ea","#0891b2","#ca8a04"
+  ];
+
+  const color = (i, alpha=1) => {
+    const c = BASE_COLORS[i % BASE_COLORS.length];
+    const r = parseInt(c.slice(1,3),16);
+    const g = parseInt(c.slice(3,5),16);
+    const b = parseInt(c.slice(5,7),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  };
+
+  // ── RING 1: Histórico (total por dept) ────────────────────
+  const hist = {};
+  allData.forEach(p=>{ const d=p.departamento||"Sin dept."; hist[d]=(hist[d]||0)+1; });
+  const ring1Labels = depts;
+  const ring1Data   = depts.map(d=>hist[d]||0);
+  const ring1Colors = depts.map((_,i)=>color(i,0.55));
+  const ring1Border = depts.map((_,i)=>color(i,0.8));
+
+  // ── RING 2: Presente — activos por dept + nivel blend ─────
+  const present = {};
+  activos.forEach(p=>{ const d=p.departamento||"Sin dept."; present[d]=(present[d]||0)+1; });
+  const ring2Labels = depts;
+  const ring2Data   = depts.map(d=>present[d]||0);
+  const ring2Colors = depts.map((_,i)=>color(i,0.85));
+  const ring2Border = depts.map((_,i)=>color(i,1));
+
+  // ── RING 3: Futuro — ingresos (vivid) + salidas (muted) ───
+  const future90in  = {}; // ingresos próx 90d
+  const future90out = {}; // salidas próx 90d
+  allData.forEach(p=>{
+    const di = daysFrom(p.inicio);
+    const ds = daysFrom(p.finEstimado);
+    const d  = p.departamento||"Sin dept.";
+    if(di!==null && di>0  && di<=90) future90in[d]  = (future90in[d] ||0)+1;
+    if(ds!==null && ds>=0 && ds<=90) future90out[d] = (future90out[d]||0)+1;
+  });
+
+  // Merge in/out for outer ring — ingresos vivid, salidas opaque
+  const ring3Labels=[], ring3Data=[], ring3Colors=[], ring3Border=[];
+  depts.forEach((d,i)=>{
+    if(future90in[d]) {
+      ring3Labels.push(`↑ ${d}`);
+      ring3Data.push(future90in[d]);
+      ring3Colors.push(color(i,0.95));
+      ring3Border.push(color(i,1));
+    }
+    if(future90out[d]) {
+      ring3Labels.push(`↓ ${d}`);
+      ring3Data.push(future90out[d]);
+      ring3Colors.push(color(i,0.2));
+      ring3Border.push(color(i,0.4));
+    }
+  });
+
+  // Fallback if no future data
+  if(!ring3Data.length) {
+    ring3Labels.push("Sin eventos próximos");
+    ring3Data.push(1);
+    ring3Colors.push("rgba(100,100,100,0.15)");
+    ring3Border.push("rgba(100,100,100,0.2)");
+  }
+
+  // ── BUILD CHART ───────────────────────────────────────────
+  if (charts["universo"]) charts["universo"].destroy();
+
+  charts["universo"] = new Chart(document.getElementById("chart-universo"), {
+    type: "doughnut",
+    data: {
+      datasets: [
+        {
+          label: "Histórico",
+          data: ring1Data,
+          backgroundColor: ring1Colors,
+          borderColor: ring1Border,
+          borderWidth: 1.5,
+          hoverOffset: 8,
+        },
+        {
+          label: "Presente",
+          data: ring2Data,
+          backgroundColor: ring2Colors,
+          borderColor: ring2Border,
+          borderWidth: 2,
+          hoverOffset: 12,
+        },
+        {
+          label: "Futuro",
+          data: ring3Data,
+          backgroundColor: ring3Colors,
+          borderColor: ring3Border,
+          borderWidth: 1,
+          hoverOffset: 16,
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      cutout: "30%",
+      radius: "95%",
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: ctx => {
+              const ds = ctx[0].datasetIndex;
+              const idx = ctx[0].dataIndex;
+              if(ds===0) return `📚 Histórico: ${ring1Labels[idx]}`;
+              if(ds===1) return `⚡ Presente: ${ring2Labels[idx]}`;
+              return `🔮 Futuro: ${ring3Labels[idx]}`;
+            },
+            label: ctx => {
+              const ds = ctx.datasetIndex;
+              const idx = ctx.dataIndex;
+              const val = ctx.raw;
+              if(ds===0) { const tot=ring1Data.reduce((a,b)=>a+b,0); return ` ${val} personas (${Math.round(val/tot*100)}% del histórico)`; }
+              if(ds===1) { const tot=ring2Data.reduce((a,b)=>a+b,0); return ` ${val} activos (${Math.round(val/tot*100)}% del presente)`; }
+              return ` ${val} persona${val!==1?'s':''} en próx. 90 días`;
+            },
+            afterLabel: ctx => {
+              const ds = ctx.datasetIndex;
+              const idx = ctx.dataIndex;
+              if(ds===1) {
+                const dept = ring2Labels[idx];
+                const nivCount = {};
+                activos.filter(p=>(p.departamento||"Sin dept.")===dept).forEach(p=>{
+                  const n=p.nivel||"?"; nivCount[n]=(nivCount[n]||0)+1;
+                });
+                return Object.entries(nivCount).map(([n,c])=>` ${n}: ${c}`);
+              }
+              return null;
+            }
+          },
+          backgroundColor: "rgba(15,30,45,0.95)",
+          titleColor: "#00b4d8",
+          bodyColor: "#f5f4f0",
+          borderColor: "rgba(255,255,255,0.1)",
+          borderWidth: 1,
+          padding: 12,
+          cornerRadius: 8,
+        }
+      },
+      onClick(evt, elements) {
+        if(!elements.length) return;
+        const ds  = elements[0].datasetIndex;
+        const idx = elements[0].dataIndex;
+        if(ds===0) openModal(`Histórico: ${ring1Labels[idx]}`, allData.filter(p=>(p.departamento||"Sin dept.")===ring1Labels[idx]), "inicio");
+        if(ds===1) openModal(`Activos: ${ring2Labels[idx]}`, activos.filter(p=>(p.departamento||"Sin dept.")===ring2Labels[idx]), "inicio");
+        if(ds===2) {
+          const label = ring3Labels[idx];
+          const dept  = label.replace(/^[↑↓] /,"");
+          if(label.startsWith("↑")) openModal(`Ingresos próx. 90d: ${dept}`, allData.filter(p=>{const d=daysFrom(p.inicio);return (p.departamento||"Sin dept.")===dept&&d!==null&&d>0&&d<=90;}), "inicio");
+          else openModal(`Salidas próx. 90d: ${dept}`, allData.filter(p=>{const d=daysFrom(p.finEstimado);return (p.departamento||"Sin dept.")===dept&&d!==null&&d>=0&&d<=90;}), "finEstimado");
+        }
+      },
+      onHover(evt, elements) {
+        evt.native.target.style.cursor = elements.length ? "pointer" : "default";
+        if(!elements.length) {
+          document.getElementById("universo-center").innerHTML = `<div style="font-size:13px;color:var(--muted)">Hover o clic para explorar</div>`;
+          return;
+        }
+        const ds=elements[0].datasetIndex, idx=elements[0].dataIndex;
+        const val=elements[0].element.$context.raw;
+        const ringName=["Histórico","Presente","Futuro"][ds];
+        const label=ds===0?ring1Labels[idx]:ds===1?ring2Labels[idx]:ring3Labels[idx];
+        document.getElementById("universo-center").innerHTML = `
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">${ringName}</div>
+          <div style="font-size:18px;font-weight:700;color:var(--white);margin:4px 0;max-width:140px;text-align:center;line-height:1.2">${label.replace(/^[↑↓] /, "")}</div>
+          <div style="font-size:28px;font-weight:700;color:var(--accent)">${val}</div>
+          <div style="font-size:11px;color:var(--muted)">${ds===2?(label.startsWith("↑")?"↑ ingresa":"↓ sale"):"personas"}</div>
+        `;
+      }
+    },
+    plugins: [{
+      id: "universoGlow",
+      beforeDraw(chart) {
+        const { ctx, chartArea } = chart;
+        if (!chartArea) return;
+        const cx = (chartArea.left + chartArea.right) / 2;
+        const cy = (chartArea.top  + chartArea.bottom) / 2;
+        const r  = Math.min(chartArea.width, chartArea.height) * 0.15;
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        grad.addColorStop(0, "rgba(0,180,216,0.08)");
+        grad.addColorStop(1, "rgba(0,180,216,0)");
+        ctx.save();
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }]
+  });
+
+  // Build legend
+  document.getElementById("universo-legend").innerHTML = depts.map((d,i)=>`
+    <span style="display:flex;align-items:center;gap:5px">
+      <span style="width:10px;height:10px;border-radius:50%;background:${color(i,0.9)};display:inline-block"></span>
+      ${d}
+    </span>`).join("");
+}
+
+
+
+const ATLANTIS_DOCS = {
+  "estudio": "ATLANTIS es un estudio de animación 3D boutique ubicado en Tenerife, Islas Canarias. Transforma ideas en experiencias visuales únicas combinando innovación y compromiso. Cada proyecto es una creación a medida.",
+  "proyectos": "ATLANTIS ha producido: Tara Duncan (Disney Channel), Temporada 5 de Miraculous Ladybug (Disney Channel y Disney Plus), y un trailer para Sony Music, Sony Pictures y Leo Messi (Messi and The Giants).",
+  "ubicacion": "El estudio está ubicado en Tenerife, Islas Canarias, España. Comenzó en Francia y se trasladó a Tenerife en 2019.",
+  "bienvenida": "ATLANTIS Animation Studio da la bienvenida a cada nuevo miembro con un proceso de onboarding que incluye: Welcome Session, Welcome Pack, documentación laboral, reconocimiento médico, formaciones PRL y Harassment Training, acceso a herramientas (Clockio, Mattermost, Shotgrid, etc.).",
+  "horario": "El registro horario se hace mediante Clockio. Hay que fichar entrada y salida. Las ausencias y vacaciones deben solicitarse con antelación siguiendo el proceso establecido.",
+  "vacaciones": "Las vacaciones se solicitan a través del proceso de Holidays Request. Deben ser aprobadas por el supervisor (N+1) con antelación suficiente.",
+  "remoto": "ATLANTIS tiene protocolo de trabajo remoto (Remote Work Protocol). Los empleados pueden ser ON SITE, HYBRID o REMOTE TNF según su contrato y departamento.",
+  "salas": "El estudio cuenta con salas de reuniones (Meeting Rooms) que se reservan a través del calendario interno.",
+  "compras": "Las compras y órdenes de compra siguen el Purchase Order Process. Debe solicitarse aprobación previa antes de realizar cualquier compra.",
+  "chat": "El sistema de comunicación interna es Mattermost. Se usa para comunicación del equipo, canales por departamento y notificaciones.",
+  "tickets": "Para reportar problemas técnicos o solicitudes de IT se usa el sistema de tickets. Hay que describir el problema con detalle antes de enviar el ticket.",
+  "vpn": "El acceso remoto a los sistemas del estudio se realiza mediante VPN. Contactar con IT para la configuración.",
+  "shotgrid": "Shotgrid es el sistema de gestión de producción utilizado en ATLANTIS para tracking de tareas, assets y versiones.",
+  "onboarding": "El proceso de onboarding incluye: Welcome Session, Welcome Pack, Laboral Docs, Medical check, PRL Training, Harassment Training, lectura de protocolos internos, configuración en Clockio y acceso a sistemas.",
+  "offboarding": "El proceso de offboarding incluye: devolución de materiales, desactivación de accesos, eliminación de listas, desactivación en Shotgrid y sistemas internos.",
+  "normas": "Las normas internas del estudio cubren: puntualidad, respeto, uso de equipos, confidencialidad, comunicación profesional y cumplimiento de políticas de empresa.",
+  "calendario": "El calendario interno de ATLANTIS se usa para coordinar reuniones, reservar salas y gestionar eventos del equipo.",
+  "animacion": "ATLANTIS se especializa en animación 3D de alta calidad para series y largometrajes. El estilo de animación sigue guías específicas documentadas en el Animation Style guide.",
+};
+
+const EQUIPO_SEARCHES = {
+  "departamento": (q) => {
+    const dept = q.match(/(\w+)/g)?.find(w => allData.some(p => p.departamento?.toLowerCase().includes(w.toLowerCase())));
+    return dept ? activos.filter(p => p.departamento?.toLowerCase().includes(dept.toLowerCase())) : [];
+  },
+  "nivel": (q) => {
+    const niveles = ["junior","middle","senior","supervisor","lead","internship"];
+    const nivel = niveles.find(n => q.toLowerCase().includes(n));
+    return nivel ? activos.filter(p => p.nivel?.toLowerCase().includes(nivel)) : [];
+  },
+  "nacionalidad": (q) => {
+    const paises = [...new Set(allData.map(p=>p.nacionalidad).filter(Boolean))];
+    const pais = paises.find(p => q.toLowerCase().includes(p.toLowerCase()));
+    return pais ? activos.filter(p => p.nacionalidad?.toLowerCase() === pais.toLowerCase()) : [];
+  },
+  "location": (q) => {
+    if (q.toLowerCase().includes("on site") || q.toLowerCase().includes("onsite")) return activos.filter(p=>p.location==="ON SITE");
+    if (q.toLowerCase().includes("hybrid")) return activos.filter(p=>p.location==="HYBRID");
+    return [];
+  },
+  "nombre": (q) => {
+    const words = q.split(" ").filter(w=>w.length>3);
+    return activos.filter(p => words.some(w => p.nombre?.toLowerCase().includes(w.toLowerCase())));
+  },
+};
+
+function searchAtlantis(query) {
+  const q = query.toLowerCase().trim();
+  if (!q) return null;
+
+  const results = { docs: [], equipo: [], stats: null };
+
+  // Search docs
+  for (const [key, text] of Object.entries(ATLANTIS_DOCS)) {
+    if (q.split(" ").some(w => w.length > 3 && (key.includes(w) || text.toLowerCase().includes(w)))) {
+      results.docs.push(text);
+    }
+  }
+
+  // Search equipo
+  const isEquipoQuery = q.includes("quien") || q.includes("quién") || q.includes("cuantos") || q.includes("cuántos") ||
+    q.includes("lista") || q.includes("personas") || q.includes("equipo") || q.includes("trabaja") ||
+    allData.some(p => p.nombre?.toLowerCase().split(" ").some(w => w.length > 3 && q.includes(w)));
+
+  if (isEquipoQuery) {
+    let found = [];
+    for (const [, fn] of Object.entries(EQUIPO_SEARCHES)) {
+      const r = fn(query);
+      if (r.length) { found = [...found, ...r]; }
+    }
+    // deduplicate
+    results.equipo = [...new Map(found.map(p=>[p.nombre,p])).values()];
+
+    // Stats queries
+    if (q.includes("cuantos") || q.includes("cuántos") || q.includes("total") || q.includes("número")) {
+      results.stats = `Total activos: ${activos.length} | Departamentos: ${new Set(activos.map(p=>p.departamento)).size} | Nacionalidades: ${new Set(activos.map(p=>p.nacionalidad).filter(Boolean)).size}`;
+    }
+  }
+
+  return results;
+}
+
+function renderSearchResults(results, query) {
+  if (!results) return `<div class="chat-msg chat-msg-assistant">Escribí una pregunta para buscar información.</div>`;
+
+  const parts = [];
+
+  if (results.stats) {
+    parts.push(`<div class="chat-msg chat-msg-assistant"><strong>📊 Estadísticas</strong><br>${results.stats}</div>`);
+  }
+
+  if (results.docs.length) {
+    const text = results.docs.slice(0,2).join("<br><br>");
+    parts.push(`<div class="chat-msg chat-msg-assistant"><strong>ℹ️ Información ATLANTIS</strong><br>${text}</div>`);
+  }
+
+  if (results.equipo.length) {
+    const lista = results.equipo.slice(0,20).map(p =>
+      `<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+        <strong>${p.nombre}</strong>
+        <span style="color:var(--muted);font-size:11px;margin-left:8px">${p.departamento} · ${p.nivel} · ${p.location}</span>
+      </div>`
+    ).join("");
+    parts.push(`<div class="chat-msg chat-msg-assistant"><strong>👥 ${results.equipo.length} persona${results.equipo.length!==1?'s':''} encontrada${results.equipo.length!==1?'s':''}</strong>${lista}</div>`);
+  }
+
+  if (!parts.length) {
+    parts.push(`<div class="chat-msg chat-msg-assistant">No encontré información sobre "<strong>${query}</strong>". Probá con: departamentos, proyectos, vacaciones, horario, onboarding, o el nombre de una persona.</div>`);
+  }
+
+  return parts.join("");
+}
+
+let activeChatTab = "equipo";
+
+function switchChatTab(tab) {
+  activeChatTab = tab;
+  document.getElementById("chat-tab-equipo").classList.toggle("active", tab === "equipo");
+  document.getElementById("chat-tab-atlantis").classList.toggle("active", tab === "atlantis");
+  document.getElementById("chat-equipo-panel").style.display = tab === "equipo" ? "flex" : "none";
+  document.getElementById("chat-atlantis-panel").style.display = tab === "atlantis" ? "flex" : "none";
+}
+
+function sendChat(type) {
+  const input = document.getElementById(`chat-input-${type}`);
+  const query = input.value.trim();
+  if (!query) return;
+  input.value = "";
+
+  const container = document.getElementById(`chat-messages-${type}`);
+
+  // User message
+  const userDiv = document.createElement("div");
+  userDiv.className = "chat-msg chat-msg-user";
+  userDiv.textContent = query;
+  container.appendChild(userDiv);
+
+  // Search and respond
+  const results = searchAtlantis(query);
+  const responseHTML = renderSearchResults(results, query);
+
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = responseHTML;
+  while (wrapper.firstChild) container.appendChild(wrapper.firstChild);
+
+  container.scrollTop = container.scrollHeight;
+}
+
+function handleChatKey(e, type) {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(type); }
 }
 
 loadData();
@@ -2567,84 +2976,45 @@ Overlap / secondaries
 ATLANTIS es un estudio de animación 3D ubicado en Tenerife, en las Islas Canarias. Nos dedicamos a transformar ideas en experiencias visuales únicas, combinando innovación y compromiso en cada proyecto.Nuestra pasión por la creatividad y la aventura nos inspira a explorar nuevas formas de contar historias. Con un enfoque flexible y dedicado, afrontamos cada desafío con soluciones personalizadas y efectivas.ATLANTIS es una boutique de animación. Cada proyecto es una creación "a medida" diseñada para reflejar tus visiones de manera única.  ¡Únete a nuestra aventura creativa!ATLANTIS is a 3D animation studio located in Tenerife, in the Canary Islands. We are dedicated to transforming ideas into unique visual experiences, combining innovation and commitment in every project.Our passion for creativity and adventure inspires us to explore new ways of storytelling. With a flexible and dedicated approach, we tackle every challenge with personalized and effective solutions.ATLANTIS is a boutique animation studio. Each project is a tailor-made creation designed to reflect your visions in a unique way. Join us on our creative adventure!ATLANTIS se dedica a producir animación 3D de alta calidad para series o largo metrajes. Hemos producido la serie Tara Duncan y gran parte la 5a temporada de Miraculous Ladybug, dos series transmitidas en Disney Channel y Disney Plus. Hemos producido recientemente también un trailer de un proyecto de animación para Sony Music, Sony Pictures y el jugado de fútbol Leo Messi.ATLANTIS is dedicated to producing high-quality 3D animation for series and feature films. We have produced the series Tara Duncan and a significant portion of the 5th season of Miraculous Ladybug, both series broadcast on Disney Channel and Disney Plus. Recently, we also produced a trailer for an animation project for Sony Music, Sony Pictures, and the football player Leo Messi.`;
 
 const chatHistories = { equipo: [], atlantis: [] };
-let activeChatTab = "equipo";
 
-function switchChatTab(tab) {
-  activeChatTab = tab;
-  document.getElementById("chat-tab-equipo").classList.toggle("active", tab === "equipo");
-  document.getElementById("chat-tab-atlantis").classList.toggle("active", tab === "atlantis");
-  document.getElementById("chat-equipo-panel").style.display = tab === "equipo" ? "flex" : "none";
-  document.getElementById("chat-atlantis-panel").style.display = tab === "atlantis" ? "flex" : "none";
-}
-
-function getEquipoContext() {
-  if (!allData.length) return "No hay datos del equipo cargados aún.";
-  const resumen = allData.slice(0, 120).map(p =>
-    `${p.nombre} | ${p.departamento} | ${p.nivel} | ${p.location} | ${p.nacionalidad} | inicio:${p.inicio} | fin:${p.finEstimado} | N+1:${p.contacto}`
-  ).join("\n");
-  return `Datos del equipo ATLANTIS Animation (${allData.length} personas total, ${activos.length} activos hoy):\n\n${resumen}`;
-}
-
-async function sendChat(type) {
-  const inputId = `chat-input-${type}`;
-  const input = document.getElementById(inputId);
-  const msg = input.value.trim();
-  if (!msg) return;
-  input.value = "";
-
-  appendMessage(type, "user", msg);
-  chatHistories[type].push({ role: "user", content: msg });
-
-  const typingId = appendMessage(type, "assistant", "···");
-
-  let systemPrompt;
-  if (type === "equipo") {
-    systemPrompt = `Eres un asistente interno de ATLANTIS Animation. Tienes acceso a los datos actualizados del equipo. Responde preguntas sobre el personal de forma clara y concisa. Si te preguntan por personas específicas, busca en los datos. Habla en el idioma en que te hablen.\n\n${getEquipoContext()}`;
-  } else {
-    systemPrompt = `Eres el asistente oficial de ATLANTIS Animation, un estudio de animación 3D en Tenerife. Responde preguntas sobre el estudio, sus proyectos, su filosofía y su trabajo. Sé amable, creativo y refleja la personalidad del estudio. Habla en el idioma en que te hablen.\n\n${ATLANTIS_INFO}`;
-  }
-
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: chatHistories[type]
-      })
-    });
-    const data = await res.json();
-    const reply = data.content?.[0]?.text || "No pude obtener respuesta.";
-    chatHistories[type].push({ role: "assistant", content: reply });
-    updateMessage(typingId, reply);
-  } catch(err) {
-    updateMessage(typingId, "Error al conectar con el asistente.");
-  }
-}
-
-function appendMessage(type, role, text) {
-  const container = document.getElementById(`chat-messages-${type}`);
-  const id = `msg-${Date.now()}-${Math.random()}`;
-  const div = document.createElement("div");
-  div.id = id;
-  div.className = `chat-msg chat-msg-${role}`;
-  div.textContent = text;
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
-  return id;
-}
-
-function updateMessage(id, text) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = text;
-}
-
-function handleChatKey(e, type) {
-  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(type); }
-}
 </script>
+
+<!-- UNIVERSO ATLANTIS -->
+<div id="page-universo" class="page" style="display:none">
+  <div style="text-align:center;margin-bottom:8px">
+    <h2 style="font-size:22px;font-weight:700;letter-spacing:0.06em;color:var(--accent)">UNIVERSO ATLANTIS</h2>
+    <p style="font-size:13px;color:var(--muted);margin-top:4px">Histórico · Presente · Futuro</p>
+  </div>
+
+  <!-- Legend -->
+  <div id="universo-legend" style="display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin-bottom:20px;font-size:12px;color:var(--muted)"></div>
+
+  <!-- Main canvas -->
+  <div style="position:relative;display:flex;justify-content:center;align-items:center;margin-bottom:24px">
+    <canvas id="chart-universo" style="max-width:680px;max-height:680px"></canvas>
+    <!-- Center label -->
+    <div id="universo-center" style="position:absolute;text-align:center;pointer-events:none">
+      <div style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Hover para ver</div>
+    </div>
+  </div>
+
+  <!-- Stats below -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:720px;margin:0 auto">
+    <div class="chart-card" style="text-align:center">
+      <div class="chart-title">⭕ Interior — Histórico</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Total personas por departamento<br>(incluyendo finalizados)</div>
+    </div>
+    <div class="chart-card" style="text-align:center">
+      <div class="chart-title">⭕ Medio — Presente</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Activos hoy por departamento<br>y distribución de niveles</div>
+    </div>
+    <div class="chart-card" style="text-align:center">
+      <div class="chart-title">⭕ Exterior — Futuro</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Ingresos próx. 90 días (vivos)<br>Salidas próx. 90 días (opacos)</div>
+    </div>
+  </div>
+</div>
+
 <!-- CHATS -->
 <div id="page-chats" class="page">
   <div class="chat-tabs">
