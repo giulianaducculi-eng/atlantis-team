@@ -1130,29 +1130,29 @@ function buildPendientesKPIs() {
     </div>
   `;
 
-  // Medical KPIs
-  const medCompletos  = base.filter(p => isMedicalDone(p.onboarding));
-  const medEnProceso  = base.filter(p => p.onboarding && p.onboarding.medicalCheck && p.onboarding.medicalCheckYes && !p.onboarding.medicalCheckManaged);
-  const medSinGestionar = base.filter(p => p.onboarding && !p.onboarding.medicalCheck);
+  // Medical KPIs — stored globally so onclick can access them
+  window._medCompletos     = base.filter(p => isMedicalDone(p.onboarding));
+  window._medEnProceso     = base.filter(p => p.onboarding && p.onboarding.medicalCheck && p.onboarding.medicalCheckYes && !p.onboarding.medicalCheckManaged);
+  window._medSinGestionar  = base.filter(p => p.onboarding && !p.onboarding.medicalCheck);
 
   document.getElementById("kpi-medical").innerHTML = `
     <div style="grid-column:1/-1;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding-bottom:4px;border-bottom:1px solid var(--border);margin-bottom:4px">Reconocimiento médico</div>
-    <div class="kpi green" onclick="openModal('Medical check — completos', base.filter(p=>isMedicalDone(p.onboarding)), 'inicio')">
-      <div class="kpi-value">${medCompletos.length}</div>
+    <div class="kpi green" onclick="openModal('Medical check — completos', window._medCompletos, 'inicio')">
+      <div class="kpi-value">${window._medCompletos.length}</div>
       <div class="kpi-label">Completos</div>
-      <div class="kpi-sub">${pct(medCompletos.length,total)}% activos</div>
+      <div class="kpi-sub">${pct(window._medCompletos.length,total)}% activos</div>
       <div class="kpi-hint">↗ ver lista</div>
     </div>
-    <div class="kpi amber" onclick="openModal('Medical check — en proceso (aceptaron, pendiente gestión)', medEnProceso, 'inicio')">
-      <div class="kpi-value">${medEnProceso.length}</div>
+    <div class="kpi amber" onclick="openModal('Medical check — aceptaron, pendiente gestión', window._medEnProceso, 'inicio')">
+      <div class="kpi-value">${window._medEnProceso.length}</div>
       <div class="kpi-label">Aceptaron, pendiente gestión</div>
-      <div class="kpi-sub">${pct(medEnProceso.length,total)}% activos</div>
+      <div class="kpi-sub">${pct(window._medEnProceso.length,total)}% activos</div>
       <div class="kpi-hint">↗ ver lista</div>
     </div>
-    <div class="kpi red" onclick="openModal('Medical check — sin consultar', medSinGestionar, 'inicio')">
-      <div class="kpi-value">${medSinGestionar.length}</div>
+    <div class="kpi red" onclick="openModal('Medical check — sin consultar', window._medSinGestionar, 'inicio')">
+      <div class="kpi-value">${window._medSinGestionar.length}</div>
       <div class="kpi-label">Sin consultar</div>
-      <div class="kpi-sub">${pct(medSinGestionar.length,total)}% activos</div>
+      <div class="kpi-sub">${pct(window._medSinGestionar.length,total)}% activos</div>
       <div class="kpi-hint">↗ ver lista</div>
     </div>
   `;
