@@ -7,134 +7,176 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
   :root {
-    --black:   #0f0f0f;
-    --white:   #f5f4f0;
-    --ocean:   #0d3b5e;
-    --ocean2:  #1a5f8a;
-    --sand:    #c9b99a;
-    --accent:  #00b4d8;
-    --wine:    #8b1a4a;
-    --wine2:   #b52260;
-    --muted:   #6b7280;
-    --surface: #1c2a36;
-    --border:  rgba(255,255,255,0.08);
-    --radius:  10px;
-    --green:   #10b981;
-    --amber:   #f59e0b;
-    --red:     #ef4444;
+    --black:   #0f0f0f; --white: #f5f4f0; --ocean: #0d3b5e; --ocean2: #1a5f8a;
+    --sand: #c9b99a; --accent: #00b4d8; --wine: #8b1a4a; --wine2: #b52260;
+    --muted: #6b7280; --surface: #1c2a36; --border: rgba(255,255,255,0.08);
+    --radius: 10px; --green: #10b981; --amber: #f59e0b; --red: #ef4444;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--black); color: var(--white); font-family: 'Inter', system-ui, sans-serif; font-size: 15px; line-height: 1.6; min-height: 100vh; }
 
-  /* NAV */
-  header { background: var(--ocean); padding: 20px 40px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-  .logo { display: flex; align-items: center; gap: 14px; }
-  .logo-mark { width: 40px; height: 40px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; color: var(--black); }
-  .logo-text strong { display: block; font-size: 16px; letter-spacing: 0.04em; }
-  .logo-text span   { font-size: 11px; color: var(--sand); letter-spacing: 0.08em; text-transform: uppercase; }
-  nav { display: flex; gap: 6px; }
-  .nav-btn { background: rgba(255,255,255,0.07); border: 1px solid var(--border); color: var(--muted); padding: 7px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
-  .nav-btn:hover  { color: var(--white); border-color: rgba(255,255,255,0.2); }
+  header { background: var(--ocean); padding: 18px 40px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-mark { width: 38px; height: 38px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: var(--black); }
+  .logo-text strong { display: block; font-size: 15px; letter-spacing: 0.04em; }
+  .logo-text span { font-size: 11px; color: var(--sand); letter-spacing: 0.08em; text-transform: uppercase; }
+  nav { display: flex; gap: 5px; flex-wrap: wrap; }
+  .nav-btn { background: rgba(255,255,255,0.07); border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .nav-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.2); }
   .nav-btn.active { background: var(--accent); border-color: var(--accent); color: var(--black); font-weight: 600; }
   .header-right { display: flex; align-items: center; gap: 10px; }
-  #btn-refresh { background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: var(--white); padding: 7px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: background 0.2s; }
+  #btn-refresh { background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: var(--white); padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; }
   #btn-refresh:hover { background: rgba(255,255,255,0.16); }
   #btn-refresh.loading { opacity: 0.5; pointer-events: none; }
   #last-update { font-size: 12px; color: var(--muted); }
 
-  /* PAGES */
-  .page { display: none; padding: 32px 40px; }
+  .page { display: none; padding: 28px 40px; }
   .page.active { display: block; }
 
-  /* KPI GRID */
-  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
-  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
-  .kpi-value { font-size: 36px; font-weight: 700; line-height: 1; }
-  .kpi-label { font-size: 12px; color: var(--muted); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
-  .kpi-sub   { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  /* KPI */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; cursor: pointer; transition: border-color 0.2s, transform 0.15s; }
+  .kpi:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .kpi-value { font-size: 32px; font-weight: 700; line-height: 1; }
+  .kpi-label { font-size: 11px; color: var(--muted); margin-top: 5px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .kpi-hint { font-size: 10px; color: var(--accent); margin-top: 4px; opacity: 0.8; }
   .kpi.accent .kpi-value { color: var(--accent); }
   .kpi.wine   .kpi-value { color: var(--wine2); }
   .kpi.green  .kpi-value { color: var(--green); }
   .kpi.amber  .kpi-value { color: var(--amber); }
   .kpi.red    .kpi-value { color: var(--red); }
+  .kpi.blue   .kpi-value { color: #60a5fa; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #162130; border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 660px; max-height: 82vh; overflow: hidden; display: flex; flex-direction: column; }
+  .modal-header { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .modal-header h3 { font-size: 15px; font-weight: 500; }
+  .modal-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+  .modal-close:hover { color: var(--white); }
+  .modal-body { overflow-y: auto; padding: 8px 22px 16px; }
+  .modal-count { font-size: 12px; color: var(--muted); padding: 10px 0 4px; }
+  .modal-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; gap: 12px; }
+  .modal-row:last-child { border-bottom: none; }
+  .modal-row-left strong { display: block; font-weight: 500; }
+  .modal-row-left span { font-size: 11px; color: var(--muted); }
+  .modal-date { font-size: 12px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+  .modal-empty { text-align: center; padding: 32px; color: var(--muted); }
 
   /* SECTION */
-  .section { margin-bottom: 36px; }
-  .section-title { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .section { margin-bottom: 24px; }
+  .section-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; padding-bottom: 7px; border-bottom: 1px solid var(--border); }
 
   /* LOCATION PILLS */
-  .loc-grid { display: flex; gap: 16px; flex-wrap: wrap; }
-  .loc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 24px; display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
-  .loc-name  { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-  .loc-count { font-size: 28px; font-weight: 700; color: var(--accent); }
-  .loc-pct   { font-size: 12px; color: var(--muted); }
+  .loc-grid { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+  .loc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; cursor: pointer; transition: border-color 0.2s, transform 0.15s; min-width: 130px; }
+  .loc-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .loc-name { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+  .loc-active-row { display: flex; align-items: baseline; gap: 7px; }
+  .loc-active-n { font-size: 28px; font-weight: 700; color: var(--green); line-height: 1; }
+  .loc-active-pct { font-size: 13px; color: var(--green); opacity: 0.8; }
+  .loc-total-row { margin-top: 3px; font-size: 11px; color: var(--muted); }
+  .loc-hint { font-size: 10px; color: var(--accent); margin-top: 5px; opacity: 0.8; }
 
   /* CHARTS */
-  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 32px; }
-  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .charts-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+  .charts-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
   .chart-card.full { grid-column: 1 / -1; }
-  .chart-title { font-size: 13px; color: var(--muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.06em; }
-  canvas { max-height: 280px; }
+  .chart-title { font-size: 11px; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  canvas { max-height: 220px; }
 
   /* DEPT TABLE */
-  .dept-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .dept-table { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .dept-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .dept-table thead th { background: var(--wine); color: var(--white); padding: 10px 14px; text-align: left; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
-  .dept-table tbody tr:nth-child(even) { background: rgba(255,255,255,0.03); }
-  .dept-table tbody tr:hover { background: rgba(255,255,255,0.07); }
-  .dept-table tbody td { padding: 9px 14px; border-bottom: 1px solid var(--border); }
-  .dept-table tfoot td { padding: 10px 14px; font-weight: 600; color: var(--wine2); border-top: 1px solid var(--border); }
+  .dept-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+  .data-table { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .data-table table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .data-table thead th { background: var(--wine); color: var(--white); padding: 9px 12px; text-align: left; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .data-table tbody tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+  .data-table tbody tr:hover { background: rgba(255,255,255,0.07); cursor: pointer; }
+  .data-table tbody td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  .data-table tfoot td { padding: 9px 12px; font-weight: 600; color: var(--wine2); border-top: 1px solid var(--border); }
 
-  /* DIRECTORIO CONTROLS */
-  .controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
-  #search { flex: 1; min-width: 200px; background: var(--surface); border: 1px solid var(--border); color: var(--white); padding: 10px 16px; border-radius: var(--radius); font-size: 14px; outline: none; transition: border-color 0.2s; }
+  /* DIRECTORIO */
+  .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+  #search { flex: 1; min-width: 200px; background: var(--surface); border: 1px solid var(--border); color: var(--white); padding: 9px 14px; border-radius: var(--radius); font-size: 13px; outline: none; }
   #search:focus { border-color: var(--accent); }
   #search::placeholder { color: var(--muted); }
-  .filter-group { display: flex; gap: 8px; flex-wrap: wrap; }
-  .filter-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 7px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-  .filter-btn:hover  { border-color: var(--accent); color: var(--white); }
+  .filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .filter-btn:hover { border-color: var(--accent); color: var(--white); }
   .filter-btn.active { background: var(--accent); border-color: var(--accent); color: var(--black); font-weight: 600; }
-
-  /* TABLE */
-  #results-count { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+  #results-count { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
   .table-wrap { overflow-x: auto; }
-  table.main { width: 100%; border-collapse: collapse; font-size: 13px; }
-  table.main thead th { text-align: left; font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); padding: 10px 14px; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; white-space: nowrap; }
+  table.main { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.main thead th { text-align: left; font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); padding: 9px 12px; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; white-space: nowrap; }
   table.main thead th:hover { color: var(--white); }
   table.main thead th.sorted { color: var(--accent); }
   table.main tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
   table.main tbody tr:hover { background: var(--surface); }
-  table.main tbody td { padding: 12px 14px; vertical-align: middle; }
-
-  .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--ocean2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: var(--accent); flex-shrink: 0; }
-  .name-cell { display: flex; align-items: center; gap: 10px; }
-  .name-cell strong { display: block; font-weight: 500; font-size: 14px; }
-  .badge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; background: rgba(0,180,216,0.12); color: var(--accent); border: 1px solid rgba(0,180,216,0.2); white-space: nowrap; }
+  table.main tbody td { padding: 10px 12px; vertical-align: middle; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--ocean2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: var(--accent); flex-shrink: 0; }
+  .name-cell { display: flex; align-items: center; gap: 9px; }
+  .name-cell strong { display: block; font-weight: 500; font-size: 13px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; background: rgba(0,180,216,0.12); color: var(--accent); border: 1px solid rgba(0,180,216,0.2); white-space: nowrap; }
   .badge-level { background: rgba(201,185,154,0.12); color: var(--sand); border-color: rgba(201,185,154,0.2); }
-  .badge-loc   { background: rgba(16,185,129,0.1);  color: var(--green); border-color: rgba(16,185,129,0.2); }
-  a.email-link { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .badge-loc { background: rgba(16,185,129,0.1); color: var(--green); border-color: rgba(16,185,129,0.2); }
+  a.email-link { color: var(--muted); text-decoration: none; }
   a.email-link:hover { color: var(--accent); }
-  .date-cell { font-size: 12px; color: var(--muted); white-space: nowrap; }
-  .date-warn  { color: var(--amber); }
-  .date-ok    { color: var(--green); }
-
+  .date-cell { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .date-warn { color: var(--amber); }
   .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
   .empty strong { display: block; font-size: 18px; color: var(--white); margin-bottom: 8px; }
 
   /* PRÓXIMOS */
-  .proximos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .prox-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .prox-header { padding: 12px 16px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .prox-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 14px; }
+  .prox-header { padding: 11px 15px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .prox-header.blue  { background: rgba(0,180,216,0.15); color: var(--accent); border-bottom: 1px solid rgba(0,180,216,0.2); }
   .prox-header.green { background: rgba(16,185,129,0.15); color: var(--green); border-bottom: 1px solid rgba(16,185,129,0.2); }
   .prox-header.amber { background: rgba(245,158,11,0.15); color: var(--amber); border-bottom: 1px solid rgba(245,158,11,0.2); }
-  .prox-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .prox-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 15px; border-bottom: 1px solid var(--border); font-size: 12px; }
   .prox-row:last-child { border-bottom: none; }
-  .prox-date { font-size: 12px; color: var(--muted); }
+  .prox-date { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .proximos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+  /* PENDIENTES */
+  .pending-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .pending-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; cursor: pointer; transition: border-color 0.2s, transform 0.15s; }
+  .pending-item:hover { border-color: var(--amber); transform: translateY(-2px); }
+  .pending-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .pending-count { font-size: 26px; font-weight: 700; color: var(--amber); line-height: 1; }
+  .pending-pct { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .pending-hint { font-size: 10px; color: var(--accent); margin-top: 4px; opacity: 0.8; }
+
+  .pending-person-list { display: flex; flex-direction: column; gap: 10px; }
+  .pending-person-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .pending-person-name { font-weight: 500; font-size: 13px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .pending-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip-pending { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); padding: 3px 9px; border-radius: 20px; font-size: 11px; }
+  .chip-done    { background: rgba(16,185,129,0.1);  color: var(--green); border: 1px solid rgba(16,185,129,0.2);  padding: 3px 9px; border-radius: 20px; font-size: 11px; }
+  .pending-filter { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+
+  /* CHATS */
+  .chat-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .chat-tab { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 9px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+  .chat-tab:hover { color: var(--white); border-color: rgba(255,255,255,0.2); }
+  .chat-tab.active { background: var(--accent); border-color: var(--accent); color: var(--black); font-weight: 600; }
+  .chat-panel { display: flex; flex-direction: column; height: calc(100vh - 240px); min-height: 400px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .chat-msg { max-width: 75%; padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+  .chat-msg-user { background: var(--accent); color: var(--black); align-self: flex-end; border-radius: 12px 12px 2px 12px; }
+  .chat-msg-assistant { background: rgba(255,255,255,0.06); color: var(--white); align-self: flex-start; border-radius: 12px 12px 12px 2px; border: 1px solid var(--border); }
+  .chat-input-row { display: flex; gap: 10px; padding: 14px 16px; border-top: 1px solid var(--border); align-items: flex-end; }
+  .chat-input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--white); padding: 10px 14px; border-radius: 8px; font-size: 14px; resize: none; outline: none; font-family: inherit; line-height: 1.5; max-height: 120px; }
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-input::placeholder { color: var(--muted); }
+  .chat-send { background: var(--accent); border: none; color: var(--black); width: 38px; height: 38px; border-radius: 8px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; flex-shrink: 0; }
+  .chat-send:hover { opacity: 0.85; }
 
   @media (max-width: 768px) {
     header, .page { padding-left: 16px; padding-right: 16px; }
-    .charts-row, .dept-grid, .proximos-grid { grid-template-columns: 1fr; }
+    .charts-row, .charts-row-3, .dept-grid, .proximos-grid { grid-template-columns: 1fr; }
     .chart-card.full { grid-column: 1; }
   }
 </style>
@@ -151,8 +193,10 @@
   </div>
   <nav>
     <button class="nav-btn active" onclick="showPage('stats', this)">Estadísticas</button>
-    <button class="nav-btn" onclick="showPage('directorio', this)">Directorio</button>
-    <button class="nav-btn" onclick="showPage('proximos', this)">Próximos</button>
+    <button class="nav-btn" onclick="showPage('directorio', this)">Departamentos</button>
+    <button class="nav-btn" onclick="showPage('proximos', this)">Próximos eventos</button>
+    <button class="nav-btn" onclick="showPage('pendientes', this)">Pendientes</button>
+    <button class="nav-btn" onclick="showPage('chats', this)">Chats</button>
   </nav>
   <div class="header-right">
     <span id="last-update"></span>
@@ -160,58 +204,111 @@
   </div>
 </header>
 
-<!-- ═══════════════════════════════════════════════════════════ -->
-<!-- PÁGINA: ESTADÍSTICAS                                        -->
-<!-- ═══════════════════════════════════════════════════════════ -->
-<div id="page-stats" class="page active">
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title"></h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-count" id="modal-count"></div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+</div>
 
+<!-- ESTADÍSTICAS -->
+<div id="page-stats" class="page active">
   <div class="kpi-grid" id="kpi-grid"></div>
 
   <div class="section">
-    <div class="section-title">Distribución por location</div>
+    <div class="section-title">Location — activos vs total</div>
     <div class="loc-grid" id="loc-grid"></div>
   </div>
 
-  <div class="charts-row">
+  <!-- Row 1: Location + Nivel activos + Antigüedad donuts, with totals below -->
+  <div class="charts-row-3">
     <div class="chart-card">
-      <div class="chart-title">Location</div>
-      <canvas id="chart-location"></canvas>
+      <div class="chart-title">Location — activos</div>
+      <canvas id="chart-location-active"></canvas>
+      <div id="totals-location" style="margin-top:10px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px"></div>
     </div>
     <div class="chart-card">
-      <div class="chart-title">Nivel</div>
-      <canvas id="chart-nivel"></canvas>
+      <div class="chart-title">Nivel — activos</div>
+      <canvas id="chart-nivel-active"></canvas>
+      <div id="totals-nivel" style="margin-top:10px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px"></div>
     </div>
-    <div class="chart-card full">
-      <div class="chart-title">Personal por departamento — Total vs Activos</div>
-      <canvas id="chart-dept"></canvas>
+    <div class="chart-card">
+      <div class="chart-title">Antigüedad — activos</div>
+      <canvas id="chart-antiguedad"></canvas>
+      <div id="totals-antiguedad" style="margin-top:10px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px"></div>
     </div>
-    <div class="chart-card full">
-      <div class="chart-title">Ingresos y salidas por mes</div>
-      <canvas id="chart-timeline"></canvas>
+  </div>
+  <!-- Hidden canvases for total donuts (still computed but not shown) -->
+  <div style="display:none">
+    <canvas id="chart-location-total"></canvas>
+    <canvas id="chart-nivel-total"></canvas>
+  </div>
+
+  <div class="chart-card full" style="margin-bottom:20px">
+    <div class="chart-title">Personal por departamento — total vs activos</div>
+    <canvas id="chart-dept" style="max-height:280px"></canvas>
+  </div>
+
+  <div class="chart-card full" style="margin-bottom:20px">
+    <div class="chart-title">Presencia por departamento — activos (ON SITE vs HYBRID)</div>
+    <canvas id="chart-ratio-dept" style="max-height:320px"></canvas>
+  </div>
+
+  <div class="chart-card full" style="margin-bottom:20px">
+    <div class="chart-title">Permanencia por departamento — activos desde hace más de 6 meses</div>
+    <canvas id="chart-ant-dept" style="max-height:280px"></canvas>
+  </div>
+
+  <div class="chart-card full" style="margin-bottom:20px">
+    <div class="chart-title">Ingresos y salidas por mes</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--muted)">Filtrar año:</span>
+      <div id="year-filter" style="display:flex;gap:6px;flex-wrap:wrap"></div>
     </div>
+    <canvas id="chart-timeline" style="max-height:240px"></canvas>
+  </div>
+
+  <!-- Al final: Nac chart + tables -->
+  <div class="chart-card full" style="margin-bottom:20px">
+    <div class="chart-title">Nacionalidad — activos vs total (top 10 + otros)</div>
+    <canvas id="chart-nac" style="max-height:220px"></canvas>
   </div>
 
   <div class="dept-grid">
-    <div class="dept-table">
+    <div class="data-table">
       <table>
-        <thead><tr><th>Departamento</th><th>Total</th></tr></thead>
-        <tbody id="dept-total-body"></tbody>
-        <tfoot><tr><td>Suma total</td><td id="dept-total-sum"></td></tr></tfoot>
+        <thead><tr><th>Departamento</th><th>Activos</th><th>Total</th><th>%</th></tr></thead>
+        <tbody id="dept-body"></tbody>
+        <tfoot><tr><td>Total</td><td id="dept-active-sum"></td><td id="dept-total-sum"></td><td></td></tr></tfoot>
       </table>
     </div>
-    <div class="dept-table">
+    <div class="data-table">
       <table>
-        <thead><tr><th>Departamento (activos)</th><th>Activos</th></tr></thead>
-        <tbody id="dept-active-body"></tbody>
-        <tfoot><tr><td>Suma total</td><td id="dept-active-sum"></td></tr></tfoot>
+        <thead><tr><th>Nacionalidad</th><th>Activos</th><th>Total</th><th>%</th></tr></thead>
+        <tbody id="nac-body"></tbody>
+        <tfoot><tr><td>Total</td><td id="nac-sum"></td><td></td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div style="margin-top:18px">
+    <div class="data-table">
+      <table>
+        <thead><tr><th>Rotación últimos 6 meses</th><th>Personas</th></tr></thead>
+        <tbody id="rotacion-body"></tbody>
       </table>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════ -->
-<!-- PÁGINA: DIRECTORIO                                          -->
-<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- DIRECTORIO -->
 <div id="page-directorio" class="page">
   <div class="controls">
     <input id="search" type="text" placeholder="Buscar por nombre, departamento, nacionalidad…" oninput="renderDir()">
@@ -227,28 +324,47 @@
           <th onclick="sortBy('nivel')">Nivel</th>
           <th onclick="sortBy('location')">Location</th>
           <th onclick="sortBy('nacionalidad')">Nacionalidad</th>
+          <th onclick="sortBy('contacto')">Primary contact</th>
           <th>Email</th>
           <th onclick="sortBy('inicio')">Inicio</th>
+          <th onclick="sortBy('inicioOnSite')">Onsite desde</th>
           <th onclick="sortBy('finEstimado')">Fin estimado</th>
+          <th onclick="sortBy('antiguedad')">Antigüedad</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
     </table>
   </div>
-  <div id="empty" class="empty" style="display:none">
-    <strong>Sin resultados</strong>
-    Prueba con otro término de búsqueda o filtro.
+  <div id="empty" class="empty" style="display:none"><strong>Sin resultados</strong>Prueba con otro término.</div>
+
+  <!-- Panel estadísticas por departamento -->
+  <div id="dept-stats-panel" style="display:none;margin-top:28px">
+    <div class="section-title" id="dept-stats-title"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
+      <div class="chart-card"><div class="chart-title">Location</div><canvas id="ds-location" style="max-height:180px"></canvas></div>
+      <div class="chart-card"><div class="chart-title">Nivel</div><canvas id="ds-nivel" style="max-height:180px"></canvas></div>
+      <div class="chart-card"><div class="chart-title">Nacionalidad</div><canvas id="ds-nac" style="max-height:180px"></canvas></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="prox-card">
+        <div class="prox-header green">Por ingresar — próximos 30 días</div>
+        <div id="ds-ingresar"></div>
+      </div>
+      <div class="prox-card">
+        <div class="prox-header amber">Por finalizar — próximos 30 días</div>
+        <div id="ds-finalizar"></div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════ -->
-<!-- PÁGINA: PRÓXIMOS                                            -->
-<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PRÓXIMOS EVENTOS -->
 <div id="page-proximos" class="page">
-  <div class="prox-card" style="grid-column:1/-1;margin-bottom:16px">
-      <div class="prox-header" style="background:rgba(0,180,216,0.15);color:var(--accent);border-bottom:1px solid rgba(0,180,216,0.2)">Ingresan hoy</div>
-      <div id="list-hoy"></div>
-    </div>
+  <div class="kpi-grid" id="kpi-proximos" style="margin-bottom:20px"></div>
+  <div class="prox-card">
+    <div class="prox-header blue">Ingresan hoy</div>
+    <div id="list-hoy"></div>
+  </div>
   <div class="proximos-grid">
     <div class="prox-card">
       <div class="prox-header green">Por ingresar — próximos 30 días</div>
@@ -259,18 +375,92 @@
       <div id="list-finalizar"></div>
     </div>
   </div>
+  <div class="proximos-grid" style="margin-top:14px">
+    <div class="prox-card">
+      <div class="prox-header blue">Próximos onsite — 30 días</div>
+      <div id="list-onsite-prox"></div>
+    </div>
+    <div class="prox-card">
+      <div class="prox-header green">Todos con fecha onsite</div>
+      <div id="list-onsite-all"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PENDIENTES -->
+<div id="page-pendientes" class="page">
+  <div class="kpi-grid" id="kpi-pendientes" style="margin-bottom:20px"></div>
+  <div class="kpi-grid" id="kpi-medical" style="margin-bottom:24px"></div>
+  <div class="section-title" style="margin-bottom:16px">Pendientes por checklist — activos</div>
+  <div class="pending-summary" id="pending-summary"></div>
+
+  <div class="section-title" style="margin-bottom:12px">Pendientes por persona</div>
+  <div class="pending-filter">
+    <button class="filter-btn active" data-pf="todos" onclick="setPendingFilter(this)">Todos</button>
+    <button class="filter-btn" data-pf="conpendientes" onclick="setPendingFilter(this)">Con pendientes</button>
+    <button class="filter-btn" data-pf="completos" onclick="setPendingFilter(this)">Completos</button>
+  </div>
+  <div class="pending-person-list" id="pending-person-list"></div>
 </div>
 
 <script>
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzRRFas8aKHIXlBqPkapJYvgoE6FVa0xt_DQk_FX5Gjj1i9LWJmjM_DC7lHYZBygjsP/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw4akfsSmiG6ENFn6jTDwzgmTORpn7o3JU2uWw8gIZRa-gt8_WZ2GJTlcuMAi2VNZL8/exec";
 
-let allData   = [];
-let sortCol   = "nombre";
-let sortAsc   = true;
-let activeFilter = "Todos";
-let charts    = {};
+const ONBOARDING_KEYS = [
+  { key: "welcomePack",             label: "Welcome Pack" },
+  { key: "laboralDocs",             label: "Laboral Docs" },
+  { key: "medicalCheck",            label: "Medical check" },
+  { key: "medicalCheckYes",         label: "Medical check YES" },
+  { key: "medicalCheckManaged",     label: "Medical check Managed" },
+  { key: "prlTraining",             label: "PRL Training" },
+  { key: "harassmentTraining",      label: "Harassment Training" },
+  { key: "readHarassmentProtocols", label: "Read Harassment protocols" },
+  { key: "readConflictGestion",     label: "Read Conflict gestion (54)" },
+  { key: "clockio",                 label: "Clockio" },
+];
 
-// ── NAVEGACIÓN ────────────────────────────────────────────────
+// Medical check logic:
+// medicalCheck=false → pendiente
+// medicalCheck=true + medicalCheckYes=false → optó por no hacerlo → completo
+// medicalCheck=true + medicalCheckYes=true + medicalCheckManaged=true → completo
+// medicalCheck=true + medicalCheckYes=true + medicalCheckManaged=false → pendiente
+function isMedicalDone(ob) {
+  if (!ob) return false;
+  if (!ob.medicalCheck) return false;           // no iniciado → pendiente
+  if (!ob.medicalCheckYes) return true;         // optó por no hacerlo → completo
+  return ob.medicalCheckManaged === true;        // hecho y gestionado → completo
+}
+
+function isPending(key, ob) {
+  if (!ob) return true;
+  if (key === "medicalCheckYes" || key === "medicalCheckManaged") {
+    // estos no se evalúan solos, se evalúan como grupo via medicalCheck
+    return false;
+  }
+  if (key === "medicalCheck") return !isMedicalDone(ob);
+  return !ob[key];
+}
+
+function isDone(key, ob) {
+  if (!ob) return false;
+  if (key === "medicalCheckYes" || key === "medicalCheckManaged") return false; // hidden from chips
+  if (key === "medicalCheck") return isMedicalDone(ob);
+  return !!ob[key];
+}
+
+// Keys to show in UI (medical sub-keys hidden, shown as one group)
+const ONBOARDING_KEYS_UI = ONBOARDING_KEYS.filter(k =>
+  k.key !== "medicalCheckYes" && k.key !== "medicalCheckManaged"
+);
+
+let allData = [], activos = [], finalizados = [], ingresanHoy = [], porIngresar = [], porFinalizar = [];
+let activeYear = 'todos';
+let deptCharts = {};
+let sortCol = "nombre", sortAsc = true, activeFilter = "Todos", activePendingFilter = "todos";
+let charts = {};
+
+const PALETTE = ["#00b4d8","#10b981","#f59e0b","#8b1a4a","#6366f1","#ec4899","#14b8a6","#f97316","#a855f7","#84cc16","#ef4444","#06b6d4"];
+
 function showPage(id, btn) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
@@ -278,7 +468,27 @@ function showPage(id, btn) {
   btn.classList.add("active");
 }
 
-// ── CARGA ─────────────────────────────────────────────────────
+function openModal(title, rows, dateField) {
+  document.getElementById("modal-title").textContent = title;
+  document.getElementById("modal-count").textContent = `${rows.length} persona${rows.length !== 1 ? "s" : ""}`;
+  document.getElementById("modal-body").innerHTML = rows.length
+    ? rows.map(r => `
+        <div class="modal-row">
+          <div class="modal-row-left">
+            <strong>${r.nombre}</strong>
+            <span>${[r.departamento, r.nivel, r.location, r.nacionalidad].filter(Boolean).join(" · ")}</span>
+          </div>
+          <div class="modal-date">${dateField ? fmtDate(r[dateField]) : (r.contacto || "")}</div>
+        </div>`).join("")
+    : `<div class="modal-empty">Sin resultados</div>`;
+  document.getElementById("modal").classList.add("open");
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById("modal"))
+    document.getElementById("modal").classList.remove("open");
+}
+
 async function loadData() {
   const btn = document.getElementById("btn-refresh");
   btn.classList.add("loading"); btn.textContent = "Cargando…";
@@ -286,322 +496,2170 @@ async function loadData() {
     const res  = await fetch(APPS_SCRIPT_URL);
     const json = await res.json();
     if (!json.ok) throw new Error("Respuesta inesperada");
-    allData = json.equipo;
+    allData = json.equipo.map(p => ({ ...p, antiguedad: calcAntiguedad(p.inicio) }));
+    activos = allData.filter(isActive);
+    const now = new Date();
+    finalizados  = allData.filter(p => { const f = parseDate(p.finEstimado); return f && f < now; });
+    ingresanHoy  = allData.filter(p => daysFrom(p.inicio) === 0);
+    porIngresar  = allData.filter(p => { const d = daysFrom(p.inicio); return d !== null && d > 0 && d <= 30; });
+    porFinalizar = allData.filter(p => { const d = daysFrom(p.finEstimado); return d !== null && d >= 0 && d <= 30; });
     buildStats();
     buildFilters();
     renderDir();
     renderProximos();
+    renderPendientes();
+    buildProximosKPIs();
+    buildPendientesKPIs();
     document.getElementById("last-update").textContent =
       "Actualizado: " + new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
-  } catch(err) {
-    alert("Error al cargar datos: " + err.message);
-  } finally {
-    btn.classList.remove("loading"); btn.textContent = "↻ Actualizar";
-  }
+  } catch(err) { alert("Error: " + err.message); }
+  finally { btn.classList.remove("loading"); btn.textContent = "↻ Actualizar"; }
 }
-
-// ── UTILIDADES ────────────────────────────────────────────────
-const hoy = () => new Date();
 
 function parseDate(v) {
   if (!v) return null;
-  const d = new Date(v);
-  return isNaN(d) ? null : d;
+  if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
+    const [y,m,d] = v.split("-").map(Number);
+    return new Date(y, m-1, d);
+  }
+  const d = new Date(v); return isNaN(d) ? null : d;
 }
-
 function fmtDate(v) {
-  const d = parseDate(v);
-  if (!d) return "—";
+  const d = parseDate(v); if (!d) return "—";
   return d.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
 }
-
-function monthKey(v) {
-  const d = parseDate(v);
-  if (!d) return null;
-  const mes = ["ene","feb","mar","abr","may","jun","jul","ago","sept","oct","nov","dic"][d.getMonth()];
-  return `${d.getFullYear()}-${mes}`;
+function daysFrom(v) {
+  const d = parseDate(v); if (!d) return null;
+  const now = new Date();
+  const dO = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const nO = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((dO - nO) / 86400000);
 }
-
 function isActive(p) {
-  const now = hoy();
-  const ini = parseDate(p.inicio);
-  const fin = parseDate(p.finEstimado);
-  if (!ini) return false;
-  if (ini > now) return false;
+  const now = new Date(), ini = parseDate(p.inicio), fin = parseDate(p.finEstimado);
+  if (!ini || ini > now) return false;
   if (fin && fin < now) return false;
   return true;
 }
+function calcAntiguedad(inicio) {
+  const d = parseDate(inicio); if (!d) return null;
+  const now = new Date(); if (d > now) return null;
+  return (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
+}
+function antLabel(m) {
+  if (m === null) return "—";
+  if (m < 6)  return "< 6 meses";
+  if (m < 12) return "6-12 meses";
+  if (m < 24) return "1-2 años";
+  if (m < 36) return "2-3 años";
+  return "+ 3 años";
+}
+function monthKey(v) {
+  const d = parseDate(v); if (!d) return null;
+  return `${d.getFullYear()}-${["ene","feb","mar","abr","may","jun","jul","ago","sept","oct","nov","dic"][d.getMonth()]}`;
+}
+function pct(n, total) { return total ? Math.round(n / total * 100) : 0; }
 
-function daysFrom(v) {
-  const d = parseDate(v);
-  if (!d) return null;
-  return Math.round((d - hoy()) / 86400000);
+function makeDonut(id, labels, data, clickFn) {
+  if (charts[id]) charts[id].destroy();
+  const total = data.reduce((a,b)=>a+b,0);
+  charts[id] = new Chart(document.getElementById(id), {
+    type: "doughnut",
+    data: { labels, datasets: [{ data, backgroundColor: PALETTE, borderWidth: 0 }] },
+    options: {
+      responsive: true, cutout: "52%",
+      onClick(evt, elements) {
+        if (!elements.length || !clickFn) return;
+        const label = labels[elements[0].index];
+        openModal(label, clickFn(label), "inicio");
+      },
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { color: "#9ca3af", boxWidth: 12, padding: 8, font: { size: 11 } },
+          onClick(evt, item) { if (clickFn) openModal(item.text, clickFn(item.text), "inicio"); }
+        },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} (${pct(ctx.raw, total)}%)` } }
+      }
+    },
+    plugins: [{
+      id: "pctLabels",
+      afterDatasetDraw(chart) {
+        const { ctx } = chart;
+        chart.data.datasets.forEach((dataset, i) => {
+          chart.getDatasetMeta(i).data.forEach((arc, idx) => {
+            const p = pct(dataset.data[idx], total);
+            if (p < 5) return;
+            const { x, y } = arc.tooltipPosition();
+            ctx.save();
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 11px Inter, system-ui, sans-serif";
+            ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText(p + "%", x, y);
+            ctx.restore();
+          });
+        });
+      }
+    }]
+  });
+  document.getElementById(id).style.cursor = clickFn ? "pointer" : "default";
 }
 
-// ── ESTADÍSTICAS ──────────────────────────────────────────────
+function makeBar(id, labels, datasets, horizontal, clickFn) {
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(document.getElementById(id), {
+    type: "bar",
+    data: { labels, datasets },
+    options: {
+      indexAxis: horizontal ? "y" : "x",
+      responsive: true,
+      onClick(evt, elements) {
+        if (!elements.length || !clickFn) return;
+        const idx = elements[0].index;
+        const dsIdx = elements[0].datasetIndex;
+        clickFn(labels[idx], dsIdx);
+      },
+      plugins: {
+        legend: { position: "top", labels: { color: "#9ca3af", boxWidth: 12, font: { size: 11 } } },
+        datalabels: false
+      },
+      scales: {
+        x: { grid: { color: "rgba(255,255,255,0.04)" }, ticks: { color: "#6b7280", maxRotation: horizontal ? 0 : 45 } },
+        y: { grid: { color: "rgba(255,255,255,0.04)" }, ticks: { color: "#6b7280" }, beginAtZero: true }
+      }
+    },
+    plugins: [{
+      id: "barLabels",
+      afterDatasetDraw(chart) {
+        const { ctx } = chart;
+        chart.data.datasets.forEach((dataset, i) => {
+          const meta = chart.getDatasetMeta(i);
+          meta.data.forEach((bar, idx) => {
+            const val = dataset.data[idx];
+            if (!val) return;
+            const { x, y } = bar.getCenterPoint ? bar.getCenterPoint() : { x: bar.x, y: bar.y };
+            ctx.save();
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 10px Inter, system-ui, sans-serif";
+            ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText(val, x, y - (horizontal ? 0 : 10));
+            ctx.restore();
+          });
+        });
+      }
+    }]
+  });
+  if (clickFn) document.getElementById(id).style.cursor = "pointer";
+}
+
+function makeLine(id, labels, datasets) {
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(document.getElementById(id), {
+    type: "line",
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: "top", labels: { color: "#9ca3af", boxWidth: 12, font: { size: 11 } } } },
+      scales: {
+        x: { grid: { color: "rgba(255,255,255,0.04)" }, ticks: { color: "#6b7280", maxRotation: 45 } },
+        y: { grid: { color: "rgba(255,255,255,0.04)" }, ticks: { color: "#6b7280" }, beginAtZero: true }
+      }
+    }
+  });
+}
+
 function buildStats() {
-  const now    = hoy();
-  const total  = allData.length;
-  const activos = allData.filter(isActive).length;
-  const finalizados = allData.filter(p => { const f = parseDate(p.finEstimado); return f && f < now; }).length;
+  const total = allData.length, activosN = activos.length;
 
-  const porIngresar = allData.filter(p => {
-    const d = daysFrom(p.inicio);
-    return d !== null && d > 0 && d <= 30;
-  }).length;
-
-  const ingresanHoy = allData.filter(p => {
-    const d = daysFrom(p.inicio);
-    return d !== null && d === 0;
-  }).length;
-
-  const porFinalizar = allData.filter(p => {
-    const d = daysFrom(p.finEstimado);
-    return d !== null && d >= 0 && d <= 30;
-  }).length;
+  // KPIs onsite
+  const proxOnsite = allData.filter(p => { const d = daysFrom(p.inicioOnSite); return d !== null && d >= 0 && d <= 30; });
+  const totalOnsite = allData.filter(p => p.inicioOnSite && p.inicioOnSite !== "");
 
   document.getElementById("kpi-grid").innerHTML = `
-    <div class="kpi accent"><div class="kpi-value">${total}</div><div class="kpi-label">Total personal</div></div>
-    <div class="kpi green"><div class="kpi-value">${activos}</div><div class="kpi-label">Activos hoy</div><div class="kpi-sub">${Math.round(activos/total*100)}%</div></div>
-    <div class="kpi wine"><div class="kpi-value">${finalizados}</div><div class="kpi-label">Finalizados</div></div>
-    ${ingresanHoy > 0 ? `<div class="kpi green"><div class="kpi-value">${ingresanHoy}</div><div class="kpi-label">Ingresan hoy</div></div>` : ""}
-    <div class="kpi amber"><div class="kpi-value">${porIngresar}</div><div class="kpi-label">Por ingresar</div><div class="kpi-sub">próximos 30 días</div></div>
-    <div class="kpi red"><div class="kpi-value">${porFinalizar}</div><div class="kpi-label">Por finalizar</div><div class="kpi-sub">próximos 30 días</div></div>
+    <div class="kpi accent" onclick="openModal('Todo el personal', allData, 'inicio')">
+      <div class="kpi-value">${total}</div><div class="kpi-label">Total personal</div><div class="kpi-hint">↗ ver lista</div>
+    </div>
+    <div class="kpi green" onclick="openModal('Activos hoy', activos, 'inicio')">
+      <div class="kpi-value">${activosN}</div><div class="kpi-label">Activos hoy</div>
+      <div class="kpi-sub">${pct(activosN,total)}% del total</div><div class="kpi-hint">↗ ver lista</div>
+    </div>
+    <div class="kpi wine" onclick="openModal('Finalizados', finalizados, 'finEstimado')">
+      <div class="kpi-value">${finalizados.length}</div><div class="kpi-label">Finalizados</div>
+      <div class="kpi-sub">${pct(finalizados.length,total)}% del total</div><div class="kpi-hint">↗ ver lista</div>
+    </div>
+    <div class="kpi ${ingresanHoy.length > 0 ? 'accent' : 'amber'}" onclick="openModal('Ingresan hoy', ingresanHoy, 'inicio')">
+      <div class="kpi-value">${ingresanHoy.length}</div><div class="kpi-label">Ingresan hoy</div><div class="kpi-hint">↗ ver lista</div>
+    </div>
+    <div class="kpi amber" onclick="openModal('Por ingresar — próximos 30 días', porIngresar, 'inicio')">
+      <div class="kpi-value">${porIngresar.length}</div><div class="kpi-label">Por ingresar</div>
+      <div class="kpi-sub">próximos 30 días</div><div class="kpi-hint">↗ ver lista</div>
+    </div>
+    <div class="kpi red" onclick="openModal('Por finalizar — próximos 30 días', porFinalizar, 'finEstimado')">
+      <div class="kpi-value">${porFinalizar.length}</div><div class="kpi-label">Por finalizar</div>
+      <div class="kpi-sub">próximos 30 días</div><div class="kpi-hint">↗ ver lista</div>
+    </div>
+    <div class="kpi blue" onclick="openModal('Próximos onsite — 30 días', proxOnsite, 'inicioOnSite')">
+      <div class="kpi-value">${proxOnsite.length}</div><div class="kpi-label">Próximos onsite</div>
+      <div class="kpi-sub">próximos 30 días</div><div class="kpi-hint">↗ ver lista</div>
+    </div>
+
   `;
 
-  // Location pills
-  const locCount = {};
-  allData.forEach(p => { const l = p.location || "Sin datos"; locCount[l] = (locCount[l]||0)+1; });
-  document.getElementById("loc-grid").innerHTML = Object.entries(locCount)
-    .sort((a,b) => b[1]-a[1])
-    .map(([loc,n]) => `
-      <div class="loc-card">
-        <span class="loc-name">${loc}</span>
-        <span class="loc-count">${n}</span>
-        <span class="loc-pct">${Math.round(n/total*100)}%</span>
-      </div>`).join("");
+  // Location
+  const locTotal = {}, locActive = {};
+  allData.forEach(p => { const l=p.location||"Sin datos"; locTotal[l]=(locTotal[l]||0)+1; });
+  activos.forEach(p => { const l=p.location||"Sin datos"; locActive[l]=(locActive[l]||0)+1; });
+  const allLocs = Object.keys(locTotal).sort((a,b)=>(locTotal[b]||0)-(locTotal[a]||0));
 
-  buildCharts(activos, locCount);
-  buildDeptTable();
-  buildTimeline();
-}
+  document.getElementById("loc-grid").innerHTML = allLocs.map(loc => {
+    const an=locActive[loc]||0, tn=locTotal[loc]||0;
+    return `<div class="loc-card" onclick="openModal('Location: ${loc} — activos', activos.filter(p=>(p.location||'Sin datos')==='${loc}'), 'inicio')">
+      <div class="loc-name">${loc}</div>
+      <div class="loc-active-row"><span class="loc-active-n">${an}</span><span class="loc-active-pct">${pct(an,activosN)}%</span></div>
+      <div class="loc-total-row">Total: ${tn} · ${pct(tn,total)}%</div>
+      <div class="loc-hint">↗ ver activos</div>
+    </div>`;
+  }).join("");
 
-function buildCharts(activos, locCount) {
-  const chartDefaults = {
-    color: "#9ca3af",
-    borderColor: "rgba(255,255,255,0.08)",
-  };
-  Chart.defaults.color = "#9ca3af";
+  // Donuts
+  const nivelTotal={}, nivelActive={};
+  allData.forEach(p=>{const n=p.nivel||"Sin nivel";nivelTotal[n]=(nivelTotal[n]||0)+1;});
+  activos.forEach(p=>{const n=p.nivel||"Sin nivel";nivelActive[n]=(nivelActive[n]||0)+1;});
 
-  const palette = ["#00b4d8","#8b1a4a","#10b981","#f59e0b","#6366f1","#ec4899","#14b8a6","#f97316"];
+  makeDonut("chart-location-active", Object.keys(locActive), Object.values(locActive), l=>activos.filter(p=>(p.location||"Sin datos")===l));
+  makeDonut("chart-nivel-active",    Object.keys(nivelActive), Object.values(nivelActive), l=>activos.filter(p=>(p.nivel||"Sin nivel")===l));
+  makeDonut("chart-location-total",  Object.keys(locTotal), Object.values(locTotal), l=>allData.filter(p=>(p.location||"Sin datos")===l));
+  makeDonut("chart-nivel-total",     Object.keys(nivelTotal), Object.values(nivelTotal), l=>allData.filter(p=>(p.nivel||"Sin nivel")===l));
 
-  // Location donut
-  if (charts.location) charts.location.destroy();
-  charts.location = new Chart(document.getElementById("chart-location"), {
-    type: "doughnut",
-    data: {
-      labels: Object.keys(locCount),
-      datasets: [{ data: Object.values(locCount), backgroundColor: palette, borderWidth: 0 }]
-    },
-    options: { plugins: { legend: { position: "bottom" } }, cutout: "60%" }
+  const nacCount={}, nacCountActive={};
+  allData.forEach(p=>{const n=p.nacionalidad||"Sin datos";nacCount[n]=(nacCount[n]||0)+1;});
+  activos.forEach(p=>{const n=p.nacionalidad||"Sin datos";nacCountActive[n]=(nacCountActive[n]||0)+1;});
+  const nacSorted=Object.entries(nacCount).sort((a,b)=>b[1]-a[1]);
+  const nacTop10=nacSorted.slice(0,10).map(e=>e[0]);
+  makeBar("chart-nac", nacTop10, [
+    {label:"Total",   data:nacTop10.map(n=>nacCount[n]||0),       backgroundColor:"rgba(139,26,74,0.7)",  borderRadius:3},
+    {label:"Activos", data:nacTop10.map(n=>nacCountActive[n]||0), backgroundColor:"rgba(0,180,216,0.7)", borderRadius:3}
+  ], false, (nac, dsIdx) => {
+    const lista = dsIdx===0 ? allData.filter(p=>(p.nacionalidad||"Sin datos")===nac) : activos.filter(p=>(p.nacionalidad||"Sin datos")===nac);
+    openModal(`${nac} — ${dsIdx===0?"total":"activos"}`, lista, "inicio");
   });
 
-  // Nivel donut
-  const nivelCount = {};
-  allData.forEach(p => { const n = p.nivel || "Sin nivel"; nivelCount[n] = (nivelCount[n]||0)+1; });
-  if (charts.nivel) charts.nivel.destroy();
-  charts.nivel = new Chart(document.getElementById("chart-nivel"), {
-    type: "doughnut",
-    data: {
-      labels: Object.keys(nivelCount),
-      datasets: [{ data: Object.values(nivelCount), backgroundColor: palette, borderWidth: 0 }]
-    },
-    options: { plugins: { legend: { position: "bottom" } }, cutout: "60%" }
+  const antRanges={"< 6 meses":0,"6-12 meses":0,"1-2 años":0,"2-3 años":0,"+ 3 años":0};
+  activos.forEach(p=>{const l=antLabel(p.antiguedad);if(l!=="—")antRanges[l]++;});
+  const antL=Object.keys(antRanges).filter(k=>antRanges[k]>0);
+  makeDonut("chart-antiguedad", antL, antL.map(k=>antRanges[k]), l=>activos.filter(p=>antLabel(p.antiguedad)===l));
+
+  // Dept stats
+  const deptTot={}, deptAct={};
+  allData.forEach(p=>{const d=p.departamento||"Sin dept.";deptTot[d]=(deptTot[d]||0)+1;});
+  activos.forEach(p=>{const d=p.departamento||"Sin dept.";deptAct[d]=(deptAct[d]||0)+1;});
+  const depts=[...new Set(Object.keys(deptTot))].sort();
+
+  makeLine("chart-dept", depts, [
+    {label:"Total",   data:depts.map(d=>deptTot[d]||0), borderColor:"#8b1a4a", backgroundColor:"rgba(139,26,74,0.1)",  tension:0.3, fill:true, pointRadius:3},
+    {label:"Activos", data:depts.map(d=>deptAct[d]||0), borderColor:"#00b4d8", backgroundColor:"rgba(0,180,216,0.08)", tension:0.3, fill:true, pointRadius:3}
+  ]);
+
+  // Ratio ON SITE vs HYBRID por dept
+  const deptOnsite={}, deptHybrid={};
+  activos.forEach(p=>{
+    const d=p.departamento||"Sin dept.";
+    if((p.location||"").toUpperCase()==="ON SITE") deptOnsite[d]=(deptOnsite[d]||0)+1;
+    if((p.location||"").toUpperCase()==="HYBRID")  deptHybrid[d]=(deptHybrid[d]||0)+1;
   });
-}
-
-function buildDeptTable() {
-  const now = hoy();
-  const totalByDept  = {};
-  const activeByDept = {};
-
-  allData.forEach(p => {
-    const d = p.departamento || "Sin dept.";
-    totalByDept[d]  = (totalByDept[d]  || 0) + 1;
-    if (isActive(p)) activeByDept[d] = (activeByDept[d] || 0) + 1;
-  });
-
-  const sortedTotal  = Object.entries(totalByDept).sort((a,b) => a[0].localeCompare(b[0]));
-  const sortedActive = Object.entries(activeByDept).sort((a,b) => a[0].localeCompare(b[0]));
-  const sumTotal  = sortedTotal.reduce((s,[,n])=>s+n,0);
-  const sumActive = sortedActive.reduce((s,[,n])=>s+n,0);
-
-  document.getElementById("dept-total-body").innerHTML  = sortedTotal.map(([d,n])=>`<tr><td>${d}</td><td>${n}</td></tr>`).join("");
-  document.getElementById("dept-active-body").innerHTML = sortedActive.map(([d,n])=>`<tr><td>${d}</td><td>${n}</td></tr>`).join("");
-  document.getElementById("dept-total-sum").textContent  = sumTotal;
-  document.getElementById("dept-active-sum").textContent = sumActive;
-
-  // Chart dept
-  const depts = [...new Set([...Object.keys(totalByDept)])].sort();
-  if (charts.dept) charts.dept.destroy();
-  charts.dept = new Chart(document.getElementById("chart-dept"), {
-    type: "line",
+  // Ratio horizontal stacked
+  if (charts["chart-ratio-dept"]) charts["chart-ratio-dept"].destroy();
+  charts["chart-ratio-dept"] = new Chart(document.getElementById("chart-ratio-dept"), {
+    type: "bar",
     data: {
       labels: depts,
       datasets: [
-        { label: "Total",   data: depts.map(d=>totalByDept[d]||0),  borderColor:"#8b1a4a", backgroundColor:"rgba(139,26,74,0.1)",  tension:0.3, fill:true, pointRadius:4 },
-        { label: "Activos", data: depts.map(d=>activeByDept[d]||0), borderColor:"#00b4d8", backgroundColor:"rgba(0,180,216,0.1)", tension:0.3, fill:true, pointRadius:4 }
+        {label:"ON SITE", data:depts.map(d=>deptOnsite[d]||0), backgroundColor:"rgba(16,185,129,0.8)", borderRadius:0},
+        {label:"HYBRID",  data:depts.map(d=>deptHybrid[d]||0), backgroundColor:"rgba(0,180,216,0.8)",  borderRadius:0},
       ]
     },
     options: {
+      indexAxis: "y",
       responsive: true,
-      plugins: { legend: { position: "top" } },
       scales: {
-        x: { grid: { color: "rgba(255,255,255,0.05)" }, ticks: { maxRotation: 45 } },
-        y: { grid: { color: "rgba(255,255,255,0.05)" }, beginAtZero: true }
+        x: { stacked:true, grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#6b7280"}, beginAtZero:true },
+        y: { stacked:true, grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#e5e7eb", font:{size:11}} }
+      },
+      plugins: {
+        legend:{position:"top",labels:{color:"#9ca3af",boxWidth:12,font:{size:11}}},
+        tooltip:{callbacks:{label:ctx=>{
+          const d=ctx.label; const tot=(deptOnsite[d]||0)+(deptHybrid[d]||0);
+          return ` ${ctx.dataset.label}: ${ctx.raw} (${tot?Math.round(ctx.raw/tot*100):0}%)`;
+        }}}
+      },
+      onClick(evt,elements){
+        if(!elements.length) return;
+        const dept=depts[elements[0].index];
+        const loc=elements[0].datasetIndex===0?"ON SITE":"HYBRID";
+        openModal(`${dept} — ${loc}`, activos.filter(p=>(p.departamento||"Sin dept.")===dept&&(p.location||"").toUpperCase()===loc), "inicio");
       }
-    }
-  });
-}
-
-function buildTimeline() {
-  const ingresos = {};
-  const salidas  = {};
-
-  allData.forEach(p => {
-    const ki = monthKey(p.inicio);
-    const ks = monthKey(p.finEstimado);
-    if (ki) ingresos[ki] = (ingresos[ki]||0)+1;
-    if (ks) salidas[ks]  = (salidas[ks] ||0)+1;
-  });
-
-  const allKeys = [...new Set([...Object.keys(ingresos),...Object.keys(salidas)])].sort();
-
-  if (charts.timeline) charts.timeline.destroy();
-  charts.timeline = new Chart(document.getElementById("chart-timeline"), {
-    type: "bar",
-    data: {
-      labels: allKeys,
-      datasets: [
-        { label: "Ingresos", data: allKeys.map(k=>ingresos[k]||0), backgroundColor:"rgba(0,180,216,0.7)", borderRadius:4 },
-        { label: "Salidas",  data: allKeys.map(k=>salidas[k] ||0), backgroundColor:"rgba(139,26,74,0.7)",  borderRadius:4 }
-      ]
     },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: "top" } },
-      scales: {
-        x: { grid: { color: "rgba(255,255,255,0.05)" }, ticks: { maxRotation: 45 } },
-        y: { grid: { color: "rgba(255,255,255,0.05)" }, beginAtZero: true }
+    plugins:[{
+      id:"barLabels",
+      afterDatasetDraw(chart){
+        const {ctx}=chart;
+        chart.data.datasets.forEach((ds,i)=>{
+          chart.getDatasetMeta(i).data.forEach((bar,idx)=>{
+            const v=ds.data[idx]; if(!v) return;
+            const {x,y}=bar.getCenterPoint();
+            ctx.save();ctx.fillStyle="#fff";ctx.font="bold 10px Inter,sans-serif";
+            ctx.textAlign="center";ctx.textBaseline="middle";
+            ctx.fillText(v,x,y);ctx.restore();
+          });
+        });
       }
-    }
+    }]
   });
+
+  // Permanencia > 6 meses por dept
+  const deptPerm={};
+  activos.forEach(p=>{
+    if(p.antiguedad===null||p.antiguedad<6) return;
+    const d=p.departamento||"Sin dept.";
+    deptPerm[d]=(deptPerm[d]||0)+1;
+  });
+  makeBar("chart-ant-dept", depts, [{
+    label:"Activos > 6 meses",
+    data: depts.map(d=>deptPerm[d]||0),
+    backgroundColor:"rgba(245,158,11,0.75)", borderRadius:4
+  }], false, (dept) => {
+    openModal(`${dept} — más de 6 meses`, activos.filter(p=>(p.departamento||"Sin dept.")===dept&&p.antiguedad!==null&&p.antiguedad>=6), "inicio");
+  });
+
+  // Timeline con filtro por año
+  const ingresos={}, salidas={};
+  allData.forEach(p=>{
+    const ki=monthKey(p.inicio), ks=monthKey(p.finEstimado);
+    if(ki) ingresos[ki]=(ingresos[ki]||0)+1;
+    if(ks) salidas[ks]=(salidas[ks]||0)+1;
+  });
+  window._ingresos = ingresos; window._salidas = salidas;
+  const allKeys=[...new Set([...Object.keys(ingresos),...Object.keys(salidas)])].sort();
+  const years=[...new Set(allKeys.map(k=>k.split('-')[0]))].sort();
+
+  // Build year filter buttons
+  const yf = document.getElementById("year-filter");
+  if(yf) {
+    yf.innerHTML = ['todos',...years].map(y=>
+      `<button class="filter-btn ${activeYear===y?'active':''}" onclick="setYearFilter('${y}')">${y==='todos'?'Todos':y}</button>`
+    ).join("");
+  }
+  buildTimeline();
+
+  // Totals panels under donuts
+  const locTotList = Object.entries(locTotal).sort((a,b)=>b[1]-a[1]);
+  document.getElementById("totals-location").innerHTML = locTotList.map(([l,n])=>
+    `<span style="margin-right:10px">${l}: <b style="color:var(--white)">${n}</b></span>`).join("");
+  const nivTotList = Object.entries(nivelTotal).sort((a,b)=>b[1]-a[1]);
+  document.getElementById("totals-nivel").innerHTML = nivTotList.map(([n,c])=>
+    `<span style="margin-right:10px">${n}: <b style="color:var(--white)">${c}</b></span>`).join("");
+  const antTotList = Object.entries({"< 6 meses":0,"6-12 meses":0,"1-2 años":0,"2-3 años":0,"+ 3 años":0});
+  allData.forEach(p=>{const l=antLabel(p.antiguedad);if(l!=="—"&&antTotList.find(x=>x[0]===l))antTotList.find(x=>x[0]===l)[1]++;});
+  document.getElementById("totals-antiguedad").innerHTML = antTotList.filter(([,v])=>v>0).map(([l,n])=>
+    `<span style="margin-right:10px">${l}: <b style="color:var(--white)">${n}</b></span>`).join("");
+
+  // Dept table
+  document.getElementById("dept-body").innerHTML = depts.map(d=>`
+    <tr onclick="openModal('Depto: ${d}', activos.filter(p=>(p.departamento||'Sin dept.')==='${d}'), 'inicio')">
+      <td>${d}</td><td>${deptAct[d]||0}</td><td>${deptTot[d]||0}</td><td>${pct(deptTot[d]||0,total)}%</td>
+    </tr>`).join("");
+  document.getElementById("dept-active-sum").textContent = activosN;
+  document.getElementById("dept-total-sum").textContent  = total;
+
+  // Nac table
+  document.getElementById("nac-body").innerHTML = nacSorted.map(([n,c])=>{ const ca=nacCountActive[n]||0; return `
+    <tr onclick="openModal('Nacionalidad: ${n}', allData.filter(p=>(p.nacionalidad||'Sin datos')==='${n}'), 'inicio')">
+      <td>${n}</td><td>${ca}</td><td>${c}</td><td>${pct(c,total)}%</td>
+    </tr>`;}).join("");
+  document.getElementById("nac-sum").textContent = total;
+
+  // Rotación últimos 6 meses
+  const now6 = new Date(); now6.setMonth(now6.getMonth()-6);
+  const rotIn  = allData.filter(p=>{ const d=parseDate(p.inicio); return d&&d>=now6; });
+  const rotOut = allData.filter(p=>{ const d=parseDate(p.finEstimado); const n=new Date(); return d&&d>=now6&&d<=n; });
+  document.getElementById("rotacion-body").innerHTML = `
+    <tr onclick="openModal('Ingresos últimos 6 meses', rotIn, 'inicio')"><td>Ingresos</td><td>${rotIn.length}</td></tr>
+    <tr onclick="openModal('Salidas últimos 6 meses', rotOut, 'finEstimado')"><td>Salidas</td><td>${rotOut.length}</td></tr>
+    <tr><td style="color:var(--muted)">Balance</td><td style="color:${rotIn.length-rotOut.length>=0?'var(--green)':'var(--red)'}">${rotIn.length-rotOut.length>=0?'+':''}${rotIn.length-rotOut.length}</td></tr>
+  `;
 }
 
-// ── DIRECTORIO ────────────────────────────────────────────────
+// DIRECTORIO
 function buildFilters() {
-  const depts = ["Todos", ...new Set(allData.map(p=>p.departamento).filter(Boolean))].sort();
+  const depts=["Todos",...new Set(allData.map(p=>p.departamento).filter(Boolean))].sort();
   document.getElementById("filter-group").innerHTML = depts.map(d=>
     `<button class="filter-btn ${d==="Todos"?"active":""}" data-dept="${d}" onclick="setFilter(this)">${d}</button>`
   ).join("");
 }
-
 function setFilter(btn) {
-  document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-  activeFilter = btn.dataset.dept;
-  renderDir();
+  document.querySelectorAll("#filter-group .filter-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active"); activeFilter=btn.dataset.dept; renderDir(); buildDeptStatsPanel(activeFilter);
 }
-
 function sortBy(col) {
-  sortAsc = sortCol === col ? !sortAsc : true;
-  sortCol = col;
+  sortAsc = sortCol===col?!sortAsc:true; sortCol=col;
   document.querySelectorAll("table.main thead th").forEach(th=>th.classList.remove("sorted"));
-  event.target.classList.add("sorted");
-  renderDir();
+  event.target.classList.add("sorted"); renderDir();
 }
-
 function renderDir() {
-  const query = (document.getElementById("search").value || "").toLowerCase().trim();
-  let filtered = allData.filter(p => {
-    const matchDept   = activeFilter === "Todos" || p.departamento === activeFilter;
-    const matchSearch = !query || Object.values(p).some(v => String(v).toLowerCase().includes(query));
-    return matchDept && matchSearch;
+  const query=(document.getElementById("search").value||"").toLowerCase().trim();
+  let filtered=allData.filter(p=>{
+    const md=activeFilter==="Todos"||p.departamento===activeFilter;
+    const ms=!query||Object.values(p).some(v=>String(v).toLowerCase().includes(query));
+    return md&&ms;
   });
-
-  filtered.sort((a,b) => {
-    const va = String(a[sortCol]||"").toLowerCase();
-    const vb = String(b[sortCol]||"").toLowerCase();
-    return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+  filtered.sort((a,b)=>{
+    const va=sortCol==="antiguedad"?(a.antiguedad??-1):String(a[sortCol]||"").toLowerCase();
+    const vb=sortCol==="antiguedad"?(b.antiguedad??-1):String(b[sortCol]||"").toLowerCase();
+    return typeof va==="number"?(sortAsc?va-vb:vb-va):(sortAsc?va.localeCompare(vb):vb.localeCompare(va));
   });
-
-  document.getElementById("results-count").textContent = `${filtered.length} persona${filtered.length!==1?"s":""}`;
-
-  const empty = document.getElementById("empty");
-  const table = document.querySelector("table.main");
-
-  if (filtered.length === 0) { empty.style.display="block"; table.style.display="none"; return; }
-  empty.style.display="none"; table.style.display="table";
-
-  document.getElementById("tbody").innerHTML = filtered.map(p => {
-    const initials = p.nombre.split(" ").slice(0,2).map(w=>w[0]||"").join("").toUpperCase() || "?";
-    const dFin = daysFrom(p.finEstimado);
-    let finClass = "date-cell";
-    if (dFin !== null && dFin >= 0 && dFin <= 30) finClass += " date-warn";
-    else if (dFin !== null && dFin > 30) finClass += " date-ok";
-
+  document.getElementById("results-count").textContent=`${filtered.length} persona${filtered.length!==1?"s":""}`;
+  const empty=document.getElementById("empty"),table=document.querySelector("table.main");
+  if(!filtered.length){empty.style.display="block";table.style.display="none";return;}
+  empty.style.display="none";table.style.display="table";
+  document.getElementById("tbody").innerHTML=filtered.map(p=>{
+    const ini=p.nombre.split(" ").slice(0,2).map(w=>w[0]||"").join("").toUpperCase()||"?";
+    const dFin=daysFrom(p.finEstimado);
+    let fc="date-cell"; if(dFin!==null&&dFin>=0&&dFin<=30)fc+=" date-warn";
     return `<tr>
-      <td><div class="name-cell"><div class="avatar">${initials}</div><strong>${p.nombre||"—"}</strong></div></td>
+      <td><div class="name-cell"><div class="avatar">${ini}</div><strong>${p.nombre||"—"}</strong></div></td>
       <td>${p.departamento?`<span class="badge">${p.departamento}</span>`:"—"}</td>
       <td>${p.nivel?`<span class="badge badge-level">${p.nivel}</span>`:"—"}</td>
       <td>${p.location?`<span class="badge badge-loc">${p.location}</span>`:"—"}</td>
-      <td style="font-size:12px">${p.nacionalidad||"—"}</td>
+      <td style="font-size:11px">${p.nacionalidad||"—"}</td>
+      <td style="font-size:11px;color:var(--muted)">${p.contacto||"—"}</td>
       <td>${p.emailPro?`<a class="email-link" href="mailto:${p.emailPro}">${p.emailPro}</a>`:"—"}</td>
       <td class="date-cell">${fmtDate(p.inicio)}</td>
-      <td class="${finClass}">${fmtDate(p.finEstimado)}</td>
+      <td class="date-cell">${fmtDate(p.inicioOnSite)}</td>
+      <td class="${fc}">${fmtDate(p.finEstimado)}</td>
+      <td class="date-cell">${antLabel(p.antiguedad)}</td>
     </tr>`;
   }).join("");
 }
 
-// ── PRÓXIMOS ──────────────────────────────────────────────────
+// PRÓXIMOS
 function renderProximos() {
-  const ingresanHoy = allData
-    .filter(p => daysFrom(p.inicio) === 0)
-    .sort((a,b) => a.nombre.localeCompare(b.nombre));
+  const hoy  = allData.filter(p=>daysFrom(p.inicio)===0).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  const entr = allData.filter(p=>{const d=daysFrom(p.inicio);return d!==null&&d>0&&d<=30;}).sort((a,b)=>new Date(a.inicio)-new Date(b.inicio));
+  const sal  = allData.filter(p=>{const d=daysFrom(p.finEstimado);return d!==null&&d>=0&&d<=30;}).sort((a,b)=>new Date(a.finEstimado)-new Date(b.finEstimado));
+  const onsiteProx = allData.filter(p=>{const d=daysFrom(p.inicioOnSite);return d!==null&&d>0&&d<=30;}).sort((a,b)=>new Date(a.inicioOnSite)-new Date(b.inicioOnSite));
+  const onsiteAll  = allData.filter(p=>p.inicioOnSite&&p.inicioOnSite!=="").sort((a,b)=>new Date(a.inicioOnSite)-new Date(b.inicioOnSite));
 
-  const porIngresar = allData
-    .filter(p => { const d = daysFrom(p.inicio); return d !== null && d > 0 && d <= 30; })
-    .sort((a,b) => new Date(a.inicio) - new Date(b.inicio));
+  const row=(p,f)=>`<div class="prox-row"><div><div style="font-weight:500">${p.nombre}</div><div style="font-size:11px;color:var(--muted)">${p.departamento} · ${p.nivel} · ${p.location||""}</div></div><div class="prox-date">${fmtDate(p[f])}</div></div>`;
+  const none=t=>`<div class="prox-row" style="color:var(--muted)">${t}</div>`;
 
-  const porFinalizar = allData
-    .filter(p => { const d = daysFrom(p.finEstimado); return d !== null && d >= 0 && d <= 30; })
-    .sort((a,b) => new Date(a.finEstimado) - new Date(b.finEstimado));
+  document.getElementById("list-hoy").innerHTML       = hoy.length       ? hoy.map(p=>row(p,"inicio")).join("")           : none("Nadie ingresa hoy");
+  document.getElementById("list-ingresar").innerHTML  = entr.length      ? entr.map(p=>row(p,"inicio")).join("")          : none("Ninguno en los próximos 30 días");
+  document.getElementById("list-finalizar").innerHTML = sal.length       ? sal.map(p=>row(p,"finEstimado")).join("")      : none("Ninguno en los próximos 30 días");
+  document.getElementById("list-onsite-prox").innerHTML = onsiteProx.length ? onsiteProx.map(p=>row(p,"inicioOnSite")).join("") : none("Ninguno en los próximos 30 días");
+  document.getElementById("list-onsite-all").innerHTML  = onsiteAll.length  ? onsiteAll.map(p=>row(p,"inicioOnSite")).join("")  : none("Sin fechas onsite registradas");
+}
 
-  const rowHtml = (p, dateField) => `
-    <div class="prox-row">
-      <div>
-        <div style="font-weight:500">${p.nombre}</div>
-        <div style="font-size:11px;color:var(--muted)">${p.departamento} · ${p.nivel}</div>
-      </div>
-      <div class="prox-date">${fmtDate(p[dateField])}</div>
+// PENDIENTES
+function setPendingFilter(btn) {
+  document.querySelectorAll(".pending-filter .filter-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active"); activePendingFilter=btn.dataset.pf; renderPendientes();
+}
+
+function renderPendientes() {
+  const base = activos;
+  const total = base.length;
+
+  // Guardar referencia global para los onclicks
+  window._pendingBase = base;
+
+  // Resumen por checklist — clicable
+  document.getElementById("pending-summary").innerHTML = ONBOARDING_KEYS_UI.map(({key, label}) => {
+    const n  = base.filter(p => isPending(key, p.onboarding)).length;
+    const nd = base.filter(p => isDone(key, p.onboarding)).length;
+    return `<div class="pending-item" onclick="openPendingModal('${key}','${label}')">
+      <div class="pending-label">${label}</div>
+      <div class="pending-count">${n}</div>
+      <div class="pending-pct">${pct(n,total)}% pendiente · ${nd} ok</div>
+      <div class="pending-hint">↗ ver lista</div>
     </div>`;
+  }).join("");
 
-  const emptyRow = txt => `<div class="prox-row" style="color:var(--muted)">${txt}</div>`;
+  // Por persona
+  let personas = base.map(p => {
+    const pend = ONBOARDING_KEYS_UI.filter(({key}) => isPending(key, p.onboarding));
+    const done = ONBOARDING_KEYS_UI.filter(({key}) => isDone(key, p.onboarding));
+    return { ...p, pendientes: pend, done };
+  });
 
-  document.getElementById("list-hoy").innerHTML = ingresanHoy.length
-    ? ingresanHoy.map(p => rowHtml(p, "inicio")).join("")
-    : emptyRow("Nadie ingresa hoy");
+  if (activePendingFilter === "conpendientes") personas = personas.filter(p=>p.pendientes.length>0);
+  if (activePendingFilter === "completos")     personas = personas.filter(p=>p.pendientes.length===0);
+  personas.sort((a,b)=>b.pendientes.length-a.pendientes.length);
 
-  document.getElementById("list-ingresar").innerHTML = porIngresar.length
-    ? porIngresar.map(p => rowHtml(p, "inicio")).join("")
-    : emptyRow("Ninguno en los próximos 30 días");
+  document.getElementById("pending-person-list").innerHTML = personas.map(p => `
+    <div class="pending-person-card" style="cursor:pointer" onclick="openPersonPendingModal('${p.nombre.replace(/'/g,"\\'")}')">
+      <div class="pending-person-name">
+        <span>${p.nombre} <span style="font-size:11px;color:var(--muted);font-weight:400">${p.departamento}</span></span>
+        <span style="font-size:12px;color:${p.pendientes.length>0?'var(--amber)':'var(--green)'}">
+          ${p.pendientes.length>0 ? p.pendientes.length+' pendiente'+(p.pendientes.length>1?'s':'') : '✓ Completo'}
+        </span>
+      </div>
+      <div class="pending-chips">
+        ${p.pendientes.map(({label})=>`<span class="chip-pending">${label}</span>`).join("")}
+        ${p.done.map(({label})=>`<span class="chip-done">✓ ${label}</span>`).join("")}
+      </div>
+    </div>`).join("");
+}
 
-  document.getElementById("list-finalizar").innerHTML = porFinalizar.length
-    ? porFinalizar.map(p => rowHtml(p, "finEstimado")).join("")
-    : emptyRow("Ninguno en los próximos 30 días");
+function openPendingModal(key, label) {
+  const base = window._pendingBase || activos;
+  const pendientes = base.filter(p => isPending(key, p.onboarding));
+  const completados = base.filter(p => isDone(key, p.onboarding));
+
+  document.getElementById("modal-title").textContent = label;
+  document.getElementById("modal-count").textContent = `${pendientes.length} pendiente${pendientes.length!==1?'s':''} · ${completados.length} completado${completados.length!==1?'s':''}`;
+  document.getElementById("modal-body").innerHTML = `
+    ${pendientes.length ? `
+      <div style="font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:.06em;padding:10px 0 6px">Pendientes</div>
+      ${pendientes.map(p=>`
+        <div class="modal-row">
+          <div class="modal-row-left">
+            <strong>${p.nombre}</strong>
+            <span>${[p.departamento,p.nivel,p.location].filter(Boolean).join(' · ')}</span>
+          </div>
+          <div class="modal-date">${fmtDate(p.inicio)}</div>
+        </div>`).join("")}` : ""}
+    ${completados.length ? `
+      <div style="font-size:11px;color:var(--green);text-transform:uppercase;letter-spacing:.06em;padding:10px 0 6px">Completados</div>
+      ${completados.map(p=>`
+        <div class="modal-row">
+          <div class="modal-row-left">
+            <strong>${p.nombre}</strong>
+            <span>${[p.departamento,p.nivel,p.location].filter(Boolean).join(' · ')}</span>
+          </div>
+          <div class="modal-date">✓</div>
+        </div>`).join("")}` : ""}
+  `;
+  document.getElementById("modal").classList.add("open");
+}
+
+function openPersonPendingModal(nombre) {
+  const base = window._pendingBase || activos;
+  const p = base.find(x => x.nombre === nombre);
+  if (!p) return;
+  const pend = ONBOARDING_KEYS.filter(({key}) => p.onboarding && !p.onboarding[key]);
+  const done = ONBOARDING_KEYS.filter(({key}) => p.onboarding &&  p.onboarding[key]);
+
+  document.getElementById("modal-title").textContent = p.nombre;
+  document.getElementById("modal-count").textContent = `${pend.length} pendiente${pend.length!==1?'s':''} · ${done.length} completado${done.length!==1?'s':''}`;
+  document.getElementById("modal-body").innerHTML = `
+    ${pend.length ? `
+      <div style="font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:.06em;padding:10px 0 6px">Pendientes</div>
+      ${pend.map(({label})=>`<div class="modal-row"><div class="modal-row-left"><strong>${label}</strong></div><div class="modal-date" style="color:var(--amber)">⏳</div></div>`).join("")}` : ""}
+    ${done.length ? `
+      <div style="font-size:11px;color:var(--green);text-transform:uppercase;letter-spacing:.06em;padding:10px 0 6px">Completados</div>
+      ${done.map(({label})=>`<div class="modal-row"><div class="modal-row-left"><strong>${label}</strong></div><div class="modal-date" style="color:var(--green)">✓</div></div>`).join("")}` : ""}
+  `;
+  document.getElementById("modal").classList.add("open");
+}
+
+// Build timeline chart
+function buildTimeline() {
+  const ing = window._ingresos || {};
+  const sal = window._salidas  || {};
+  let keys = [...new Set([...Object.keys(ing),...Object.keys(sal)])].sort();
+  if (activeYear !== 'todos') keys = keys.filter(k=>k.startsWith(activeYear+'-'));
+  makeBar("chart-timeline", keys, [
+    {label:"Ingresos", data:keys.map(k=>ing[k]||0), backgroundColor:"rgba(0,180,216,0.75)", borderRadius:3},
+    {label:"Salidas",  data:keys.map(k=>sal[k]||0), backgroundColor:"rgba(139,26,74,0.75)",  borderRadius:3}
+  ], false, (mes, dsIdx) => {
+    if(dsIdx===0) openModal(`Ingresos: ${mes}`, allData.filter(p=>monthKey(p.inicio)===mes), "inicio");
+    else          openModal(`Salidas: ${mes}`,  allData.filter(p=>monthKey(p.finEstimado)===mes), "finEstimado");
+  });
+}
+
+function setYearFilter(y) {
+  activeYear = y;
+  document.querySelectorAll("#year-filter .filter-btn").forEach(b=>{
+    b.classList.toggle("active", b.textContent===(y==='todos'?'Todos':y));
+  });
+  buildTimeline();
+}
+
+// Proximos KPIs
+function buildProximosKPIs() {
+  const hoy  = allData.filter(p=>daysFrom(p.inicio)===0);
+  const entr = allData.filter(p=>{const d=daysFrom(p.inicio);return d!==null&&d>0&&d<=30;});
+  const sal  = allData.filter(p=>{const d=daysFrom(p.finEstimado);return d!==null&&d>=0&&d<=30;});
+  const onst = allData.filter(p=>{const d=daysFrom(p.inicioOnSite);return d!==null&&d>=0&&d<=30;});
+  document.getElementById("kpi-proximos").innerHTML = `
+    <div class="kpi accent" onclick="document.getElementById('list-hoy').scrollIntoView({behavior:'smooth'})">
+      <div class="kpi-value">${hoy.length}</div><div class="kpi-label">Ingresan hoy</div><div class="kpi-hint">↓ ver</div>
+    </div>
+    <div class="kpi green" onclick="document.getElementById('list-ingresar').scrollIntoView({behavior:'smooth'})">
+      <div class="kpi-value">${entr.length}</div><div class="kpi-label">Por ingresar</div>
+      <div class="kpi-sub">próx. 30 días</div><div class="kpi-hint">↓ ver</div>
+    </div>
+    <div class="kpi amber" onclick="document.getElementById('list-finalizar').scrollIntoView({behavior:'smooth'})">
+      <div class="kpi-value">${sal.length}</div><div class="kpi-label">Por finalizar</div>
+      <div class="kpi-sub">próx. 30 días</div><div class="kpi-hint">↓ ver</div>
+    </div>
+    <div class="kpi blue" onclick="document.getElementById('list-onsite-prox').scrollIntoView({behavior:'smooth'})">
+      <div class="kpi-value">${onst.length}</div><div class="kpi-label">Próximos onsite</div>
+      <div class="kpi-sub">próx. 30 días</div><div class="kpi-hint">↓ ver</div>
+    </div>
+  `;
+}
+
+// Pendientes KPIs
+function buildPendientesKPIs() {
+  const base = activos;
+  const total = base.length;
+  const completos = base.filter(p => p.onboarding && ONBOARDING_KEYS_UI.every(({key})=>isDone(key, p.onboarding)));
+  const conPend   = base.filter(p => p.onboarding && ONBOARDING_KEYS_UI.some(({key})=>isPending(key, p.onboarding)));
+  document.getElementById("kpi-pendientes").innerHTML = `
+    <div class="kpi green" onclick="setPendingFilter(document.querySelector('[data-pf=completos]'))">
+      <div class="kpi-value">${completos.length}</div><div class="kpi-label">Onboarding completo</div>
+      <div class="kpi-sub">${pct(completos.length,total)}% del total activos</div><div class="kpi-hint">↗ ver lista</div>
+    </div>
+    <div class="kpi amber" onclick="setPendingFilter(document.querySelector('[data-pf=conpendientes]'))">
+      <div class="kpi-value">${conPend.length}</div><div class="kpi-label">Con pendientes</div>
+      <div class="kpi-sub">${pct(conPend.length,total)}% del total activos</div><div class="kpi-hint">↗ ver lista</div>
+    </div>
+    <div class="kpi accent">
+      <div class="kpi-value">${total}</div><div class="kpi-label">Total activos</div>
+    </div>
+  `;
+
+  // Medical KPIs
+  const medCompletos  = base.filter(p => isMedicalDone(p.onboarding));
+  const medEnProceso  = base.filter(p => p.onboarding && p.onboarding.medicalCheck && p.onboarding.medicalCheckYes && !p.onboarding.medicalCheckManaged);
+  const medSinGestionar = base.filter(p => p.onboarding && !p.onboarding.medicalCheck);
+
+  document.getElementById("kpi-medical").innerHTML = `
+    <div style="grid-column:1/-1;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding-bottom:4px;border-bottom:1px solid var(--border);margin-bottom:4px">Reconocimiento médico</div>
+    <div class="kpi green" onclick="openModal('Medical check — completos', base.filter(p=>isMedicalDone(p.onboarding)), 'inicio')">
+      <div class="kpi-value">${medCompletos.length}</div>
+      <div class="kpi-label">Completos</div>
+      <div class="kpi-sub">${pct(medCompletos.length,total)}% activos</div>
+      <div class="kpi-hint">↗ ver lista</div>
+    </div>
+    <div class="kpi amber" onclick="openModal('Medical check — en proceso (aceptaron, pendiente gestión)', medEnProceso, 'inicio')">
+      <div class="kpi-value">${medEnProceso.length}</div>
+      <div class="kpi-label">Aceptaron, pendiente gestión</div>
+      <div class="kpi-sub">${pct(medEnProceso.length,total)}% activos</div>
+      <div class="kpi-hint">↗ ver lista</div>
+    </div>
+    <div class="kpi red" onclick="openModal('Medical check — sin consultar', medSinGestionar, 'inicio')">
+      <div class="kpi-value">${medSinGestionar.length}</div>
+      <div class="kpi-label">Sin consultar</div>
+      <div class="kpi-sub">${pct(medSinGestionar.length,total)}% activos</div>
+      <div class="kpi-hint">↗ ver lista</div>
+    </div>
+  `;
+}
+
+// Dept stats panel (Departamentos page)
+function buildDeptStatsPanel(dept) {
+  const panel = document.getElementById("dept-stats-panel");
+  if (!dept || dept === "Todos") { panel.style.display="none"; return; }
+  panel.style.display = "block";
+  document.getElementById("dept-stats-title").textContent = `Estadísticas — ${dept}`;
+
+  const deptActivos = activos.filter(p=>(p.departamento||"Sin dept.")===dept);
+  const deptAll     = allData.filter(p=>(p.departamento||"Sin dept.")===dept);
+
+  // Location donut
+  const locC={};
+  deptActivos.forEach(p=>{const l=p.location||"Sin datos";locC[l]=(locC[l]||0)+1;});
+  if(deptCharts.loc) deptCharts.loc.destroy();
+  deptCharts.loc = new Chart(document.getElementById("ds-location"), {
+    type:"doughnut", data:{labels:Object.keys(locC),datasets:[{data:Object.values(locC),backgroundColor:["#10b981","#00b4d8","#f59e0b","#8b1a4a"],borderWidth:0}]},
+    options:{responsive:true,cutout:"55%",plugins:{legend:{position:"bottom",labels:{color:"#9ca3af",boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw}`}}}}
+  });
+
+  // Nivel donut
+  const nivC={};
+  deptActivos.forEach(p=>{const n=p.nivel||"Sin nivel";nivC[n]=(nivC[n]||0)+1;});
+  if(deptCharts.niv) deptCharts.niv.destroy();
+  deptCharts.niv = new Chart(document.getElementById("ds-nivel"), {
+    type:"doughnut", data:{labels:Object.keys(nivC),datasets:[{data:Object.values(nivC),backgroundColor:["#00b4d8","#10b981","#f59e0b","#8b1a4a","#6366f1"],borderWidth:0}]},
+    options:{responsive:true,cutout:"55%",plugins:{legend:{position:"bottom",labels:{color:"#9ca3af",boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw}`}}}}
+  });
+
+  // Nac donut
+  const nacC={};
+  deptActivos.forEach(p=>{const n=p.nacionalidad||"Sin datos";nacC[n]=(nacC[n]||0)+1;});
+  if(deptCharts.nac) deptCharts.nac.destroy();
+  deptCharts.nac = new Chart(document.getElementById("ds-nac"), {
+    type:"doughnut", data:{labels:Object.keys(nacC),datasets:[{data:Object.values(nacC),backgroundColor:["#00b4d8","#10b981","#f59e0b","#8b1a4a","#6366f1","#ec4899","#f97316"],borderWidth:0}]},
+    options:{responsive:true,cutout:"55%",plugins:{legend:{position:"bottom",labels:{color:"#9ca3af",boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw}`}}}}
+  });
+
+  // Próximos
+  const row=(p,f)=>`<div class="prox-row"><div><div style="font-weight:500">${p.nombre}</div><div style="font-size:11px;color:var(--muted)">${p.nivel}</div></div><div class="prox-date">${fmtDate(p[f])}</div></div>`;
+  const none=t=>`<div class="prox-row" style="color:var(--muted)">${t}</div>`;
+
+  const entr = deptAll.filter(p=>{const d=daysFrom(p.inicio);return d!==null&&d>0&&d<=30;}).sort((a,b)=>new Date(a.inicio)-new Date(b.inicio));
+  const sal  = deptAll.filter(p=>{const d=daysFrom(p.finEstimado);return d!==null&&d>=0&&d<=30;}).sort((a,b)=>new Date(a.finEstimado)-new Date(b.finEstimado));
+
+  document.getElementById("ds-ingresar").innerHTML  = entr.length ? entr.map(p=>row(p,"inicio")).join("") : none("Ninguno próximos 30 días");
+  document.getElementById("ds-finalizar").innerHTML = sal.length  ? sal.map(p=>row(p,"finEstimado")).join("") : none("Ninguno próximos 30 días");
 }
 
 loadData();
+
+function openPendingModal(label, key) {
+  const base = activos;
+  const pendientes = base.filter(p => p.onboarding && !p.onboarding[key]);
+  const completados = base.filter(p => p.onboarding && p.onboarding[key]);
+
+  document.getElementById("modal-title").textContent = label;
+  document.getElementById("modal-count").textContent = `${pendientes.length} pendiente${pendientes.length!==1?'s':''} · ${completados.length} completado${completados.length!==1?'s':''}`;
+
+  const section = (title, rows, color) => rows.length ? `
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:${color};padding:12px 0 6px">${title}</div>
+    ${rows.map(r => `
+      <div class="modal-row">
+        <div class="modal-row-left">
+          <strong>${r.nombre}</strong>
+          <span>${[r.departamento, r.nivel, r.location].filter(Boolean).join(' · ')}</span>
+        </div>
+        <div class="modal-date">${fmtDate(r.inicio)}</div>
+      </div>`).join('')}` : '';
+
+  document.getElementById("modal-body").innerHTML =
+    section('Pendientes', pendientes, 'var(--amber)') +
+    section('Completados', completados, 'var(--green)') ||
+    '<div class="modal-empty">Sin datos</div>';
+
+  document.getElementById("modal").classList.add("open");
+}
+
+// ── CHATS ─────────────────────────────────────────────────────
+const ATLANTIS_INFO = `
+
+## Welcome
+Welcome
+
+ATLANTIS
+
+ANIMATION
+
+Welcome to ATLANTIS Animation Studio
+
+We're excited to have you on board as part of our
+
+dynamic and creative team.
+
+Our journey began in France, where we first built
+the foundation of the studio. In 2019, we jumped
+into the heavenly island of Tenerife to embark on
+the production of “Tara Duncan": This move
+
+marked a significant chapter in our story!
+
+
+After the delivery of “Tara Duncan” to Disney Channel, we were entrusted in 2023 with the production of Season 5 of
+the globally beloved series “Miraculous Ladybug”. This project further solidified our reputation as a studio that delivers
+nothing but the highest quality in animation.
+
+Today, we're thrilled to be working on “Messi and The Giants”, a project that encapsulates our passion for storytelling
+and cutting-edge animation, besides Sony Music, Sony Pictures Television Kids, Leo Messi Management and once
+again Disney.
+
+ATLANTIS Animation is more than just a workplace: We're a boutique studio that thrives on creativity, collaboration,
+and the blending of cultures and languages. Our diverse team brings together a richness of experiences and
+perspectives, making us a truly international studio where every voice matters. We believe that this mix of backgrounds
+is key to the super qualitative work we produce. We're delighted to have you join our team, and we look forward to
+creating something extraordinary together!
+
+Highlighted projects
+
+Highlighted project:
+TARA DUNCAN Season 1
+
+
+A
+
+TARA DUNCAN’S SUCCESS
+
+WORLDWIDE PHENOMENON, BROADCASTED IN MORE THAN 130 COUNTRIES.
+YOUTUBE: MORE THAN 2 BILLION VIEWS, 3 MILLION VIDEOS ONLINE, MORE THAN 220 000 CHANNELS.
+IN FRANCE: N21 SERIES FOR KIDS, 29% AVERAGE AUDIENCE SHARE ON SEASON 1, 41% AUDIENCE SHARE FOR CHRISTMAS SPECIAL.
+
+
+INSTAGRAM LAUNCH
+
+PROJECT
+TEASER
+
+The project was launched by Leo
+Messi himself on his Instagram
+account on the 9/10/23.
+
+It is more than 6.9 million likes, 52
+
+thousand comments, and 54 million
+views so far, and counting !!
+
+>> Instagram Link
+
+— “AUDIOVISUALAST na
+": la serie animada del astro argentino con Lionel Messi Gets Animated With Sony Kids; Arabic-
+
+ze een on sees nm a a
+
+La serie de animación inspirada en
+Leo Messi se producirá en Tenerife
+
+Canary Islands-based Atlantis
+Animation serves as the lead
+creative studio driving graphic
+development and art treatment
+
+« Messi and the Giants »:
+
+Subs The animated series
+The Argentinian star rae ales
+animated series with a ingy ined: Diy Mestwtibe
+Canarian label produced in Tenerife
+
+## Studio Rules
+Studio Rules
+
+Studio Rules
+
+OPENSPACE & WORK
+
++ Working hours are 8h30-13h / 14h-18h from Monday to Thursday, and 8h30- 14h30 on Friday. These hours apply
+to all staff, except in cases of specific agreements approved by management. You must be at your workstation
+and ready to work by 8h30 or by 14h after lunch break. Don't forget to badget when entering or leaving the studio.
+
++ Inthe event of a delay, you are required to inform your direct supervisor and agree on how to make up for the lost
+time. For remote work, the same rules apply as for on-site work: everyone must be connected, reachable, and
+exclusively available for professional tasks throughout the full working period.
+
+¢ Itis strictly prohibited to use working hours for personal activities, appointments, or any non-work-related matters
+(whether remote or on-site). Notifying that you have an appointment does not constitute authorization: any
+personal absence or errand must be requested and approved in advance. Same-day personal appointments will
+not be accepted without prior authorization, except in cases of force majeure.
+
++ The production department reserves the right to deny an appointment request if it conflicts with production needs
+or scheduling priorities. For any authorized personal appointment, it is necessary to inform at least the day before
+and coordinate with production to agree on how to make up the missed working time.
+
++ Everyone is expected to respect their working hours and make up for any absence or delay. A salary deduction
+will only apply in cases of unjustified and uncompensated absences, in accordance with labor legislation (Article
+30 of the Estatuto de los Trabajadores).
+
++ Keep noise low when arriving in the morning or after lunch as there may be people working or attending a
+meeting. If you want to chat, use the terrace.
+
++ No walking barefoot in the studio and the terrace, as it can cause a workplace accident.
+
++ No alcohol consumption inside the office or the terrace. Outside the studio is fine, but never come to work drunk.
++ Speak respectfully to everyone in the studio.
+
++ Follow up on requests via Mattermost.
+
++ Maintain good personal hygiene.
+
++ Report any absence through the absences email (abscences@atlantisanimation.com).
+
+* Keep your desk tidy as this will help the cleaning team.
+
++ No one should stay working after 18h (or 14h30 on Fridays) unless previously agreed with Production.
+
++ Complete and sign your timesheet every month, either in digital or paper format, and submit it to your PM before
+the last day of the month.
+
+KITCHEN & FOOD
+
+* Throw away food leftovers.
+
++ Keep the kitchen clean and empty: wash, dry, and put away kitchenware, keep shelves tidy (this helps cleaning
+staff).
+
++ Empty personal food from the fridge every Friday and take your tupperware home (otherwise it will be thrown
+away).
+
++ There's a drawer in the fridge marked “Admin”: It is reserved for administration.
+
++ Use and clean your own mug.
+TERRACE
+
+* Keep the windows closed to preserve air temperature in the office.
++ Put everything back after use: paper towels, oil, salt, chairs, parasol, even the ping-pong table.
+
++ Smokers should be respectful: do not leave half-smoked cigarettes, ashes, or cigarette butts on the terrace.
+GENERAL
+
++ Always keep bathroom doors closed.
+* Ask Rosa before accessing cupboards or shelves near the bathrooms.
+
++ We're in the city center with many restaurants and bars around; the terrace is an option, not an obligation. Please
+treat it respectfully.
+
++ Forks are still disappearing. For now, no more will be provided.
++ Coffee machines are currently at the entrance. Keep the door closed and silent: this zone is not a break room.
+
++ Please sit properly on the sofa at the entrance: Clients and visitors may arrive at any time and you can relax on
+the terrace.
+
+## Company Policies
+Company Policies
+
+This page serves as the central reference point for all company policies, guidelines, and official procedures that support
+our daily work.
+
+These documents are also posted on the notice board in the studio and made available via a QR code.
+
+Company Internal Rules & Policies
+
+This document explains all the internal rules and policies of the company, standards of behavior and procedures that
+apply to every employee.
+
+Company Internal Rules & Policies - ENGLISH
+
+Company Internal Rules & Policies - ESPANOL
+
+Company Calendar & Holidays
+
+This is the official working calendar of the company, including Public Holidays, the company closures, and the
+Audiovisual Collective Agreement Public Holidays.
+
+2025 Company Calendar & Holidays - ENGLISH & ESPANOL
+
+2026 Company Calendar & Holidays - ENGLISH & ESPANOL
+
+Internal Procedure for Conflict Management and Mediation
+
+This procedure explains how to report and manage conflicts, and the steps involved in the internal mediation process.
+
+Internal Procedure for Conflict Management and Mediation - ENGLISH
+
+Internal Procedure for Conflict Management and Mediation - ESPANOL
+
+Overview Guide for Internal Procedure for Conflict
+
+Asimplified visual guide summarizing the key steps of the conflict-management procedure.
+
+Overview Guide for International Procedure for Conflict - ENGLISH
+
+Overview Guide for Internal Procedure for Conflict - ESPANOL
+
+IT & Data Security Usage Policy
+
+This policy details the rules for the use of company equipment, software, communication tools, and data-security
+
+requirements.
+IT & Data Security Usage Policy - ENGLISH
+
+IT & Data Security Usage Policy - ESPANOL
+
+Harassment Protocols
+
+Please review the protocols through each link and refer to them whenever you have any doubt.
+The reporting channel is the following email address: complaints@atlantisanimation.com
+
+We ask you to send the official complaint form, available in the annexes of each protocol, duly completed to this
+address.
+
+Protocol for the Prevention and Action Against Workplace Harassment
+
+Protocol for the Prevention and Action Against Sexual Harassment and Gender-Based Harassment
+
+Audiovisual Collective Agreement
+
+The formal agreement setting out employment terms and conditions agreed between employers and employee
+representatives at audiovisual sector level:
+
+Collective Agreement - ES
+
+QR Code
+
+## Onboarding Process
+Onboarding Process
+
+Onboarding Process - Atlantis Animation Studio
+
+Overview
+
+The onboarding process ensures new artists feel welcomed, equipped, and confident from day one. Key goals include:
+Team Connection — Meet colleagues, understand team roles, and align with company culture.
+
+Tool Setup — Get access to essential software, resources, and creative tools for seamless work.
+
+Clear Expectations — Outline goals, responsibilities, and growth paths.
+
+Early Support — Provide training and regular check-ins to build confidence and engagement.
+
+By the end of onboarding, artists are prepared to dive into projects and contribute creatively.
+
+Interview & Offer . TO FILL BY HR
+
+Interview Process - Evaluation and interview stages.
+
+Offer & Documentation - Sending the offer and gathering necessary documents.
+
+Pre-Start Preparation - Setup
+
+Account Setup - Create and configure all necessary accounts.
+
+Each person arriving at the studio should have:
+
+» AAS domain account
+
++ Internal mail account
+
+Workspace Ready - Prepare the physical or digital workspace.
+
+We are working to find the best way/assistant to deploy consistently WorkStations
+
+At the moment we're manually deploying Win11 + join domain “aas.lan”
+
+Software Installation - Install and test essential tools and programs.
+
+Follow “AA_Software Profile” for the different artist profile
+
+Sane ae ee oe re ree A =
+a A :
+\\ 1
+. pS
+=: n n pu
+: 1
+E =
+El i $ =
+ee 5
+as =
+'
+|e nr
+ENS : =e ict ik artes
+ee : A =
+ee i
+we: o
+
+Installation of the pipeline launcher process (good idea to do this with “Test” user)
+
+1. Check if the Workstation has C:\\pipeline
+1. If yes: Delete
+2. If not: Proceed
+2. Go to this path \\\\columbus\\SGD\\company\\tools\\pipelineupdateribin and launch “install_pipeline”
+3. C:\\pipeline folder will be created
+4. Go to this path C:\\pipeline\\tools\\launcher\\1.0.14\\bin and run “launcher”
+5. Anew “Launcher” desktop icon will be created
+
+6. Run “Launcher”
+
+Currently, version 1.0.14 is the latest. In the future, it may be updated, so always make sure to use the
+
+most recent version.
+
+Licenses
+
+Depending on the department you will have different licenses — to buy new licenses check with Paul & Delphine
+
+» Parsec (for remote workers)
++ MS Office
++ Adobe
+e Photoshop
+o Premiere
+o AfterEffects
+o Substance
++» Autodesk
+© ShotGrid/FlowProductionTracking
+o Maya
+o Arnold
+o RV
++ ToonBoom
+o Harmony
+o Storyboard
+* SideFX
+
+o Houdini
+
++ Foundry
+o Nuke
+
+Resource Introduction — Provide initial resources and key contacts
+
+Use the template generated in the document IN OUT HR-IT-PROD when you click on “generate welcome mail”
+
+ourMmT-PRCO # 20 02 o- GED @
+
+vale pias wala Orta Sweeter edt
+
+3 0
+Minne Mat wee O o 0 Q a
+pS one omen OO NN] a a e
+se cazo pe ola cpu O a a a
+eae om 8 3 cra BO a o a
+a zac pr oe O a a a
+— rawr mms o a a a 1
+Peano voce có nm BO a a a
+pu sen cr O o 0 1 F]
+pa pS cc oo Doro a a a
+A O ave BO a a
+fine cs men O o 0. . o
+
+Send to the artist's PERSONAL email address:
+
+1. WorkStation login information
+2. Professional Email login information
+
+3. Welcome Document & Parsec setup guide (if remote)
+Send to the artist's PROFESSIONAL email address:
+
+1. Mattermost invite
+2. Shotgrid login information
+
+3. Atlantis Wiki
+
+Day 1: Essentials -. TO FILL BY PROD
+
+Introductions — Meet the team and get oriented in the workspace.
+
+Overview - Overview of tools, workflows, and company policies.
+
+Week 1: Integration
+
+Training - Begin tool and workflow training.
+
+Support - Regular check-ins for questions and feedback.
+
+Month 1: Review & Integration
+
+Progress Review - Feedback and setting next steps.
+
+Full Integration — Transition into active team projects and responsibilities.
+
+## Offboarding Process  Atlantis Animation Studio
+Offboarding Process - Atlantis Animation Studio
+
+Offboarding Process - Atlantis Animation Studio
+
+This document outlines the steps to follow when an employee leaves Atlantis Animation Studio, ensuring a smooth
+
+transition and safeguarding company data.
+
+1. Immediate Security Measures
+
+Upon termination notification, IT will swiftly follow the steps below to secure company data and prevent unauthorized
+
+access:
+
++ For off-boarded users, IT must revoke access to (some may not apply due to local/remote workflows):
+o Disable Domain User account
+© Disable Google Account (if applicable).
+© Ensure all Google sessions are logged out on all devices (verify via Google Admin Panel)
+o Cloud services (Gitlab or any others where the user had access to).
+© Terminate VPN session.
+© Shutdown / Logoff local workstation
+o Retrieve or disable access to all company devices, including laptops and mobile phones.
+
++ Afterwards, IT will follow the archival procedure in place to persevere user data and free up licenses.
+
+For non-hostile offboardings, steps will be taken at the end of the last day of the user at the studio,
+
+For hostile offboardings, the employee will be called in a meeting with HR/Management. These steps must take
+place during that meeting unless management gives different instructions.
+
+2. Device Storage and Data Preservation
+
+* Always preserve user data for a minimum of 3 months. (Do a takeout, backup of desktop and local information)
+
++ Store devices securely for a minimum of two weeks without repurposing / destroying data
+
+3. General Account Management
+
+When informed that an employee will leave, the following accounts need to be addressed:
+
++ Domain User (AAS.lan)
++ Shotgrid (talk with Anne-Cecile, she must change the password)
+
++ Disable Google Account (terminate sessions)
+
+Kill VPN sessions
+
+For non-license-dependent services (e.g., domain users, internal email, Mattermost), it is recommended to deactivate
+accounts instead of deleting them. This allows for future reactivation if needed and preserves useful information in
+Mattermost chats for teammates. Since these accounts do not pose a security risk, they can remain accessible.
+
+4. Licensing Deactivation
+
+Shotgrid
+
+= Change Password
+
+Adobe
+
+= Creative Cloud
+= Photoshop
+
+= Premiere
+
+= After Effects
+
+= Substance
+
+= Standard
+
+= Acrobat Pro
+
+Autodesk
+= Arnold
+=> Maya
+
+ToonBoom
+= Storyboard Pro
+
+= Harmony
+
+5. Additional Considerations
+
++ For license-based tools, accounts should be deactivated immediately after the employee's departure to avoid
+unnecessary costs.
+
++ Ensure proper documentation and access logs are updated to reflect the account status changes.
+
+## Glossary
+Glossary
+
+This page's purpose is to offer a list of terms for easier communication between departments. For a complete
+view of each term, please, direct to the pages dedicated to them.
+
+Key Terms
+
+Pipeline - Set of software, tools and scripts that ensure project production's consistency, preserve and reuse work and
+
+solve technical pitfalls.
+
+Workflow - Set of steps of a production, based on the technical possibilities offered by the Pipeline, and organized
+following the requirements of the project.
+
+Department Pipeline - Set of tools and scripts used in a department, isolated from other departments.
+
+Department Workflow - Steps done by the same department, including how and when to use the tools available in the
+Department Pipeline.
+
+Client Workflow - Workflow of a project, adjusted to fulfill the Client's requirements and requests.
+On Boarding - Introduction of a person to the company's Pipeline and/or Workflow related to that person's goals.
+
+Kickoff - Set of actions to introduce the team to a new part of the production, and do the first steps towards its
+accomplishment.
+
+Pipeline Step or Step - Unique identifier to group a set of tasks that follow the same goal within the workflow of its
+context (Asset, Shot, Sequence, Episode...).
+
+Task - Minimal unit of work management, established as a process to generate, share, register in the database and
+approve a revised, unmutable and versionable package of published elements.
+
+As an example, the Task Animation generates animation curves that are saved in the server, registered in
+ShotGrid and approved by a supervisor, after reviewing the package form by: a playblast, the Maya scene, the
+USD file for the Shot's animation, and the animation curves stored in separate files.
+
+Published Element - Registry in the database of data generated for the production and the information needed to
+track its creation. It can have a Version linked to it for review.
+
+Version - Revision material used to approve or reject the Published Elements of a Task.
+
+Asset - Set of Tasks, Published Elements and Versions that form a named item of the production.
+
+Character - Asset that represents a person, creature, or any animated figure. It is expected for it to have Geometry,
+Shading and Rig as it will be animated.
+
+Set - Asset that represents a scenario where the action of a Shot happens.
+
+Prop - Asset that represents an object in the production. It is expected for it to have Geometry, Shading and Rig as it
+will be animated, and does not form part of a Set.
+
+Vehicle - Prop that represents an object used for transport/travel in the production. It is expected for it to have
+Geometry, Shading and Rig as it will be animated, and does not form part of a Set.
+
+SetProp - Asset that represents an object in the production that forms part of a Set. It is expected for it to have
+Geometry and Shading and for it to not be animated. A rig can be created for them to be animated in specific Shots.
+
+Variant - Tag that defines one style of the Asset.
+
+Variant is not the same as Variation. One comes from Pipeline terminology, the other comes from client-
+production terminology.
+
+Variant-Variation is a pair of joint terms used to establish a distinction between what the client asks for and how
+we want to organize that request internally.
+
+For example, the client requests Leo with a different haircut (Variation LongHairLeo). Internally we can manage
+that as a Variant in Shading (Leo, Variant LongHair used only as a Shading Variant), or do a new asset if the
+change is too drastic (LeoLongHair), and depending on the work we would have to do internally, we can
+establish a value to request the client for in order to add the change in the hair to the production plans).
+
+AssetVariant - ShotGrid entry that pairs an Asset with one of its Variants for Production management and Pipeline
+
+data retrieval.
+
+EDL - Text file that contains editing information for an Episode (Shots, Sequences numbers and timecodes).
+
+Breakdown List or BKL - File
+
+## Daily time tracking Absences  Holidays
+Daily time tracking, Absences & Holidays
+
+Daily time tracking
+
+Methodology:
+
+» Access to Clockio is done using your professional email from the computer. As an exception, the mobile application
+must be used when a supporting document for an absence must be attached (user name: professional email).
+
+» The workday must be logged daily in Clockio.
+
+» Please make it a habit to complete this daily.
+
+» For identification purposes, please add a photo to your Clockio profile.
+» Daily Work Log- Clockio Tutorial: EN / ES
+
+Overtime:
+
+» If a Producer Manager requests an employee to work overtime: The Producer Manager will be responsible for adding
+the overtime hours to the corresponding day.
+
+Monthly Log Submission - Clockio:
+» The generation of the current month's report is required on the first business day of the following month.
+
+» Verify regularly to avoid errors at month-end. You can check the possible mistakes in the tutorials. Register
+Correction: EN / ES
+
+» In case of doubt, consult the tutorials: Register Review and Submission to the PM: EN / ES
+
+How to request an Absence (Non-holiday)
+
+Important rules:
+
+» Delays and same-day issues must be communicated as soon as feasibly possible.
+
+» Absences must be notified at least 24 hours in advance, unless force majeure.
+
+» Unapproved absences become unjustified and may lead to salary deductions (Art. 30 ET) and disciplinary action.
+
+» Any missed hours must be recovered the same week if approved by Production.
+
+Absence Request Methodology:
+
+» Absence requests must be submitted via Clockio.
+
+» Exceptions and Admitted Delays: The following reporting rules apply only in cases of a same-day delay or same-day
+sickness/illness.
+
+1. Compose an email to absences@atlantisanimation.com with:
+Subject: ABS_FullName_Department_Date,
+
+The reason.
+
+2. Report to Clockio (Clockio Permission Required):
+
+Sick Leave/Medical Rest Request: Submit the report in Clockio ONLY after obtaining the corresponding medical
+certificate and ensure the document is attached to the request. To attach the document, you must use the mobile
+application (more info in the absence procedure).
+
+» Absence Request- Tutorial- EN / ES
+
+> Do Not Report to Clockio (No Clockio Notification Required): Same-Day Delay: If the delay is recovered within the
+same working day.
+
+Absence Request Procedure:
+
+» Via Clockio. Absence Request tutorial: EN / ES
+
+» Before the appointment: You need to submit a permission request.
+Create a request in Permis indicating:
+
+the day,
+
+the approximate times.
+
+» After the appointment: You need to submit a permission request.
+Create the request again with:
+
+The real time absent (not the time on the certificate),
+
+the appointment certificate of attendance.
+
+These two steps are highly important: the first is necessary to request the permission, and the second is to
+communicate the exact time used for it and provide the attached document.
+
+Proof of Absence:
+
+» An absence may correspond to:
+
+- A full day (e.g. marriage/ sick leave/medical 'baja'),
+
+- A part of the day (e.g. appointments).
+
+» The required documentation depends on the type of absence:
+
+- Asick leave certificate (certificado de baja médica/petición de reposo') issued by a doctor justifies an absence of one
+or several full days.
+
+- A certificate of attendance (¡justificante de asistencia a la cita") only justifies the time of the appointment, not a full day.
+
+Important Note: A document that only indicates you attended a medical visit or medicine prescription is not valid to
+justify a full-day absence.
+
+Paid personal leave (according to law and internal policy-absence to not be compense it- prior notice and
+certificate proof):
+
+» Medical visits: Up to 8 hours per calendar year (Clockio Permission Category: Medical visit/ Visita médica).
+» Moving / Change of address: Up to 2 consecutive days (Clockio Permission Category: Moving/ Mudanza).
+
+» Serious Illness, Hospital admission, Hospitalization or Surgical Procedure with/without hospitalization: Up to seco
+
+## Remote work protocol
+Remote work protocol
+
+DRAFT: Guidelines for remote work at Atlantis Animation
+
+The studio acknowledges the need for remote access to studio resources and content development from remote
+locations. As such, we're considering several cases, environments and solutions. IT department will provide service
+and support according to the following use cases and solutions.
+
+Solutions
+
+OpenVPN (staff access)
+
+For non IP content workers, there's an OpenVPN service available. See the related document here.
+
+VPN Service at atlantis. | Atlantis Animation Wiki
+Parsec
+Remote Desktop (RDP)
+
+File exchange over google drive (Provisional)
+
+As a temporary measure, to provide a temporary solution to users with high latency, we will allow them to <partially>
+work locally by doing file push to the studio.
+
++ Production has to authorize an individual or external company to perform file-exchange operations with the studio.
+
++ IT will create an isolated folder shared with one email address provided by production (the user's personal gmail
+address usually).
+
++ Files will be contained inside a shared google drive controlled by IT
+
+o Each artist authorized to work remotely using this system will be invited to a personal folder inside that
+shared drive
+
+o The folder will be writable from the outise (the artist will be able to PUT content from his remote localtion).
+
+o The folder will be automatically syncronized to the artists personal folder, inside a freelancer sync READ
+ONLY folder.
+
+= TODO: Currently a synkron task on Jorge's workstation, Move to automation server when available
+
+= EXE/COM/BAT/PS1 etc files are not synced.
+= Files are virus-scanned before synchronized.
+
+© The artist can access his studio workstation as usual, and publish the file after copying it elsewhere needed
+using the regular studio tools.
+
+« After a succesful publish files should be removed permanently from the studio computer.
+
+Example folder:
+
+went
++ Now Freelancer shared drive > jan.esparzay 2
+@ ore E E
+
+D activity E
+
+e Workspaces
+
+Bo tisisatestflera
+
++B myorive
+
+Bile
++B Shared drives
+
+Freel a
+
+Shared drive link: Freelancer shared drive - Google Drive
+
+Environments
+
+Personal home with private space
+
+Personal home with shared space
+
+Professional environment with private space
+
+Professional environment with shared space
+
+Use cases
+
+Remote worker connecting from an unsafe environment.
+
+Remote worker connecting from a safe environment and network latency below 30ms.
+
+Remote worker connecting from a safe environment and network latency below 45ms.
+
+Remote worker connecting from a safe environment and network latency below 75ms.
+
+Remote worker connecting from a safe environment and network latency over 75ms.
+
+## Holidays request
+Holidays request
+
+Annual Leave Entitlement
+
+Employees are entitled to 23 working days of paid vacation per calendar year (from January 1st to December 31st),
+
+based on a full year of service.
+
+If an employee works less than a full calendar year, the vacation days will be calculated on a pro-rata basis according
+to the number of days worked that year. Vacation days accrue at a rate of 1.95 days per month worked.
+
+Employees cannot request more vacation days than those accrued, except in exceptional cases approved by the
+
+company.
+
+Public and Additional Holidays
+
+In addition to the annual leave, employees are entitled to 14 public holidays spread throughout the year, including
+national, regional, and local holidays.
+
++ The list of these holidays is available in the Labor Calendar provided during onboarding, on request from
+Administration, and posted on the company’s notice board.
+
+« Additionally, our collective agreement grants two extra holidays on December 24th and December 31st.
+
+Mandatory Studio Closure Periods
+
+The studio observes two mandatory closure periods during the year:
+
++ One week during August,
+
++ The week between Christmas and New Year's Eve.
+The exact dates per year can be found at the entrance of the studio.
+Vacation Request Procedure
+
+To request vacation days, employees must follow this procedure:
+
+1. Fill out the Vacation Request Form.
+
+2. Send the form by email to your Production Manager copying admin@atlantisanimation.com
+
+3. The Production Team will review the project schedule before approving the request.
+
+4. Once approved, the Coordinator will respond to the employee and return the signed form, copying
+admin@atlantisanimation.com
+
+5. If the requested dates cannot be approved due to scheduling conflicts, the Coordinator will propose alternative
+dates.
+
+6. Administration must always be copied on the approval response.
+
+Advance Notice
+
+Vacation requests must be submitted at least one month in advance to allow Production to plan workloads accordingly.
+
+Use and Expiration of Vacation Days
+
++ Employees are encouraged to use their vacation days within the same calendar year in which they are accrued.
+
++ The validity period of unused vacation days extends until March 31st of the following year. After this date, any
+unused vacation days will be forfeited.
+
+Half days
+
+It is allowed to take half a day of vacation if necessary.
+
+Vacation Payment Upon Contract Termination
+
+If, by mutual agreement, the employee has not used all their accrued vacation days by the time their contract ends, the
+
+company will pay the unused days as part of the final settlement.
+
+FAQs
+
+If | want to take Friday off as a vacation day, will it count as a half day or a full day?
+
+It will count as a full day.
+
+OFFICIAL WORKING CALENDAR 2025
+
+Icalendario_laboral_2025-cambio_de_julio.pdf
+
+## Meeting Rooms
+Meeting Rooms
+
+Meeting Rooms FAQ
+
+| want to:
+
+Join a Microsoft teams meeting:
+
+¢ Go to Join a Microsoft Teams Meeting by ID | Microsoft Teams and enter your meeting ID and passcode. Both will
+be available inside your calendar invite details.
+
+Note: If you don't enter a passcode, you will enter the meeting as a guest, and someone inside the meeting will
+have to let you in.
+Join a google meets meeting:
+
+* Go to Google Meet and enter your meeting ID. Meeting id will be available inside your calendar invite details.
+Note: If you are not logged in to your Google Workspace account or any google account that was invited to the
+meeting, you will enter the meeting as a guest, and someone inside the meeting will have to let you in.
+
+Join a Zoom meeting:
+Go to Zoom and enter your meeting ID.
+
+Note: Depending on Zoom settings, you will be allowed directly into the meeting, or someone inside it will have
+
+to let you in.
+
+Operation of meeting rooms
+
+3rd Floor - Corner room
+
+## Chat Mattermost
+Chat / Mattermost
+
+Quick fixes
+
+nginx crash
+
+Deployment
+
+See docker deployment here: https://docs.mattermost.com/deployment-guide/server/deploy-containers.html
+
+The text below has been copied here as reference in case the original documentation changes
+
+Deploy Mattermost using Containers
+
+You can deploy Mattermost Server using container technologies for exploring functionality, testing, and development
+purposes, as it allows you to quickly set up a Mattermost instance without needing to manage the underlying
+infrastructure. This deployment method shouldn't be used in production environments as it doesn't support clustered
+
+deployments or High Availability (HA) configurations out-of-the-box.
+
+Choose your preferred container platform below for specific deployment instructions:
+FIPSISTIGDocker
+
+This guide provides step-by-step instructions for deploying Mattermost using Docker containers.
+Warning
+
+Mattermost server deployment using Docker is officially supported on Linux operating systems only.
+macOS and Windows Docker deployments are supported for testing and development purposes only.
+
+Docker is not ideal for High Availability (HA) because it lacks key features including automatic failover, shared storage,
+and load balancing. Docker also has challenges managing multiple nodes and recovering from failures. We
+
+recommend deploying on Kubernetes for HA for these features to ensure reliability.
+
+Install Docker
+
+If you don't have Docker installed, follow the instructions below based on your operating system. You'll need Docker
+Engine and Docker Compose (release 1.28 or later).
+
+Deploy Mattermost on Docker
+
+This section provides a quick start guide for deploying Mattermost on Docker by leveraging Docker Compose.
+Note
+
+The deployment configuration results in two separate containers: a container for the database and a container for the
+application. An optional third container results when using NGINX for reverse proxy.
+
+Encountering issues with your Docker deployment? See the Docker deployment troubleshooting documentation for
+details.
+
+In a terminal window, clone the repository and enter the directory.
+
+git clone https://github.com/mattermost/docker cd docker
+
+Create your .env file by copying and adjusting the env.example file.
+cp env.example .env
+
+Important
+
+Ata minimum, you must edit the DOMAIN value inthe .env file to correspond to the domain for your Mattermost
+
+server.
+
+We recommend configuring the Support Email via MM_SUPPORTSETTINGS_SUPPORTEMALL . This is the email
+address your users will contact when they need help.
+
+Create the required directories and set their permissions.
+
+mkdir -p ./volumes/app/mattermost/{config, data, logs, plugins, client/plugins, bleve-indexes} sudo chown -R 2000:2000
+./volumes/app/mattermost
+
+(Optional) Configure TLS for NGINX. If you're not using the included NGINX reverse proxy, you can skip this step.
+Note
+
+Resource limits: If you're using a custom docker -compose.yml file that sets pids_limit, we recommend using
+
+mem_limit instead to constrain resources while allowing normal connection scaling. Low pids_limit values
+
+can prevent the container from creating enough processes or threads, which may lead to unstable behavior under load.
+The current default in docker-compose.yml issetto mem_limit: 46.
+
+Create a new certificate and key
+
+bash scripts/issue-certificate.sh -d <YOUR_MM_DOMAIN> -o $(PWD)/certs
+
+To include the certificate and key, uncomment the following lines in your .env file and ensure they point to the
+appropriate files.
+
+#CERT_PATH=./certs/etc/letsencrypt/live/\${DOMAIN}fullchain.pem
+
+#KEY_PATH=./certs/etc/letsencrypt/live/\${DOMAIN}privkey.pem
+
+Use a pre-existing certificate and key
+
+mkdir -p ./volumes/web/cert cp <PATH-TO-PRE-EXISTING-CERT>.pem ./volumes/web/cert/cert.pem cp <PATH-TO-
+PRE-EXISTING-KEY>.pem ./volumes/web/cert/key-no-password.pem
+
+To include the certificate and key, ensure the following lines in your .env_ file points to the appropriate files.
+
+CERT_PATH=./volumes/web/cert/
+
+## Calendar
+Calendar
+
+HOW TO ACCESS:
+1) Open your Google Calendar
+
+2) Scroll down to “Other Calendars", and click the +
+
+3) Select “Browse Resources”
+
+4) Select “Other”, then — MATG_all
+
+And you're in — you now have access to the full show calendar!
+
+You now have the power to: access the full schedule, add guests to meetings, and create your own meetings.
+
+TYPES OF MEETINGS:
+We categorize meetings through a color code to clarify meeting kind and importance level.
+
+YELLOW - Dailies
+
+ORANGE - Important meeting, usually with multiple managers
+
+note: these meetings cannot be easily moved
+
+RED - Client meeting! external, high level team members
+
+PURPLE - Pipeline-oriented meeting
+
+And lastly, GREY — OOO (Out of Office) reminders
+
+CREATING MEETINGS:
+
+Create meetings just like you would a regular Google Calendar meeting —
+Select time, add appropriate guests, and follow the color notation accordingly
+Meeting Title Notation examples:
+
+MATG | Assets | Supe/Director Review
+
+MATG | Daily Assets Catchup | LAY + ANIM
+
+## Purchase Order Process
+Purchase Order Process
+
+Purchase Order Workflow Documentation
+
+Overview
+
+This document describes the workflow for creating, approving, and managing Purchase Orders (POs). This process
+involves approval from key personnel and ensures that budgets are tracked and controlled effectively.
+
+Workflow Steps
+
+Initiating the Purchase Order (PO)
+
++ The IT department (via Xatélite) creates a Purchase Order (PO).
+
++ Aquote or estimate from the vendor is attached to the PO in PDF format.
+
+Approval Process
+
++ The PO is submitted for approval by the following roles:
++ CTO (Chief Technology Officer)
+o Head of Production
+o Head of Finance
+
+* Once all approvals are completed, the PO is considered approved.
+
+Vendor Request and Payment
+
++ The IT department places the order with the vendor after the final approval.
+
++ The invoice is sent directly to the Administration department.
+
+Invoice Check
+
++ If the invoice amount exceeds the approved PO by more than 5%, the IT department must re-validate the
+expense.
+
++ Ifthe invoice amount is within 5%, the invoice is processed for payment.
+
+Roles and Responsibilities
+
+IT Department (Xatélite)
+
++ Initiates the PO process.
++ Obtains the vendor quote.
++ Launches the approval flow.
+
++ Places the order with the vendor upon final approval.
+
+Approvers (CTO/Head of Production/Head of Finance)
+
++» Review and decide whether to approve or reject the PO.
+
+Administration
+
++ Pays the invoice.
+
++ Checks for discrepancies greater than 5% and escalates to IT if necessary.
+
+Budget Exceptions
+
+The following approval criteria apply based on the budget amount:
++» Budgets under €1,000:
+o Require approval from Paul only.
+
++ Budgets between €1,000 and €5,000:
+
+© Require approval from both Paul and Delphine.
+
++ Budgets over €5,000:
+
+© Require approval from Paul, Delphine, and Fanny.
+
+At the end of each month, a consolidated PO will be created to account for these minor expenses.
+
+Documentation and File Management
+
+Master Google Sheet
+
++ Each sheet represents a single PO.
+
++ Sheets are converted to PDFs with the following naming convention:
+
+o [Department Initials][Company Initials]-[4-digit Number]
+
+o Example: ITAT-3456 .
+
+Folder Structure
+
+A folder is created for each company. Each folder contains:
++ The master Google Sheet.
+
++ PDFs of POs.
+
++ Vendor quotes.
+
+## 01 Company Internal Rules  Policies  EN M
+ATLANT
+
+ANIMATION
+
+All policies and internal procedures described in this document apply equally to ATLANTIS Animation and to
+any of its subsidiaries, affiliated entities, or production units, without exception.
+
+Company Internal Rules & Policies
+
+TABLE OF CONTENTS
+
+1.WORKING HOURS
+2.BREAKS & REST PERIODS (LEGAL + INTERNAL RULES)
+
+2.1. LEGAL DaILy BREAK (ART. 34.3 ET)
+2.2. SHORT BREAKS & MICRO-PAUSES (INTERNAL RULES)
+2.3. COORDINATION WITH PRODUCTION ..
+
+3. ENTRANCE AREA .
+
+3.1. RESTRICTIONS IN THE ENTRANCE AREA ..
+3.2. Visitors & CLIENT PRIORITY.
+3.3. PROFESSIONAL IMAGE .
+
+4. TIMESHEET COMPLETION & WORKING HOURS REGISTRATION
+
+4.1. DAILY & MONTHLY OBLIGATION.
+4.2. SUBMISSION DEADLINE
+4.3. ACCURACY & TRUTHFULNESS
+4.4. LEGAL REQUIREMENT .........
+4.5. CORRECTIONS & ADJUSTMENTS...
+4.6. CONSEQUENCES OF NON-COMPLIANCE .
+
+5. ABSENCES, HOLIDAYS & PERSONAL APPOINTMENTS......
+
+5 TSNOTIFICATION REQUIREMENTS 222 BEES
+5.2. DEFINITION OF FORCE MAJEURE
+5.3. TYPES OF ABSENCES......
+5.4. PERSONAL APPOINTMENTS ..
+5.5. HOUR RECOVERY RULES.
+5.6. UNJUSTIFIED ABSENCES..
+5.7. REMOTE WORK ABSENCE RULES...
+5.8. RESPONSIBILITIES OF EMPLOYEES .. a
+BB ANNUAL CLOSURE PON oidos
+
+6. HYBRID & REMOTE WORK (WORK FROM HOME)
+
+6.1. SCHEDULES, AVAILABILITY & CONDUCT.
+6.2. CONNECTIVITY & EQUIPMENT REQUIREMENTS.
+6.3. REMOTE WORK ENVIRONMENT (PRL COMPLIANCE)
+6.4. ADDRESS & LOCATION REGULATIONS
+6.5. DATA PROTECTION & CONFIDENTIALITY (GDPR / RGPD) .
+6.6. BREAKS & SHORT ABSENCES DURING TELEWORK.
+6.7. HOUR RECOVERY & ABSENCE MANAGEMENT...
+6.8. ACCIDENTS, INCIDENTS & LIABILITY
+6.9. SUPERVISION & MONITORING .... =
+6.10. SUSPENSION OR REVOCATION OF REMOTE WORK ........ssessseetesesseseseseeseseeeseaessecesseesescsssensnessenesaeeeses
+
+7. CALLS, MEETINGS & COMMUNICATION.
+
+7.1. ATTENDANCE & PARTICIPATION IN MEETINGS ........scscscscssssseseseresssssneeecesseacseneacsesesesenesesssnesenenssenensaenes 15
+
+ANIMATION ATLANTIS STUDIO S.L / CIF: B76809730 / San Pedro Alcántara, 5-3°, 38002 SC de Tenerife!
+Company Internal Rules & Policies 08/12/2025
+
+ATLANT
+
+ANIMATION
+
+7.2. PROFESSIONAL ENVIRONMENT FOR CALLS
+7.3. MATTERMOST USAGE ...........
+7.4, COMMUNICATION EXPECTATIONS...
+
+7.5. APPROVED PROFESSIONAL USE ONLY
+7.6. CONFIDENTIALITY & INTERNAL BOUNDARIES
+7.7. Limits ON GROUPS, CHANNELS & CHATS
+7.8. INTERNET ACCESS AND ACCEPTABLE USE
+7.9. MONITORING & COMPLIANCE
+
+8. OPEN-SPACE NOISE POLICY & LANGUAGE ENVIRONMENT
+
+8.1. VOICE VOLUME & CONVERSATIONS.
+8.2. RESPECT FOR COLLEAGUES WORKING OR IN MEETINGS.
+8.3. HEADPHONES & AUDIO ... ei
+8.4. CALLS, VIDEOCALLS & SYNC MEETINGS
+8.5. TERRACE USE FOR WORK... aa
+
+8.6. BEHAVIOR INA SHARED PROFESSIONAL ENVIRONMENT .
+8.7. PRODUCTION AUTHORITY
+
+9. DRESS CODE & PROFESSIONAL APPEARANCE
+
+9.1. GENERAL APPEARANCE ..
+9.2. CLOTHING REQUIREMENTS...
+9.3. FOOTWEAR REQUIREMENTS ....
+9.4. REMOTE WORK VIDEO CALLS.
+9.5. SPECIAL CIRCUMSTANCE:
+9.6. PRODUCTION, ADMINISTRATION 8 MANAGEMENT AUTHORITY
+9.7. HYGIENE, CLEANLINESS .....sscsecsesssssessessasenceaceneenseaees
+
+9.8. CLEANLINESS IN THE WORKPLACE ..
+9.9. SMOKING RULES .....-..0e+e+eeee0e0
+
+10. PHONE USE (PERSONAL PHONE).
+
+10.1. PERSONAL PHONE USE ..........cscssscsssseseesteccestecsceenssseneesesensescsseessesseesseneeesseneeassesseaesanasseneessaeeaee
+10.2. PHONE SETTINGS DURING WORKING HOURS
+10.3. PHONE USE DURING MEETINGS.............»».
+10.4. DISCIPLINARY MEASURES
+
+11. CONFIDENTIALITY € SECURITY ..........
+
+11.1. STRICT PROHIBITIONS...
+11.2. CONFIDENTIAL MATERIALS.
+11.3. DIGITAL SECURITY RULES .. oe
+11.4. CONFIDENTIALITY DURING REMOTE Work
+11.5. SOCIAL MEDIA & PUBLIC COMMUNICATION
+11.6. PHOTOGRAPHY, FILMING & VISUAL CAPTURE INSIDE THE STUDIO.
+
+12. COMPANY INTERNAL CONFIDENTIALITY RULE
+
+12.1. MANDATORY CONFIDENTIALITY
+12.2. RECORDINGS: CLARIFICATION OF AUTHORIZED VS RESTRICTED USE .
+12.3. CONSEQUENCES OF BREACH
+12.4. SECURITY & DIGITAL PROTECTION RULES
+12.5. CONFLICTS OF INTEREST ...
+12.6. ARTIFICIAL INTELLIGENCE TooLs & GENERATIVE MODELS
+12.7. ACCIDENTAL EXPOSURE OR UNINTENTIONAL DISCLOSURE ..
+12.8. PROJECT
+
+## 01 Animation Style
+01- Animation Style
+
+EVERYTHING BASED ON THE TEASER
+
+Have a look to the teaser to watch what is the main intention of the show
+
+Z:\\Animation\\Animation Main Pack\\LEO_Trailer_VA_H264_1080p25_MixWEB-VA_2.0_V2.mp4
+
+ANIMATION STYLE
+
+During the show we are going to have diferent moments:
+
++ Emotive Moments
++ Body Mech Moments
+
++ Comedy Moments
+
+Those moments are going to define the small diference styles that we are going to use during the MAG proyect.
+
+EMOTIONAL MOMENTS
+
+This animation is quite different from the others because is more long in timing. We are going to maintain the body with
+
+slow in and out with lot of timing and soft arrives to poses.
+
+Check the wiki of the main characters for animation examples:
+https://wiki.atlantisanimation.net/en/MATG/Animation/charactersmain
+
+BODY MECHANICS MOMENTS
+
+Itis destiated to the action moments. We want to be realistic, non cartoon and some times with momentums to exagerate
+the action of the character action.
+
+COMEDY MOMENTS
+
+This is the more cartoon stylized. It is a kind of pose to pose with snappy inbetweens. Working in spline for arrivals,
+overshots and overlaps of body parts.
+
+Comedy Moments Yes and No’s of Animation Style
+
+Maintain the Body structure is the key.
+
+When you are posing for a cartoon we tend to extreme the pose and even build different shapes of the body. Try to avoid
+it. Hotel Transilvania mode OFF.
+
+Itis a good technique to exaggerate the pose, but not too far. The key is maintaining the structure. In the example “2”, the
+head is Stretched but not as much as the “no”.
+
+Pose 1/ Initial Multiples / fake smears
+
+Squash / anticipation
+
+Part of the body super scaled
+
+Pose 2 / final
+
+Overlap / secondaries
+
+## Textos presentacion
+ATLANTIS es un estudio de animación 3D ubicado en Tenerife, en las Islas Canarias. Nos dedicamos a transformar ideas en experiencias visuales únicas, combinando innovación y compromiso en cada proyecto.Nuestra pasión por la creatividad y la aventura nos inspira a explorar nuevas formas de contar historias. Con un enfoque flexible y dedicado, afrontamos cada desafío con soluciones personalizadas y efectivas.ATLANTIS es una boutique de animación. Cada proyecto es una creación "a medida" diseñada para reflejar tus visiones de manera única.  ¡Únete a nuestra aventura creativa!ATLANTIS is a 3D animation studio located in Tenerife, in the Canary Islands. We are dedicated to transforming ideas into unique visual experiences, combining innovation and commitment in every project.Our passion for creativity and adventure inspires us to explore new ways of storytelling. With a flexible and dedicated approach, we tackle every challenge with personalized and effective solutions.ATLANTIS is a boutique animation studio. Each project is a tailor-made creation designed to reflect your visions in a unique way. Join us on our creative adventure!ATLANTIS se dedica a producir animación 3D de alta calidad para series o largo metrajes. Hemos producido la serie Tara Duncan y gran parte la 5a temporada de Miraculous Ladybug, dos series transmitidas en Disney Channel y Disney Plus. Hemos producido recientemente también un trailer de un proyecto de animación para Sony Music, Sony Pictures y el jugado de fútbol Leo Messi.ATLANTIS is dedicated to producing high-quality 3D animation for series and feature films. We have produced the series Tara Duncan and a significant portion of the 5th season of Miraculous Ladybug, both series broadcast on Disney Channel and Disney Plus. Recently, we also produced a trailer for an animation project for Sony Music, Sony Pictures, and the football player Leo Messi.`;
+
+const chatHistories = { equipo: [], atlantis: [] };
+let activeChatTab = "equipo";
+
+function switchChatTab(tab) {
+  activeChatTab = tab;
+  document.getElementById("chat-tab-equipo").classList.toggle("active", tab === "equipo");
+  document.getElementById("chat-tab-atlantis").classList.toggle("active", tab === "atlantis");
+  document.getElementById("chat-equipo-panel").style.display = tab === "equipo" ? "flex" : "none";
+  document.getElementById("chat-atlantis-panel").style.display = tab === "atlantis" ? "flex" : "none";
+}
+
+function getEquipoContext() {
+  if (!allData.length) return "No hay datos del equipo cargados aún.";
+  const resumen = allData.slice(0, 120).map(p =>
+    `${p.nombre} | ${p.departamento} | ${p.nivel} | ${p.location} | ${p.nacionalidad} | inicio:${p.inicio} | fin:${p.finEstimado} | N+1:${p.contacto}`
+  ).join("\n");
+  return `Datos del equipo ATLANTIS Animation (${allData.length} personas total, ${activos.length} activos hoy):\n\n${resumen}`;
+}
+
+async function sendChat(type) {
+  const inputId = `chat-input-${type}`;
+  const input = document.getElementById(inputId);
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = "";
+
+  appendMessage(type, "user", msg);
+  chatHistories[type].push({ role: "user", content: msg });
+
+  const typingId = appendMessage(type, "assistant", "···");
+
+  let systemPrompt;
+  if (type === "equipo") {
+    systemPrompt = `Eres un asistente interno de ATLANTIS Animation. Tienes acceso a los datos actualizados del equipo. Responde preguntas sobre el personal de forma clara y concisa. Si te preguntan por personas específicas, busca en los datos. Habla en el idioma en que te hablen.\n\n${getEquipoContext()}`;
+  } else {
+    systemPrompt = `Eres el asistente oficial de ATLANTIS Animation, un estudio de animación 3D en Tenerife. Responde preguntas sobre el estudio, sus proyectos, su filosofía y su trabajo. Sé amable, creativo y refleja la personalidad del estudio. Habla en el idioma en que te hablen.\n\n${ATLANTIS_INFO}`;
+  }
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: chatHistories[type]
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || "No pude obtener respuesta.";
+    chatHistories[type].push({ role: "assistant", content: reply });
+    updateMessage(typingId, reply);
+  } catch(err) {
+    updateMessage(typingId, "Error al conectar con el asistente.");
+  }
+}
+
+function appendMessage(type, role, text) {
+  const container = document.getElementById(`chat-messages-${type}`);
+  const id = `msg-${Date.now()}-${Math.random()}`;
+  const div = document.createElement("div");
+  div.id = id;
+  div.className = `chat-msg chat-msg-${role}`;
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return id;
+}
+
+function updateMessage(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+function handleChatKey(e, type) {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(type); }
+}
 </script>
+<!-- CHATS -->
+<div id="page-chats" class="page">
+  <div class="chat-tabs">
+    <button id="chat-tab-equipo"   class="chat-tab active"  onclick="switchChatTab('equipo')">🧑‍💼 Chat Equipo</button>
+    <button id="chat-tab-atlantis" class="chat-tab"         onclick="switchChatTab('atlantis')">🎬 Chat ATLANTIS</button>
+  </div>
+
+  <!-- Panel Equipo -->
+  <div id="chat-equipo-panel" class="chat-panel">
+    <div class="chat-messages" id="chat-messages-equipo">
+      <div class="chat-msg chat-msg-assistant">Hola, soy el asistente del equipo ATLANTIS. Puedo ayudarte a encontrar información sobre cualquier persona, departamento, fechas de contrato, y más. ¿Qué necesitas?</div>
+    </div>
+    <div class="chat-input-row">
+      <textarea id="chat-input-equipo" class="chat-input" placeholder="Ej: ¿Quiénes son los SENIOR de Animation?" onkeydown="handleChatKey(event,'equipo')" rows="1"></textarea>
+      <button class="chat-send" onclick="sendChat('equipo')">↑</button>
+    </div>
+  </div>
+
+  <!-- Panel ATLANTIS -->
+  <div id="chat-atlantis-panel" class="chat-panel" style="display:none">
+    <div class="chat-messages" id="chat-messages-atlantis">
+      <div class="chat-msg chat-msg-assistant">¡Hola! Soy el asistente de ATLANTIS Animation. Puedo contarte sobre el estudio, nuestros proyectos, nuestra filosofía creativa y mucho más. ¿En qué puedo ayudarte?</div>
+    </div>
+    <div class="chat-input-row">
+      <textarea id="chat-input-atlantis" class="chat-input" placeholder="Ej: ¿En qué proyectos ha trabajado ATLANTIS?" onkeydown="handleChatKey(event,'atlantis')" rows="1"></textarea>
+      <button class="chat-send" onclick="sendChat('atlantis')">↑</button>
+    </div>
+  </div>
+</div>
+
+
 </body>
 </html>
