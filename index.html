@@ -840,9 +840,10 @@ function buildStats() {
     const d=p.departamento||"Sin dept.";
     deptPerm[d]=(deptPerm[d]||0)+1;
   });
-  makeBar("chart-ant-dept", depts, [{
+  const deptPermSorted = [...depts].sort((a,b)=>(deptPerm[b]||0)-(deptPerm[a]||0));
+  makeBar("chart-ant-dept", deptPermSorted, [{
     label:"Activos > 6 meses",
-    data: depts.map(d=>deptPerm[d]||0),
+    data: deptPermSorted.map(d=>deptPerm[d]||0),
     backgroundColor:"rgba(245,158,11,0.75)", borderRadius:4
   }], false, (dept) => {
     openModal(`${dept} — más de 6 meses`, activos.filter(p=>(p.departamento||"Sin dept.")===dept&&p.antiguedad!==null&&p.antiguedad>=6), "inicio");
@@ -1263,32 +1264,49 @@ function openPendingModal(label, key) {
 function buildUniverso() {
   if (!allData.length) return;
 
-  const canvas = document.getElementById("universo-canvas");
-  const tooltip = document.getElementById("universo-tooltip");
-  if (!canvas) return;
+  // ── Starfield ─────────────────────────────────────────────
+  const sc = document.getElementById("universo-stars-canvas");
+  if (sc) {
+    const dpr = Math.min(window.devicePixelRatio||1, 2);
+    const sw = sc.parentElement.offsetWidth || 1200;
+    const sh = sc.parentElement.offsetHeight || 800;
+    sc.width  = sw * dpr; sc.height = sh * dpr;
+    sc.style.width = sw+"px"; sc.style.height = sh+"px";
+    const sx = sc.getContext("2d");
+    sx.scale(dpr, dpr);
 
-  const dpr = Math.min(window.devicePixelRatio || 1, 3);
-  const headerH = document.querySelector("header").offsetHeight || 60;
-  const legendH = canvas.previousElementSibling ? canvas.previousElementSibling.offsetHeight + 20 : 80;
-  const W = window.innerWidth;
-  const H = window.innerHeight - headerH - legendH - 10;
-  canvas.width  = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.width  = "100vw";
-  canvas.style.height = H + "px";
-  canvas.style.display = "block";
-  canvas.style.marginLeft = "-20px"; // cancel page padding
-  const ctx = canvas.getContext("2d");
-  ctx.scale(dpr, dpr);
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
+    // Background deep space gradient
+    const bg = sx.createRadialGradient(sw*0.5,sh*0.4,0,sw*0.5,sh*0.5,Math.max(sw,sh));
+    bg.addColorStop(0,"#0a1628"); bg.addColorStop(0.5,"#060e1a"); bg.addColorStop(1,"#020608");
+    sx.fillStyle = bg; sx.fillRect(0,0,sw,sh);
 
-  const cx = W / 2, cy = H / 2;
+    // Nebula blobs
+    [[sw*0.2,sh*0.3,200,"rgba(99,102,241,0.06)"],[sw*0.8,sh*0.6,250,"rgba(0,180,216,0.05)"],[sw*0.5,sh*0.8,180,"rgba(139,26,74,0.07)"]].forEach(([x,y,r,c])=>{
+      const g=sx.createRadialGradient(x,y,0,x,y,r);
+      g.addColorStop(0,c); g.addColorStop(1,"transparent");
+      sx.fillStyle=g; sx.fillRect(0,0,sw,sh);
+    });
 
-  // Zoom & pan state
-  let zoom = 1, panX = 0, panY = 0;
-  let isDragging = false, lastMX = 0, lastMY = 0;
+    // Stars
+    const stars = Array.from({length:200},()=>({
+      x:Math.random()*sw, y:Math.random()*sh,
+      r:Math.random()*1.8+0.2, a:Math.random()*0.8+0.2,
+      color: Math.random()>0.9 ? "#aad4ff" : Math.random()>0.95 ? "#ffd6aa" : "#ffffff"
+    }));
+    stars.forEach(s=>{
+      sx.beginPath(); sx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      sx.fillStyle = s.color + (s.r > 1.2 ? "dd" : "88");
+      sx.fill();
+      // tiny glow for big stars
+      if(s.r>1.4){
+        const g=sx.createRadialGradient(s.x,s.y,0,s.x,s.y,s.r*4);
+        g.addColorStop(0,"rgba(255,255,255,0.15)"); g.addColorStop(1,"transparent");
+        sx.fillStyle=g; sx.beginPath(); sx.arc(s.x,s.y,s.r*4,0,Math.PI*2); sx.fill();
+      }
+    });
+  }
 
+  // ── Planet cards ──────────────────────────────────────────
   const COLORS = [
     "#00b4d8","#10b981","#f59e0b","#8b1a4a","#6366f1",
     "#ec4899","#14b8a6","#f97316","#a855f7","#84cc16",
@@ -1297,45 +1315,15 @@ function buildUniverso() {
     "#ea580c","#9333ea","#0891b2","#ca8a04","#dc2626"
   ];
 
-  // Department icons (emoji + draw function)
   const DEPT_ICONS = {
-    "ANIMATION":      (c,x,y,s) => drawIcon(c,"🎬",x,y,s),
-    "PRODUCTION":     (c,x,y,s) => drawIcon(c,"🎬",x,y,s),
-    "DESIGN":         (c,x,y,s) => drawIcon(c,"✏️",x,y,s),
-    "STORYBOARD":     (c,x,y,s) => drawIcon(c,"🎨",x,y,s),
-    "MODELING":       (c,x,y,s) => drawIcon(c,"🧊",x,y,s),
-    "IT":             (c,x,y,s) => drawIcon(c,"💻",x,y,s),
-    "LAYOUT":         (c,x,y,s) => drawIcon(c,"📐",x,y,s),
-    "LIGHTING":       (c,x,y,s) => drawIcon(c,"💡",x,y,s),
-    "RIGGING":        (c,x,y,s) => drawIcon(c,"🔧",x,y,s),
-    "COMPOSITING":    (c,x,y,s) => drawIcon(c,"🔬",x,y,s),
-    "VFX":            (c,x,y,s) => drawIcon(c,"✨",x,y,s),
-    "RENDER":         (c,x,y,s) => drawIcon(c,"⚡",x,y,s),
-    "TECHNICAL":      (c,x,y,s) => drawIcon(c,"⚙️",x,y,s),
-    "ADMIN":          (c,x,y,s) => drawIcon(c,"📋",x,y,s),
-    "EDITING":        (c,x,y,s) => drawIcon(c,"✂️",x,y,s),
-    "FX - LIGHTING":  (c,x,y,s) => drawIcon(c,"🌟",x,y,s),
-    "MATTE PAINTING": (c,x,y,s) => drawIcon(c,"🖌️",x,y,s),
-    "TXT SHADING":    (c,x,y,s) => drawIcon(c,"🎭",x,y,s),
-    "TEXTURING":      (c,x,y,s) => drawIcon(c,"🎨",x,y,s),
-    "2DFX":           (c,x,y,s) => drawIcon(c,"💫",x,y,s),
-    "3DFX":           (c,x,y,s) => drawIcon(c,"🌀",x,y,s),
-    "CG SUPERVISOR":  (c,x,y,s) => drawIcon(c,"👁️",x,y,s),
-    "VFX - COMPOSITING": (c,x,y,s) => drawIcon(c,"🔭",x,y,s),
-    "DEFAULT":        (c,x,y,s) => drawIcon(c,"🪐",x,y,s),
+    "ANIMATION":"🎬","PRODUCTION":"🎬","DESIGN":"✏️","STORYBOARD":"🎨",
+    "MODELING":"🧊","IT":"💻","LAYOUT":"📐","LIGHTING":"💡","RIGGING":"🔧",
+    "COMPOSITING":"🔬","VFX":"✨","RENDER":"⚡","TECHNICAL":"⚙️","ADMIN":"📋",
+    "EDITING":"✂️","FX - LIGHTING":"🌟","MATTE PAINTING":"🖌️","TXT SHADING":"🎭",
+    "TEXTURING":"🎨","2DFX":"💫","3DFX":"🌀","CG SUPERVISOR":"👁️",
+    "VFX - COMPOSITING":"🔭","DEFAULT":"🪐"
   };
 
-  function drawIcon(ctx, emoji, x, y, size) {
-    const fs = Math.max(10, size * 1.0);
-    ctx.font = `${fs}px serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.globalAlpha = 0.92;
-    ctx.fillText(emoji, x, y);
-    ctx.globalAlpha = 1;
-  }
-
-  // Data per dept
   const depts = [...new Set(allData.map(p=>p.departamento).filter(Boolean))].sort();
   const hist={}, present={}, futIn={}, futOut={};
   allData.forEach(p=>{const d=p.departamento||"?";hist[d]=(hist[d]||0)+1;});
@@ -1347,293 +1335,66 @@ function buildUniverso() {
     if(ds!==null&&ds>=0&&ds<=90) futOut[d]=(futOut[d]||0)+1;
   });
 
-  const maxHist    = Math.max(...depts.map(d=>hist[d]||0),1);
-  const maxPresent = Math.max(...depts.map(d=>present[d]||0),1);
-  const n = depts.length;
+  const maxPresent = Math.max(...depts.map(d=>present[d]||0), 1);
+  const sorted = [...depts].sort((a,b)=>(present[b]||0)-(present[a]||0));
 
-  // Sort by present count so big depts get inner orbits (more stable)
-  const deptsSorted = [...depts].sort((a,b)=>(present[b]||0)-(present[a]||0));
+  const grid = document.getElementById("universo-grid");
+  if (!grid) return;
 
-  // Evenly space angles
-  const maxPlanetSize = 32;
-  const safeMargin = maxPlanetSize + 20;
-  const minR = Math.min(W,H)*0.13;
-  const maxR = (Math.min(W,H)/2) - safeMargin;
+  grid.innerHTML = sorted.map((dept) => {
+    const n     = present[dept]||0;
+    const h     = hist[dept]||0;
+    const fi    = futIn[dept]||0;
+    const fo    = futOut[dept]||0;
+    const color = COLORS[depts.indexOf(dept)%COLORS.length];
+    const icon  = DEPT_ICONS[dept.toUpperCase()]||DEPT_ICONS["DEFAULT"];
+    const soft  = 0.4 + 0.6*(n/maxPresent);
+    const size  = Math.round(80 + 60*soft);
 
-  const planets = deptsSorted.map((dept,i) => {
-    const angle  = (i/n)*Math.PI*2 - Math.PI/2;
-    // Orbit: mix between dept history rank and even spacing
-    const histRank = (hist[dept]||0)/maxHist;
-    const orbitR = minR + (maxR-minR)*(0.15 + 0.85*histRank);
-    const px     = cx + Math.cos(angle)*orbitR;
-    const py     = cy + Math.sin(angle)*orbitR;
-    // Planet size: logarithmic scale to avoid Animation dominating
-    // Soft scale: compress range so all planets are visible but Animation is still biggest
-    const raw    = (present[dept]||0)/Math.max(maxPresent,1);
-    const soft   = 0.4 + 0.6 * raw; // compress to range [0.4, 1.0]
-    const size   = 12 + 22 * soft;
-    const color  = COLORS[depts.indexOf(dept)%COLORS.length];
-    const iconFn = DEPT_ICONS[dept.toUpperCase()] || DEPT_ICONS["DEFAULT"];
-    return {dept,i,angle,orbitR,px,py,size,color,iconFn,
-      hist:hist[dept]||0, present:present[dept]||0,
-      futIn:futIn[dept]||0, futOut:futOut[dept]||0};
-  });
+    // Planet texture layers via CSS
+    const planetStyle = `
+      width:${size}px;height:${size}px;border-radius:50%;
+      background:
+        radial-gradient(circle at 30% 25%, ${color}ff 0%, ${color}cc 30%, ${color}88 55%, ${color}33 75%, ${color}11 100%),
+        radial-gradient(circle at 70% 70%, rgba(0,0,0,0.4) 0%, transparent 60%);
+      box-shadow:
+        0 0 ${6+fi*4}px ${fi>0?color+"bb":"transparent"},
+        0 0 ${20+fi*8}px ${fi>0?color+"44":"transparent"},
+        inset -${size*0.15}px -${size*0.1}px ${size*0.3}px rgba(0,0,0,0.5),
+        inset ${size*0.05}px ${size*0.05}px ${size*0.15}px rgba(255,255,255,0.15);
+      border: ${fo>0?"2px solid rgba(150,150,180,0.4)":"1px solid "+color+"55"};
+      cursor:pointer;
+      transition:transform 0.25s cubic-bezier(.34,1.56,.64,1), box-shadow 0.25s;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      position:relative;margin:auto;flex-shrink:0;
+    `;
 
-  window._universo_planets = planets;
-
-  // Stars (fixed)
-  if (!window._universo_stars || window._universo_stars_W !== W) {
-    window._universo_stars_W = W;
-    window._universo_stars = Array.from({length:160}, ()=>({
-      x:Math.random()*W*1.5-W*0.25, y:Math.random()*H*1.5-H*0.25,
-      r:Math.random()*1.5, a:0.2+Math.random()*0.8,
-      twinkle: Math.random()*Math.PI*2
-    }));
-  }
-
-  let frame = 0;
-
-  function draw() {
-    ctx.clearRect(0,0,W,H);
-
-    // Background
-    const bg = ctx.createRadialGradient(cx,cy,0,cx,cy,Math.max(W,H));
-    bg.addColorStop(0,"#0a1628"); bg.addColorStop(1,"#030810");
-    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
-
-    ctx.save();
-    ctx.translate(cx+panX, cy+panY);
-    ctx.scale(zoom, zoom);
-    ctx.translate(-cx, -cy);
-
-    // Stars
-    frame++;
-    window._universo_stars.forEach(s => {
-      const twinkle = 0.5 + 0.5*Math.sin(s.twinkle + frame*0.02);
-      ctx.beginPath();
-      ctx.arc(s.x,s.y,s.r*twinkle,0,Math.PI*2);
-      ctx.fillStyle=`rgba(255,255,255,${s.a*twinkle})`;
-      ctx.fill();
+    const nivCount = {};
+    activos.filter(p=>(p.departamento||"?")===dept).forEach(p=>{
+      const nv=p.nivel||"?"; nivCount[nv]=(nivCount[nv]||0)+1;
     });
+    const nivStr = Object.entries(nivCount).map(([nv,c])=>`${nv}: ${c}`).join(" · ")||"—";
 
-    // Orbits
-    planets.forEach(p => {
-      ctx.beginPath();
-      ctx.arc(cx,cy,p.orbitR,0,Math.PI*2);
-      ctx.strokeStyle = p.isMoving ? "rgba(0,180,216,0.07)" : "rgba(255,255,255,0.04)";
-      ctx.lineWidth=1/zoom;
-      ctx.stroke();
-    });
-    // Separator ring hint
-    const midR = Math.min(W,H)*0.14 + ((Math.min(W,H)/2-62) - Math.min(W,H)*0.14)*0.45;
-    ctx.beginPath(); ctx.arc(cx,cy,midR,0,Math.PI*2);
-    ctx.strokeStyle="rgba(0,180,216,0.12)";
-    ctx.lineWidth=1.5/zoom; ctx.setLineDash([6,10]);
-    ctx.stroke(); ctx.setLineDash([]);
+    // Escape for inline onclick
+    const deptSafe = dept.replace(/'/g,"\'");
+    const tipHtml = `<div style='font-weight:700;color:${color};margin-bottom:6px'>${dept}</div><div>👥 Activos: <b>${n}</b></div><div style='font-size:11px;color:var(--muted);margin-top:2px'>${nivStr}</div><div style='border-top:1px solid rgba(255,255,255,.1);margin-top:6px;padding-top:6px;color:var(--muted)'>📚 Histórico: ${h}${fi?`<br>✨ Ingresan (90d): <span style='color:var(--green)'>${fi}</span>`:''}${fo?`<br>🌑 Salen (90d): <span style='color:var(--amber)'>${fo}</span>`:''}</div><div style='font-size:10px;color:var(--accent);margin-top:6px'>Clic para ver lista →</div>`;
 
-    // Sun
-    // Sun glow layers
-    [60,44,28].forEach((r,i)=>{
-      const g=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
-      g.addColorStop(0,`rgba(0,180,216,${[0.08,0.15,0.9][i]})`);
-      g.addColorStop(1,"rgba(0,180,216,0)");
-      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
-      ctx.fillStyle=g; ctx.fill();
-    });
-    ctx.beginPath(); ctx.arc(cx,cy,20,0,Math.PI*2);
-    ctx.fillStyle="#00b4d8"; ctx.fill();
-    ctx.fillStyle="#050e1a";
-    ctx.font="bold 13px Inter,sans-serif";
-    ctx.textAlign="center"; ctx.textBaseline="middle";
-    ctx.fillText("A",cx,cy);
-
-    // Planets
-    planets.forEach(p => {
-      // Future out halo (muted)
-      if(p.futOut>0){
-        const r=p.size+4+p.futOut*2.5;
-        const g=ctx.createRadialGradient(p.px,p.py,p.size,p.px,p.py,r);
-        g.addColorStop(0,p.color+"55"); g.addColorStop(1,p.color+"00");
-        ctx.beginPath(); ctx.arc(p.px,p.py,r,0,Math.PI*2);
-        ctx.fillStyle=g; ctx.fill();
-        // dark ring
-        ctx.beginPath(); ctx.arc(p.px,p.py,p.size+1.5,0,Math.PI*2);
-        ctx.strokeStyle="rgba(80,80,100,0.7)"; ctx.lineWidth=2/zoom; ctx.stroke();
-      }
-
-      // Future in glow (bright)
-      if(p.futIn>0){
-        const r=p.size+8+p.futIn*3;
-        const g=ctx.createRadialGradient(p.px,p.py,p.size*0.5,p.px,p.py,r);
-        g.addColorStop(0,p.color+"ee"); g.addColorStop(0.4,p.color+"55"); g.addColorStop(1,p.color+"00");
-        ctx.beginPath(); ctx.arc(p.px,p.py,r,0,Math.PI*2);
-        ctx.fillStyle=g; ctx.fill();
-      }
-
-      // Planet body
-      const pg=ctx.createRadialGradient(p.px-p.size*0.3,p.py-p.size*0.3,0,p.px,p.py,p.size);
-      pg.addColorStop(0,p.color+"ff"); pg.addColorStop(0.6,p.color+"cc"); pg.addColorStop(1,p.color+"55");
-      ctx.beginPath(); ctx.arc(p.px,p.py,p.size,0,Math.PI*2);
-      ctx.fillStyle=pg; ctx.fill();
-      ctx.strokeStyle=p.color+"99"; ctx.lineWidth=1.5/zoom; ctx.stroke();
-
-      // Icon inside planet
-      if(p.size > 8) {
-        ctx.save();
-        p.iconFn(ctx, p.px, p.py, p.size * 1.1);
-        ctx.restore();
-      }
-
-      // Label below
-      const labelSize = Math.max(9, Math.min(12, p.size*0.65));
-      ctx.fillStyle="rgba(255,255,255,0.92)";
-      ctx.font=`${labelSize}px Inter,sans-serif`;
-      ctx.textAlign="center"; ctx.textBaseline="top";
-      const short = p.dept.length>12?p.dept.slice(0,12)+"…":p.dept;
-      ctx.fillText(short, p.px, p.py+p.size+4);
-
-      // Count badge
-      ctx.fillStyle="rgba(255,255,255,0.7)";
-      ctx.font=`bold ${Math.max(7,p.size*0.5)}px Inter,sans-serif`;
-      ctx.textAlign="center"; ctx.textBaseline="bottom";
-      ctx.fillText(p.present, p.px, p.py-p.size-2);
-    });
-
-    ctx.restore();
-
-    // Zoom indicator
-    ctx.fillStyle="rgba(255,255,255,0.3)";
-    ctx.font="11px Inter,sans-serif";
-    ctx.textAlign="right"; ctx.textBaseline="bottom";
-    ctx.fillText(`zoom ${Math.round(zoom*100)}%`, W-10, H-8);
-
-    requestAnimationFrame(draw);
-  }
-
-  draw();
-
-  // No legend
-
-  // ── INTERACTIONS ──────────────────────────────────────────
-  const toWorld = (mx,my) => {
-    return {
-      wx: (mx - cx - panX)/zoom + cx,
-      wy: (my - cy - panY)/zoom + cy
-    };
-  };
-
-  const hitPlanet = (mx,my) => {
-    const {wx,wy} = toWorld(mx,my);
-    for(const p of window._universo_planets){
-      const dx=wx-p.px, dy=wy-p.py;
-      if(Math.sqrt(dx*dx+dy*dy)<=p.size+8/zoom) return p;
-    }
-    return null;
-  };
-
-  canvas.onmousemove = (e) => {
-    const rect=canvas.getBoundingClientRect();
-    const mx=(e.clientX-rect.left)*(W/rect.width);
-    const my=(e.clientY-rect.top)*(H/rect.height);
-
-    if(isDragging){
-      panX += mx-lastMX; panY += my-lastMY;
-      lastMX=mx; lastMY=my;
-      canvas.style.cursor="grabbing";
-      tooltip.style.display="none";
-      return;
-    }
-
-    const hit=hitPlanet(mx,my);
-    if(hit){
-      canvas.style.cursor="pointer";
-      const nivCount={};
-      activos.filter(q=>(q.departamento||"?")===hit.dept).forEach(q=>{
-        const nv=q.nivel||"?"; nivCount[nv]=(nivCount[nv]||0)+1;
-      });
-      const nivStr=Object.entries(nivCount).map(([n,c])=>`${n}: ${c}`).join(" · ")||"—";
-      tooltip.innerHTML=`
-        <div style="font-weight:700;color:${hit.color};margin-bottom:6px;font-size:14px">${hit.dept}</div>
-        <div style="color:var(--white)">👥 Activos: <b>${hit.present}</b></div>
-        <div style="color:var(--muted);font-size:11px;margin-top:2px">${nivStr}</div>
-        <div style="border-top:1px solid rgba(255,255,255,0.1);margin-top:6px;padding-top:6px;color:var(--muted)">
-          📚 Histórico total: ${hit.hist}
-          ${hit.futIn  ?`<br>✨ Ingresan (90d): <span style="color:var(--green)">${hit.futIn}</span>`:""}
-          ${hit.futOut ?`<br>🌑 Salen (90d): <span style="color:var(--amber)">${hit.futOut}</span>`:""}
-        </div>
-        <div style="font-size:10px;color:var(--accent);margin-top:6px">Clic para ver lista →</div>
-      `;
-      tooltip.style.display="block";
-      tooltip.style.left=(e.clientX+14)+"px";
-      tooltip.style.top=(e.clientY-10)+"px";
-    } else {
-      canvas.style.cursor="grab";
-      tooltip.style.display="none";
-    }
-  };
-
-  canvas.onmouseleave = ()=>{ tooltip.style.display="none"; isDragging=false; };
-
-  canvas.onmousedown = (e)=>{
-    isDragging=true;
-    const rect=canvas.getBoundingClientRect();
-    lastMX=(e.clientX-rect.left)*(W/rect.width);
-    lastMY=(e.clientY-rect.top)*(H/rect.height);
-  };
-
-  canvas.onmouseup = (e)=>{
-    if(!isDragging) return;
-    isDragging=false;
-    const rect=canvas.getBoundingClientRect();
-    const mx=(e.clientX-rect.left)*(W/rect.width);
-    const my=(e.clientY-rect.top)*(H/rect.height);
-    const moved=Math.abs(mx-lastMX)+Math.abs(my-lastMY);
-    if(moved<4){
-      const hit=hitPlanet(mx,my);
-      if(hit) openModal(`${hit.dept} — activos`, activos.filter(q=>(q.departamento||"?")===hit.dept), "inicio");
-    }
-  };
-
-  canvas.onwheel = (e)=>{
-    e.preventDefault();
-    const rect=canvas.getBoundingClientRect();
-    const mx=(e.clientX-rect.left)*(W/rect.width);
-    const my=(e.clientY-rect.top)*(H/rect.height);
-    const delta=e.deltaY>0?0.85:1.15;
-    const newZoom=Math.max(0.3,Math.min(5,zoom*delta));
-    // Zoom toward mouse position
-    panX = mx - (mx - panX)*newZoom/zoom;
-    panY = my - (my - panY)*newZoom/zoom;
-    zoom=newZoom;
-  };
-
-  // Touch support
-  let lastTouchDist=0;
-  canvas.ontouchstart=(e)=>{
-    if(e.touches.length===1){
-      isDragging=true;
-      lastMX=e.touches[0].clientX; lastMY=e.touches[0].clientY;
-    } else if(e.touches.length===2){
-      lastTouchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
-    }
-  };
-  canvas.ontouchmove=(e)=>{
-    e.preventDefault();
-    if(e.touches.length===1&&isDragging){
-      panX+=e.touches[0].clientX-lastMX; panY+=e.touches[0].clientY-lastMY;
-      lastMX=e.touches[0].clientX; lastMY=e.touches[0].clientY;
-    } else if(e.touches.length===2){
-      const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-      zoom=Math.max(0.3,Math.min(5,zoom*(dist/lastTouchDist)));
-      lastTouchDist=dist;
-    }
-  };
-  canvas.ontouchend=()=>{ isDragging=false; };
-
-  // Resize
-  window._universo_resize=()=>{ window._universo_stars=null; buildUniverso(); };
-  window.removeEventListener("resize",window._universo_resize);
-  window.addEventListener("resize",window._universo_resize);
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 4px">
+      <div
+        onclick="openModal('${deptSafe} — activos', activos.filter(p=>(p.departamento||'?')==='${deptSafe}'), 'inicio')"
+        onmouseover="this.style.transform='scale(1.14) translateY(-4px)';this.style.boxShadow='0 8px 32px ${color}99, inset -${Math.round(size*0.15)}px -${Math.round(size*0.1)}px ${Math.round(size*0.3)}px rgba(0,0,0,0.5), inset ${Math.round(size*0.05)}px ${Math.round(size*0.05)}px ${Math.round(size*0.15)}px rgba(255,255,255,0.2)';document.getElementById('universo-tooltip').style.display='block';document.getElementById('universo-tooltip').innerHTML=\`${tipHtml.replace(/`/g,"'")}\`;"
+        onmousemove="var t=document.getElementById('universo-tooltip');t.style.left=(event.clientX+14)+'px';t.style.top=(event.clientY-10)+'px';"
+        onmouseleave="this.style.transform='';this.style.boxShadow='';document.getElementById('universo-tooltip').style.display='none';"
+        style="${planetStyle}"
+      >
+        <div style="font-size:${Math.round(size*0.3)}px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5))">${icon}</div>
+        <div style="font-size:${Math.round(size*0.22)}px;font-weight:800;color:white;line-height:1;text-shadow:0 1px 4px rgba(0,0,0,0.8)">${n}</div>
+        ${fi>0?`<div style="position:absolute;top:-5px;right:-5px;background:var(--green);color:#000;border-radius:50%;width:20px;height:20px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 8px var(--green)">+${fi}</div>`:''}
+        ${fo>0?`<div style="position:absolute;bottom:-5px;right:-5px;background:var(--amber);color:#000;border-radius:50%;width:20px;height:20px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center">-${fo}</div>`:''}
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.8);text-align:center;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,0.9);max-width:${size+20}px">${dept}</div>
+    </div>`;
+  }).join("");
 }
 
 
@@ -1641,18 +1402,19 @@ function buildUniverso() {
 </script>
 
 <!-- UNIVERSO ATLANTIS -->
-<div id="page-universo" class="page" style="padding:0;margin:0;width:100%;max-width:100%;overflow:hidden">
-  <div style="text-align:center;padding:12px 20px 6px;position:relative;z-index:2">
-    <h2 style="font-size:18px;font-weight:700;letter-spacing:0.06em;color:var(--accent)">🌊 UNIVERSO ATLANTIS</h2>
-    <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:4px">
-      <span>🪐 Planeta = Activos hoy</span>
-      <span>✨ Brillo = Ingresos 90d</span>
-      <span>🌑 Halo = Salidas 90d</span>
-      <span>🖱️ Scroll = zoom · Drag = mover</span>
+<div id="page-universo" class="page" style="position:relative;overflow:hidden;min-height:calc(100vh - 80px);background:#030810;padding:20px 32px 32px">
+  <!-- Starfield background -->
+  <canvas id="universo-stars-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0"></canvas>
+
+  <!-- Content -->
+  <div style="position:relative;z-index:1">
+    <div style="text-align:center;margin-bottom:20px">
+      <h2 style="font-size:20px;font-weight:700;letter-spacing:0.06em;color:var(--accent);text-shadow:0 0 20px rgba(0,180,216,0.5)">🌊 UNIVERSO ATLANTIS</h2>
+      <p style="font-size:12px;color:var(--muted);margin-top:4px">Cada planeta = un departamento · Tamaño = personas activas · Clic para ver lista</p>
     </div>
+    <div id="universo-tooltip" style="display:none;position:fixed;background:rgba(15,25,40,0.97);border:1px solid rgba(0,180,216,0.3);border-radius:10px;padding:12px 16px;font-size:13px;z-index:200;pointer-events:none;max-width:220px"></div>
+    <div id="universo-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:24px;align-items:center"></div>
   </div>
-  <div id="universo-tooltip" style="display:none;position:fixed;background:rgba(15,25,40,0.97);border:1px solid rgba(0,180,216,0.3);border-radius:10px;padding:12px 16px;font-size:13px;z-index:200;pointer-events:none;max-width:220px"></div>
-  <canvas id="universo-canvas" style="display:block;cursor:grab"></canvas>
 </div>
 
 <!-- CHATS -->
