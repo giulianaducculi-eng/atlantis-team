@@ -324,6 +324,13 @@
       <div class="chart-card"><div class="chart-title">Nivel</div><canvas id="ds-nivel" style="max-height:180px"></canvas></div>
       <div class="chart-card"><div class="chart-title">Nacionalidad</div><canvas id="ds-nac" style="max-height:180px"></canvas></div>
     </div>
+    <div class="chart-card full" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+        <div class="chart-title" style="margin-bottom:0">Ingresos y salidas por mes</div>
+        <div id="ds-year-filter" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+      <canvas id="ds-timeline" style="max-height:200px"></canvas>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px">
       <div class="prox-card">
         <div class="prox-header" style="background:rgba(139,26,74,0.15);color:var(--wine2);border-bottom:1px solid rgba(139,26,74,0.2)">Finalizados</div>
@@ -412,7 +419,7 @@
 </div>
 
 <script>
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw4akfsSmiG6ENFn6jTDwzgmTORpn7o3JU2uWw8gIZRa-gt8_WZ2GJTlcuMAi2VNZL8/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzG4glszRH1AF945Wxa44pqeWWLbPNqC8EYcHrRXh9WXTe6UVh0owVbv9GF-pbwxa0/exec";
 
 const ONBOARDING_KEYS = [
   { key: "welcomePack",             label: "Welcome Pack" },
@@ -1228,6 +1235,68 @@ function buildDeptStatsPanel(dept) {
   document.getElementById("ds-finalizados").innerHTML = fin.length  ? fin.map(p=>row(p,"finEstimado")).join("") : none("Ninguno");
   document.getElementById("ds-ingresar").innerHTML    = entr.length ? entr.map(p=>row(p,"inicio")).join("")     : none("Ninguno próximos 30 días");
   document.getElementById("ds-finalizar").innerHTML   = sal.length  ? sal.map(p=>row(p,"finEstimado")).join("") : none("Ninguno próximos 30 días");
+
+  // Build timeline for this dept
+  buildDeptTimeline(dept, "todos");
+}
+
+function buildDeptTimeline(dept, year) {
+  const deptAll = allData.filter(p=>(p.departamento||"Sin dept.")===dept);
+  const ing={}, sal={};
+  deptAll.forEach(p=>{
+    const ki=monthKey(p.inicio), ks=monthKey(p.finEstimado);
+    if(ki) ing[ki]=(ing[ki]||0)+1;
+    if(ks) sal[ks]=(sal[ks]||0)+1;
+  });
+
+  let keys=[...new Set([...Object.keys(ing),...Object.keys(sal)])].sort();
+  const years=[...new Set(keys.map(k=>k.split("-")[0]))].sort();
+
+  // Year filter buttons
+  const yf=document.getElementById("ds-year-filter");
+  if(yf && yf.dataset.dept !== dept) {
+    yf.dataset.dept = dept;
+    yf.innerHTML = ["todos",...years].map(y=>
+      `<button class="filter-btn ${y===year?"active":""}" style="padding:4px 10px;font-size:11px" onclick="buildDeptTimeline('${dept}','${y}')">${y==="todos"?"Todos":y}</button>`
+    ).join("");
+  } else if(yf) {
+    // update active state
+    yf.querySelectorAll(".filter-btn").forEach(b=>{
+      b.classList.toggle("active", b.textContent===(year==="todos"?"Todos":year));
+    });
+  }
+
+  if(year!=="todos") keys=keys.filter(k=>k.startsWith(year+"-"));
+  const labels=keys.map(k=>monthLabel(k));
+
+  if(deptCharts.timeline) deptCharts.timeline.destroy();
+  deptCharts.timeline = new Chart(document.getElementById("ds-timeline"), {
+    type:"bar",
+    data:{
+      labels,
+      datasets:[
+        {label:"Ingresos", data:keys.map(k=>ing[k]||0), backgroundColor:"rgba(0,180,216,0.75)", borderRadius:3},
+        {label:"Salidas",  data:keys.map(k=>sal[k]||0), backgroundColor:"rgba(139,26,74,0.75)",  borderRadius:3}
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{position:"top",labels:{color:"#9ca3af",boxWidth:12,font:{size:11}}},
+      },
+      scales:{
+        x:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#6b7280",maxRotation:45}},
+        y:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#6b7280"},beginAtZero:true}
+      },
+      onClick(evt,elements){
+        if(!elements.length) return;
+        const k=keys[elements[0].index];
+        const dsIdx=elements[0].datasetIndex;
+        if(dsIdx===0) openModal(`Ingresos ${monthLabel(k)} — ${dept}`, deptAll.filter(p=>monthKey(p.inicio)===k), "inicio");
+        else          openModal(`Salidas ${monthLabel(k)} — ${dept}`,  deptAll.filter(p=>monthKey(p.finEstimado)===k), "finEstimado");
+      }
+    }
+  });
 }
 
 loadData();
