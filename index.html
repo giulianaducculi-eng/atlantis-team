@@ -513,6 +513,7 @@ const ONBOARDING_KEYS_UI = ONBOARDING_KEYS.filter(k =>
 );
 
 let allData = [], activos = [], active = [], finalizados = [], ingresanHoy = [], porIngresar = [], porFinalizar = [];
+let pendingSet = new Set(); // nombres con pendientes
 let activeYear = 'todos';
 let deptCharts = {};
 let sortCol = "nombre", sortAsc = true, activeFilter = "All", activePendingFilter = "todos";
@@ -527,6 +528,14 @@ function showPage(id, btn) {
   btn.classList.add("active");
 }
 
+function hasPending(nombre) {
+  return pendingSet && pendingSet.has(nombre);
+}
+
+function nameWithEmoji(nombre) {
+  return hasPending(nombre) ? `${nombre} 🧐` : nombre;
+}
+
 function openModal(title, rows, dateField) {
   document.getElementById("modal-title").textContent = title;
   document.getElementById("modal-count").textContent = `${rows.length} person${rows.length !== 1 ? "s" : ""}`;
@@ -534,7 +543,7 @@ function openModal(title, rows, dateField) {
     ? rows.map(r => `
         <div class="modal-row">
           <div class="modal-row-left">
-            <strong>${r.nombre}</strong>
+            <strong>${nameWithEmoji(r.nombre)}</strong>
             <span>${[r.departamento, r.nivel, r.location, r.nacionalidad].filter(Boolean).join(" · ")}</span>
           </div>
           <div class="modal-date">${dateField ? fmtDate(r[dateField]) : (r.contacto || "")}</div>
@@ -563,6 +572,11 @@ async function loadData() {
     ingresanHoy  = allData.filter(p => daysFrom(p.inicio) === 0);
     porIngresar  = allData.filter(p => { const d = daysFrom(p.inicio); return d !== null && d > 0 && d <= 30; });
     porFinalizar = allData.filter(p => { const d = daysFrom(p.finEstimado); return d !== null && d >= 0 && d <= 30; });
+    // Build set of people with pending onboarding items
+    pendingSet = new Set(
+      activos.filter(p => p.onboarding && ONBOARDING_KEYS_UI.some(({key}) => isPending(key, p.onboarding)))
+             .map(p => p.nombre)
+    );
     buildStats();
     buildFilters();
     renderDir();
@@ -1059,7 +1073,7 @@ function renderDir() {
     const dFin=daysFrom(p.finEstimado);
     let fc="date-cell"; if(dFin!==null&&dFin>=0&&dFin<=30)fc+=" date-warn";
     return `<tr>
-      <td><div class="name-cell"><div class="avatar">${ini}</div><strong>${p.nombre||"—"}</strong></div></td>
+      <td><div class="name-cell"><div class="avatar">${ini}</div><strong>${nameWithEmoji(p.nombre)||"—"}</strong></div></td>
       <td>${p.departamento?`<span class="badge">${p.departamento}</span>`:"—"}</td>
       <td>${p.nivel?`<span class="badge badge-level">${p.nivel}</span>`:"—"}</td>
       <td>${p.location?`<span class="badge badge-loc">${p.location}</span>`:"—"}</td>
@@ -1082,7 +1096,7 @@ function renderProximos() {
   const onsiteProx = allData.filter(p=>{const d=daysFrom(p.inicioOnSite);return d!==null&&d>0&&d<=30;}).sort((a,b)=>new Date(a.inicioOnSite)-new Date(b.inicioOnSite));
   const onsiteAll  = allData.filter(p=>p.inicioOnSite&&p.inicioOnSite!=="").sort((a,b)=>new Date(a.inicioOnSite)-new Date(b.inicioOnSite));
 
-  const row=(p,f)=>`<div class="prox-row"><div><div style="font-weight:500">${p.nombre}</div><div style="font-size:11px;color:var(--muted)">${p.departamento} · ${p.nivel} · ${p.location||""}</div></div><div class="prox-date">${fmtDate(p[f])}</div></div>`;
+  const row=(p,f)=>`<div class="prox-row"><div><div style="font-weight:500">${nameWithEmoji(p.nombre)}</div><div style="font-size:11px;color:var(--muted)">${p.departamento} · ${p.nivel} · ${p.location||""}</div></div><div class="prox-date">${fmtDate(p[f])}</div></div>`;
   const none=t=>`<div class="prox-row" style="color:var(--muted)">${t}</div>`;
 
   document.getElementById("list-hoy").innerHTML       = hoy.length       ? hoy.map(p=>row(p,"inicio")).join("")           : none("No one starting today");
@@ -1273,19 +1287,29 @@ function buildPendingKPIs() {
 
   document.getElementById("kpi-medical").innerHTML = `
     <div style="grid-column:1/-1;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding-bottom:4px;border-bottom:1px solid var(--border);margin-bottom:4px">Medical check</div>
-    <div class="kpi green" onclick="openModal('Medical check — completos', window._medCompleted, 'inicio')">
+    <div class="kpi green" onclick="openModal('Medical check — completed', window._medCompleted, 'inicio')">
       <div class="kpi-value">${window._medCompleted.length}</div>
       <div class="kpi-label">Completed</div>
       <div class="kpi-sub">${pct(window._medCompleted.length,total)}% active</div>
       <div class="kpi-hint">↗ view list</div>
     </div>
-    <div class="kpi amber" onclick="openModal('Medical check — aceptaron, pendiente gestión', window._medEnProceso, 'inicio')">
-      <div class="kpi-value">${window._medEnProceso.length}</div>
-      <div class="kpi-label">Accepted, pending management</div>
-      <div class="kpi-sub">${pct(window._medEnProceso.length,total)}% active</div>
-      <div class="kpi-hint">↗ view list</div>
+    <div class="kpi amber" style="border-color:rgba(245,158,11,0.5);grid-column:span 2">
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px;cursor:pointer" onclick="openModal('Medical check — accepted, pending management', window._medEnProceso, 'inicio')">
+        <div class="kpi-value" style="font-size:44px">${window._medEnProceso.length}</div>
+        <div>
+          <div class="kpi-label" style="color:var(--amber)">Accepted — pending management</div>
+          <div class="kpi-sub">${pct(window._medEnProceso.length,total)}% of active staff · click to view all</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;flex-wrap:wrap;gap:6px">
+        ${[...new Set((window._medEnProceso||[]).map(p=>p.departamento).filter(Boolean))].sort().map(dept=>{
+          const n=(window._medEnProceso||[]).filter(p=>p.departamento===dept).length;
+          const t=activos.filter(p=>p.departamento===dept).length;
+          return '<span onclick="event.stopPropagation();openModal(\'Medical pending: '+dept+'\',window._medEnProceso.filter(p=>p.departamento===\''+dept+'\'),\'inicio\')" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);color:var(--amber);padding:3px 10px;border-radius:20px;font-size:11px;cursor:pointer">'+dept+': '+n+' ('+Math.round(n/t*100)+'%)</span>';
+        }).join("")}
+      </div>
     </div>
-    <div class="kpi red" onclick="openModal('Medical check — sin consultar', window._medSinGestionar, 'inicio')">
+    <div class="kpi red" onclick="openModal('Medical check — not yet consulted', window._medSinGestionar, 'inicio')">
       <div class="kpi-value">${window._medSinGestionar.length}</div>
       <div class="kpi-label">Not yet consulted</div>
       <div class="kpi-sub">${pct(window._medSinGestionar.length,total)}% active</div>
@@ -1332,7 +1356,7 @@ function buildDeptStatsPanel(dept) {
   });
 
   // Próximos
-  const row=(p,f)=>`<div class="prox-row"><div><div style="font-weight:500">${p.nombre}</div><div style="font-size:11px;color:var(--muted)">${p.nivel}</div></div><div class="prox-date">${fmtDate(p[f])}</div></div>`;
+  const row=(p,f)=>`<div class="prox-row"><div><div style="font-weight:500">${nameWithEmoji(p.nombre)}</div><div style="font-size:11px;color:var(--muted)">${p.nivel}</div></div><div class="prox-date">${fmtDate(p[f])}</div></div>`;
   const none=t=>`<div class="prox-row" style="color:var(--muted)">${t}</div>`;
 
   const now = new Date();
