@@ -450,10 +450,32 @@
 <div id="page-pendientes" class="page">
   <div class="kpi-grid" id="kpi-pendientes" style="margin-bottom:20px"></div>
   <div class="kpi-grid" id="kpi-medical" style="margin-bottom:24px"></div>
-  <div class="section-title" style="margin-bottom:16px">Pending por checklist — active</div>
+
+  <!-- Charts row -->
+  <div class="charts-row-3" style="margin-bottom:24px">
+    <div class="chart-card">
+      <div class="chart-title">Pending items by checklist</div>
+      <canvas id="chart-pend-checklist" style="max-height:220px"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Pending items by department</div>
+      <canvas id="chart-pend-dept" style="max-height:220px"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Onboarding completion over time</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px" id="pend-year-filter"></div>
+      <canvas id="chart-pend-progress" style="max-height:220px"></canvas>
+    </div>
+  </div>
+  <div class="chart-card full" style="margin-bottom:24px">
+    <div class="chart-title">Top 15 — people with most pending items</div>
+    <canvas id="chart-pend-people" style="max-height:260px"></canvas>
+  </div>
+
+  <div class="section-title" style="margin-bottom:16px">Checklist pending — active staff</div>
   <div class="pending-summary" id="pending-summary"></div>
 
-  <div class="section-title" style="margin-bottom:12px">Pending por person</div>
+  <div class="section-title" style="margin-bottom:12px">Pending by person</div>
   <div class="pending-filter">
     <button class="filter-btn active" data-pf="todos" onclick="setPendingFilter(this)">All</button>
     <button class="filter-btn" data-pf="conpendientes" onclick="setPendingFilter(this)">With pending items</button>
@@ -466,7 +488,6 @@
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzG4glszRH1AF945Wxa44pqeWWLbPNqC8EYcHrRXh9WXTe6UVh0owVbv9GF-pbwxa0/exec";
 
 const ONBOARDING_KEYS = [
-  { key: "welcomePack",             label: "Welcome Pack" },
   { key: "laboralDocs",             label: "Laboral Docs" },
   { key: "medicalCheck",            label: "Medical check" },
   { key: "medicalCheckYes",         label: "Medical check YES" },
@@ -1115,23 +1136,77 @@ function setPendingFilter(btn) {
 function renderPending() {
   const base = active;
   const total = base.length;
-
-  // Guardar referencia global para los onclicks
   window._pendingBase = base;
 
-  // Resumen por checklist — clicable
+  // ── CHARTS ────────────────────────────────────────────────
+
+  // 1. Donut: pending by checklist item
+  const checklistPending = ONBOARDING_KEYS_UI.map(({key,label}) => ({
+    label, n: base.filter(p=>isPending(key,p.onboarding)).length
+  }));
+  if (charts["chart-pend-checklist"]) charts["chart-pend-checklist"].destroy();
+  charts["chart-pend-checklist"] = new Chart(document.getElementById("chart-pend-checklist"), {
+    type:"doughnut",
+    data:{ labels: checklistPending.map(x=>x.label), datasets:[{ data: checklistPending.map(x=>x.n), backgroundColor:["#f59e0b","#ef4444","#6366f1","#ec4899","#10b981","#00b4d8","#f97316","#a855f7","#14b8a6","#84cc16"], borderWidth:0 }] },
+    options:{ responsive:true, cutout:"52%", plugins:{ legend:{position:"bottom",labels:{color:"#9ca3af",boxWidth:10,font:{size:10}}}, tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw} (${pct(ctx.raw,total)}%)`}} },
+      onClick(evt,els){ if(!els.length) return; const {key,label}=ONBOARDING_KEYS_UI[els[0].index]; openPendingModal(label,key); }
+    }
+  });
+
+  // 2. Bars: pending by department
+  const depts = [...new Set(base.map(p=>p.departamento).filter(Boolean))].sort();
+  const deptPendCount = depts.map(d => base.filter(p=>p.departamento===d && ONBOARDING_KEYS_UI.some(({key})=>isPending(key,p.onboarding))).length);
+  const deptTotalCount = depts.map(d => base.filter(p=>p.departamento===d).length);
+  const deptSorted = depts.map((d,i)=>({d,n:deptPendCount[i],t:deptTotalCount[i]})).sort((a,b)=>b.n-a.n);
+  if (charts["chart-pend-dept"]) charts["chart-pend-dept"].destroy();
+  charts["chart-pend-dept"] = new Chart(document.getElementById("chart-pend-dept"), {
+    type:"bar",
+    data:{ labels:deptSorted.map(x=>x.d), datasets:[
+      {label:"With pending", data:deptSorted.map(x=>x.n), backgroundColor:"rgba(245,158,11,0.75)", borderRadius:3},
+      {label:"Completed",    data:deptSorted.map(x=>x.t-x.n), backgroundColor:"rgba(16,185,129,0.5)",  borderRadius:3}
+    ]},
+    options:{ responsive:true, scales:{x:{stacked:true,grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#6b7280",maxRotation:45}},y:{stacked:true,grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#6b7280"},beginAtZero:true}}, plugins:{legend:{position:"top",labels:{color:"#9ca3af",boxWidth:12,font:{size:11}}}},
+      onClick(evt,els){ if(!els.length) return; const dept=deptSorted[els[0].index].d; openModal(`Pending — ${dept}`, base.filter(p=>p.departamento===dept&&ONBOARDING_KEYS_UI.some(({key})=>isPending(key,p.onboarding))), "inicio"); }
+    }
+  });
+
+  // 3. Line: onboarding completion % over time (cumulative by month)
+  window._pendingBase2 = base;
+  buildPendingProgressChart(base, "todos");
+
+  // 4. Bars: top 15 people with most pending items
+  const byPerson = base.map(p=>({ nombre:p.nombre, dept:p.departamento||"", n:ONBOARDING_KEYS_UI.filter(({key})=>isPending(key,p.onboarding)).length }))
+    .filter(x=>x.n>0).sort((a,b)=>b.n-a.n).slice(0,15);
+  if (charts["chart-pend-people"]) charts["chart-pend-people"].destroy();
+  charts["chart-pend-people"] = new Chart(document.getElementById("chart-pend-people"), {
+    type:"bar",
+    data:{ labels:byPerson.map(x=>x.nombre.split(" ").slice(0,2).join(" ")), datasets:[{
+      label:"Pending items",
+      data:byPerson.map(x=>x.n),
+      backgroundColor:"rgba(245,158,11,0.75)", borderRadius:3
+    }]},
+    options:{ indexAxis:"y", responsive:true, scales:{x:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#6b7280"},beginAtZero:true,max:ONBOARDING_KEYS_UI.length},y:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#e5e7eb",font:{size:11}}}}, plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.raw} pending items — ${byPerson[ctx.dataIndex].dept}`}}},
+      onClick(evt,els){ if(!els.length) return; openPersonPendingModal(base.find(p=>p.nombre.startsWith(byPerson[els[0].index].nombre.split(" ")[0]))?.nombre||byPerson[els[0].index].nombre); }
+    }
+  });
+
+  // ── CHECKLIST SUMMARY ─────────────────────────────────────
   document.getElementById("pending-summary").innerHTML = ONBOARDING_KEYS_UI.map(({key, label}) => {
     const n  = base.filter(p => isPending(key, p.onboarding)).length;
     const nd = base.filter(p => isDone(key, p.onboarding)).length;
+    // Dept breakdown
+    const deptBreakdown = [...new Set(base.filter(p=>isPending(key,p.onboarding)).map(p=>p.departamento).filter(Boolean))].sort()
+      .map(d=>{ const dn=base.filter(p=>p.departamento===d&&isPending(key,p.onboarding)).length; return `<span onclick="event.stopPropagation();openModal('${label} pending — ${d}',base.filter(p=>p.departamento==='${d}'&&isPending('${key}',p.onboarding)),'inicio')" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);color:var(--amber);padding:2px 7px;border-radius:20px;font-size:10px;cursor:pointer">${d}: ${dn}</span>`; }).join(" ");
     return `<div class="pending-item" onclick="openPendingModal('${label}','${key}')">
       <div class="pending-label">${label}</div>
       <div class="pending-count">${n}</div>
-      <div class="pending-pct">${pct(n,total)}% pendiente · ${nd} ok</div>
+      <div class="pending-pct">${pct(n,total)}% pending · ${nd} done</div>
+      ${deptBreakdown ? `<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">${deptBreakdown}</div>` : ""}
       <div class="pending-hint">↗ view list</div>
     </div>`;
   }).join("");
 
-  // Por person
+  // ── BY PERSON ─────────────────────────────────────────────
   let persons = base.map(p => {
     const pend = ONBOARDING_KEYS_UI.filter(({key}) => isPending(key, p.onboarding));
     const done = ONBOARDING_KEYS_UI.filter(({key}) => isDone(key, p.onboarding));
@@ -1145,9 +1220,9 @@ function renderPending() {
   document.getElementById("pending-person-list").innerHTML = persons.map(p => `
     <div class="pending-person-card" style="cursor:pointer" onclick="openPersonPendingModal('${p.nombre.replace(/'/g,"\\'")}')">
       <div class="pending-person-name">
-        <span>${p.nombre} <span style="font-size:11px;color:var(--muted);font-weight:400">${p.departamento}</span></span>
+        <span>${nameWithEmoji(p.nombre)} <span style="font-size:11px;color:var(--muted);font-weight:400">${p.departamento}</span></span>
         <span style="font-size:12px;color:${p.pendientes.length>0?'var(--amber)':'var(--green)'}">
-          ${p.pendientes.length>0 ? p.pendientes.length+' pendiente'+(p.pendientes.length>1?'s':'') : '✓ Completo'}
+          ${p.pendientes.length>0 ? p.pendientes.length+' pending' : '✓ Complete'}
         </span>
       </div>
       <div class="pending-chips">
@@ -1155,6 +1230,91 @@ function renderPending() {
         ${p.done.map(({label})=>`<span class="chip-done">✓ ${label}</span>`).join("")}
       </div>
     </div>`).join("");
+}
+
+function buildPendingProgressChart(base, year) {
+  // Group by starting month
+  const allMonths = [...new Set(base.map(p=>monthKey(p.inicio)).filter(Boolean))].sort();
+  const years = [...new Set(allMonths.map(k=>k.split("-")[0]))].sort();
+
+  // Year filter buttons
+  const yf = document.getElementById("pend-year-filter");
+  if(yf) {
+    yf.innerHTML = ["todos",...years].map(y=>
+      `<button class="filter-btn ${y===year?"active":""}" style="padding:4px 10px;font-size:11px" onclick="buildPendingProgressChart(window._pendingBase2,'${y}')">${y==="todos"?"All":y}</button>`
+    ).join("");
+  }
+
+  let keys = allMonths;
+  if(year !== "todos") keys = keys.filter(k=>k.startsWith(year+"-"));
+
+  // For each month: people who started that month, split by completed vs pending
+  const completedData = keys.map(k => {
+    const started = base.filter(p => monthKey(p.inicio) === k);
+    return started.filter(p => ONBOARDING_KEYS_UI.every(({key}) => isDone(key, p.onboarding))).length;
+  });
+  const pendingData = keys.map(k => {
+    const started = base.filter(p => monthKey(p.inicio) === k);
+    return started.filter(p => ONBOARDING_KEYS_UI.some(({key}) => isPending(key, p.onboarding))).length;
+  });
+  const totalData = keys.map((_,i) => completedData[i] + pendingData[i]);
+
+  if (charts["chart-pend-progress"]) charts["chart-pend-progress"].destroy();
+  charts["chart-pend-progress"] = new Chart(document.getElementById("chart-pend-progress"), {
+    type: "bar",
+    data: {
+      labels: keys.map(k => monthLabel(k)),
+      datasets: [
+        {
+          label: "✓ Complete",
+          data: completedData,
+          backgroundColor: "rgba(16,185,129,0.8)",
+          borderRadius: 3,
+          stack: "s"
+        },
+        {
+          label: "⚠ Pending",
+          data: pendingData,
+          backgroundColor: "rgba(245,158,11,0.75)",
+          borderRadius: 3,
+          stack: "s"
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: { stacked:true, grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#6b7280",maxRotation:45} },
+        y: { stacked:true, grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#6b7280"}, beginAtZero:true }
+      },
+      plugins: {
+        legend: { position:"top", labels:{color:"#9ca3af",boxWidth:12,font:{size:11}} },
+        tooltip: {
+          callbacks: {
+            afterBody: ctx => {
+              const i = ctx[0].dataIndex;
+              const tot = totalData[i];
+              const comp = completedData[i];
+              const pend = pendingData[i];
+              return [
+                `Total started: ${tot}`,
+                `Complete: ${comp} (${tot?Math.round(comp/tot*100):0}%)`,
+                `Pending: ${pend} (${tot?Math.round(pend/tot*100):0}%)`
+              ];
+            }
+          }
+        }
+      },
+      onClick(evt, els) {
+        if(!els.length) return;
+        const k = keys[els[0].index];
+        const dsIdx = els[0].datasetIndex;
+        const started = base.filter(p => monthKey(p.inicio) === k);
+        if(dsIdx === 0) openModal(`Complete — ${monthLabel(k)}`, started.filter(p=>ONBOARDING_KEYS_UI.every(({key})=>isDone(key,p.onboarding))), "inicio");
+        else openModal(`Pending — ${monthLabel(k)}`, started.filter(p=>ONBOARDING_KEYS_UI.some(({key})=>isPending(key,p.onboarding))), "inicio");
+      }
+    }
+  });
 }
 
 function openPendingModal(key, label) {
@@ -1266,14 +1426,28 @@ function buildPendingKPIs() {
   const total = base.length;
   const completos = base.filter(p => p.onboarding && ONBOARDING_KEYS_UI.every(({key})=>isDone(key, p.onboarding)));
   const conPend   = base.filter(p => p.onboarding && ONBOARDING_KEYS_UI.some(({key})=>isPending(key, p.onboarding)));
+  window._conPend = conPend;
+
   document.getElementById("kpi-pendientes").innerHTML = `
     <div class="kpi green" onclick="setPendingFilter(document.querySelector('[data-pf=completos]'))">
       <div class="kpi-value">${completos.length}</div><div class="kpi-label">Onboarding complete</div>
       <div class="kpi-sub">${pct(completos.length,total)}% of total active</div><div class="kpi-hint">↗ view list</div>
     </div>
-    <div class="kpi amber" onclick="setPendingFilter(document.querySelector('[data-pf=conpendientes]'))">
-      <div class="kpi-value">${conPend.length}</div><div class="kpi-label">With pending items</div>
-      <div class="kpi-sub">${pct(conPend.length,total)}% of total active</div><div class="kpi-hint">↗ view list</div>
+    <div class="kpi amber" style="border-color:rgba(245,158,11,0.5);grid-column:span 2">
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px;cursor:pointer" onclick="setPendingFilter(document.querySelector('[data-pf=conpendientes]'))">
+        <div class="kpi-value" style="font-size:44px">${conPend.length}</div>
+        <div>
+          <div class="kpi-label" style="color:var(--amber)">With pending items</div>
+          <div class="kpi-sub">${pct(conPend.length,total)}% of total active · click to view all</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;flex-wrap:wrap;gap:6px">
+        ${[...new Set(conPend.map(p=>p.departamento).filter(Boolean))].sort().map(dept=>{
+          const n=conPend.filter(p=>p.departamento===dept).length;
+          const t=base.filter(p=>p.departamento===dept).length;
+          return '<span onclick="event.stopPropagation();openModal(\'Pending — '+dept+'\',window._conPend.filter(p=>p.departamento===\''+dept+'\'),\'inicio\')" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);color:var(--amber);padding:3px 10px;border-radius:20px;font-size:11px;cursor:pointer">'+dept+': '+n+' ('+Math.round(n/t*100)+'%)</span>';
+        }).join("")}
+      </div>
     </div>
     <div class="kpi accent">
       <div class="kpi-value">${total}</div><div class="kpi-label">Total active</div>
