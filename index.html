@@ -28,7 +28,7 @@
   #btn-refresh { background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: var(--white); padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; }
   #btn-refresh:hover { background: rgba(255,255,255,0.16); }
   #btn-refresh.loading { opacity: 0.5; pointer-events: none; }
-  #last-update { font-size: 12px; color: var(--muted); }
+  #last-update { font-size: 14px; color: var(--white); font-weight: 500; }
 
   .page { display: none; padding: 28px 40px; }
   .page.active { display: block; }
@@ -480,6 +480,9 @@
     <button class="filter-btn active" data-pf="todos" onclick="setPendingFilter(this)">All</button>
     <button class="filter-btn" data-pf="conpendientes" onclick="setPendingFilter(this)">With pending items</button>
     <button class="filter-btn" data-pf="completos" onclick="setPendingFilter(this)">Completed</button>
+    <input id="pending-search" type="text" placeholder="Search by name or department…"
+      style="flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);color:var(--white);padding:7px 14px;border-radius:var(--radius);font-size:13px;outline:none"
+      oninput="renderPending()" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
   </div>
   <div class="pending-person-list" id="pending-person-list"></div>
 </div>
@@ -1215,6 +1218,14 @@ function renderPending() {
 
   if (activePendingFilter === "conpendientes") persons = persons.filter(p=>p.pendientes.length>0);
   if (activePendingFilter === "completos")     persons = persons.filter(p=>p.pendientes.length===0);
+
+  // Search filter
+  const searchQ = (document.getElementById("pending-search")?.value||"").toLowerCase().trim();
+  if (searchQ) persons = persons.filter(p =>
+    p.nombre.toLowerCase().includes(searchQ) ||
+    (p.departamento||"").toLowerCase().includes(searchQ)
+  );
+
   persons.sort((a,b)=>b.pendientes.length-a.pendientes.length);
 
   document.getElementById("pending-person-list").innerHTML = persons.map(p => `
