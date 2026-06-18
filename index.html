@@ -48,6 +48,35 @@
   .kpi.red    .kpi-value { color: var(--red); }
   .kpi.blue   .kpi-value { color: #60a5fa; }
 
+  /* Big KPI cards */
+  .kpi-big-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
+  .kpi-big { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; cursor: pointer; transition: border-color 0.2s, transform 0.15s; }
+  .kpi-big:hover { transform: translateY(-3px); }
+  .kpi-big-value { font-size: 52px; font-weight: 800; line-height: 1; letter-spacing: -2px; }
+  .kpi-big-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; margin-bottom: 14px; }
+  .kpi-big-divider { border: none; border-top: 1px solid var(--border); margin: 0 0 12px; }
+  .kpi-big-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 12px; cursor: pointer; border-radius: 4px; transition: background 0.15s; padding: 4px 6px; margin: 0 -6px; }
+  .kpi-big-row:hover { background: rgba(255,255,255,0.06); }
+  .kpi-big-row-label { color: var(--muted); }
+  .kpi-big-row-value { font-weight: 600; color: var(--white); }
+  .kpi-big.green .kpi-big-value { color: var(--green); }
+  .kpi-big.green { border-color: rgba(16,185,129,0.25); }
+  .kpi-big.green:hover { border-color: var(--green); }
+  .kpi-big.accent .kpi-big-value { color: var(--accent); }
+  .kpi-big.accent { border-color: rgba(0,180,216,0.25); }
+  .kpi-big.accent:hover { border-color: var(--accent); }
+  .kpi-big.amber .kpi-big-value { color: var(--amber); }
+  .kpi-big.amber { border-color: rgba(245,158,11,0.25); }
+  .kpi-big.amber:hover { border-color: var(--amber); }
+  .kpi-big.red .kpi-big-value { color: var(--red); }
+  .kpi-big.red { border-color: rgba(239,68,68,0.25); }
+  .kpi-big.red:hover { border-color: var(--red); }
+  @media(max-width:900px){ .kpi-big-grid { grid-template-columns: repeat(2,1fr); } }
+  @keyframes float0{0%,100%{transform:translateY(0px)}50%{transform:translateY(-8px)}}
+  @keyframes float1{0%,100%{transform:translateY(0px)}50%{transform:translateY(-12px)}}
+  @keyframes float2{0%,100%{transform:translateY(0px)}50%{transform:translateY(-6px)}}
+  @media(max-width:500px){ .kpi-big-grid { grid-template-columns: 1fr; } }
+
   /* MODAL */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
   .modal-overlay.open { display: flex; }
@@ -183,25 +212,40 @@
 </head>
 <body>
 
+<!-- PASSWORD SCREEN -->
+<div id="pw-screen" style="position:fixed;inset:0;background:radial-gradient(ellipse at 50% 40%,#0a1628,#020608);z-index:1000;display:flex;align-items:center;justify-content:center">
+  <div style="text-align:center;padding:40px;background:rgba(255,255,255,0.04);border:1px solid rgba(0,180,216,0.2);border-radius:16px;min-width:320px">
+    <div style="font-size:36px;margin-bottom:8px">🌊</div>
+    <div style="font-size:20px;font-weight:700;color:var(--accent);letter-spacing:0.08em;margin-bottom:4px">ATLANTIS</div>
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:28px">Internal Dashboard</div>
+    <input id="pw-input" type="password" placeholder="Enter password"
+      style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:white;padding:12px 16px;border-radius:8px;font-size:15px;outline:none;margin-bottom:12px;text-align:center;letter-spacing:0.1em"
+      onkeydown="if(event.key==='Enter')checkPw()"
+    >
+    <div id="pw-error" style="color:var(--red);font-size:12px;margin-bottom:12px;display:none">Incorrect password</div>
+    <button onclick="checkPw()" style="width:100%;background:var(--accent);border:none;color:#000;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.05em">Enter →</button>
+  </div>
+</div>
+
 <header>
   <div class="logo">
     <div class="logo-mark">A</div>
     <div class="logo-text">
       <strong>ATLANTIS Animation</strong>
-      <span>Equipo interno</span>
+      <span>Internal Team</span>
     </div>
   </div>
   <nav>
-    <button class="nav-btn active" onclick="showPage('stats', this)">Estadísticas</button>
-    <button class="nav-btn" onclick="showPage('directorio', this)">Departamentos</button>
-    <button class="nav-btn" onclick="showPage('proximos', this)">Próximos eventos</button>
-    <button class="nav-btn" onclick="showPage('pendientes', this)">Pendientes</button>
+    <button class="nav-btn active" onclick="showPage('stats', this)">Statistics</button>
+    <button class="nav-btn" onclick="showPage('directorio', this)">Departments</button>
+    <button class="nav-btn" onclick="showPage('proximos', this)">Upcoming Events</button>
+    <button class="nav-btn" onclick="showPage('pendientes', this)">Pending</button>
     <button class="nav-btn" onclick="showPage('universo', this)">🌊 Universo</button>
     <button class="nav-btn" onclick="showPage('chats', this)">Chats</button>
   </nav>
   <div class="header-right">
     <span id="last-update"></span>
-    <button id="btn-refresh" onclick="loadData()">↻ Actualizar</button>
+    <button id="btn-refresh" onclick="loadData()">↻ Refresh</button>
   </div>
 </header>
 
@@ -221,27 +265,27 @@
 
 <!-- ESTADÍSTICAS -->
 <div id="page-stats" class="page active">
-  <div class="kpi-grid" id="kpi-grid"></div>
+  <div class="kpi-big-grid" id="kpi-grid"></div>
 
   <div class="section">
-    <div class="section-title">Location — activos vs total</div>
+    <div class="section-title">Location — active vs total</div>
     <div class="loc-grid" id="loc-grid"></div>
   </div>
 
-  <!-- Row 1: Location + Nivel activos + Antigüedad donuts, with totals below -->
+  <!-- Row 1: Location + Level active + Seniority donuts, with totals below -->
   <div class="charts-row-3">
     <div class="chart-card">
-      <div class="chart-title">Location — activos</div>
+      <div class="chart-title">Location — active</div>
       <canvas id="chart-location-active"></canvas>
       <div id="totals-location" style="margin-top:10px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px"></div>
     </div>
     <div class="chart-card">
-      <div class="chart-title">Nivel — activos</div>
+      <div class="chart-title">Level — active</div>
       <canvas id="chart-nivel-active"></canvas>
       <div id="totals-nivel" style="margin-top:10px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px"></div>
     </div>
     <div class="chart-card">
-      <div class="chart-title">Antigüedad — activos</div>
+      <div class="chart-title">Seniority — active</div>
       <canvas id="chart-antiguedad"></canvas>
       <div id="totals-antiguedad" style="margin-top:10px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px"></div>
     </div>
@@ -253,24 +297,24 @@
   </div>
 
   <div class="chart-card full" style="margin-bottom:20px">
-    <div class="chart-title">Personal por departamento — total vs activos</div>
+    <div class="chart-title">Staff by department — total vs active</div>
     <canvas id="chart-dept" style="max-height:280px"></canvas>
   </div>
 
   <div class="chart-card full" style="margin-bottom:20px">
-    <div class="chart-title">Presencia por departamento — activos (ON SITE vs HYBRID)</div>
+    <div class="chart-title">Presence by department — active (ON SITE vs HYBRID)</div>
     <canvas id="chart-ratio-dept" style="max-height:320px"></canvas>
   </div>
 
   <div class="chart-card full" style="margin-bottom:20px">
-    <div class="chart-title">Permanencia por departamento — activos desde hace más de 6 meses</div>
+    <div class="chart-title">Retention by department — active for more than 6 months</div>
     <canvas id="chart-ant-dept" style="max-height:280px"></canvas>
   </div>
 
   <div class="chart-card full" style="margin-bottom:20px">
-    <div class="chart-title">Ingresos y salidas por mes</div>
+    <div class="chart-title">Arrivals and departures by month</div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-      <span style="font-size:11px;color:var(--muted)">Filtrar año:</span>
+      <span style="font-size:11px;color:var(--muted)">Filter year:</span>
       <div id="year-filter" style="display:flex;gap:6px;flex-wrap:wrap"></div>
     </div>
     <canvas id="chart-timeline" style="max-height:240px"></canvas>
@@ -278,21 +322,21 @@
 
   <!-- Al final: Nac chart + tables -->
   <div class="chart-card full" style="margin-bottom:20px">
-    <div class="chart-title">Nacionalidad — activos vs total (top 10 + otros)</div>
+    <div class="chart-title">Nationality — active vs total (top 10 + otros)</div>
     <canvas id="chart-nac" style="max-height:220px"></canvas>
   </div>
 
   <div class="dept-grid">
     <div class="data-table">
       <table>
-        <thead><tr><th>Departamento</th><th>Activos</th><th>Total</th><th>%</th></tr></thead>
+        <thead><tr><th>Department</th><th>Active</th><th>Total</th><th>%</th></tr></thead>
         <tbody id="dept-body"></tbody>
         <tfoot><tr><td>Total</td><td id="dept-active-sum"></td><td id="dept-total-sum"></td><td></td></tr></tfoot>
       </table>
     </div>
     <div class="data-table">
       <table>
-        <thead><tr><th>Nacionalidad</th><th>Activos</th><th>Total</th><th>%</th></tr></thead>
+        <thead><tr><th>Nationality</th><th>Active</th><th>Total</th><th>%</th></tr></thead>
         <tbody id="nac-body"></tbody>
         <tfoot><tr><td>Total</td><td id="nac-sum"></td><td></td></tr></tfoot>
       </table>
@@ -302,7 +346,7 @@
   <div style="margin-top:18px">
     <div class="data-table">
       <table>
-        <thead><tr><th>Rotación últimos 6 meses</th><th>Personas</th></tr></thead>
+        <thead><tr><th>Turnover last 6 months</th><th>People</th></tr></thead>
         <tbody id="rotacion-body"></tbody>
       </table>
     </div>
@@ -312,7 +356,7 @@
 <!-- DIRECTORIO -->
 <div id="page-directorio" class="page">
   <div class="controls">
-    <input id="search" type="text" placeholder="Buscar por nombre, departamento, nacionalidad…" oninput="renderDir()">
+    <input id="search" type="text" placeholder="Search by name, department, nationality…" oninput="renderDir()">
     <div class="filter-group" id="filter-group"></div>
   </div>
 
@@ -321,27 +365,27 @@
     <div class="section-title" id="dept-stats-title" style="margin-bottom:16px"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
       <div class="chart-card"><div class="chart-title">Location</div><canvas id="ds-location" style="max-height:180px"></canvas></div>
-      <div class="chart-card"><div class="chart-title">Nivel</div><canvas id="ds-nivel" style="max-height:180px"></canvas></div>
-      <div class="chart-card"><div class="chart-title">Nacionalidad</div><canvas id="ds-nac" style="max-height:180px"></canvas></div>
+      <div class="chart-card"><div class="chart-title">Level</div><canvas id="ds-nivel" style="max-height:180px"></canvas></div>
+      <div class="chart-card"><div class="chart-title">Nationality</div><canvas id="ds-nac" style="max-height:180px"></canvas></div>
     </div>
     <div class="chart-card full" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap">
-        <div class="chart-title" style="margin-bottom:0">Ingresos y salidas por mes</div>
+        <div class="chart-title" style="margin-bottom:0">Arrivals and departures by month</div>
         <div id="ds-year-filter" style="display:flex;gap:6px;flex-wrap:wrap"></div>
       </div>
       <canvas id="ds-timeline" style="max-height:200px"></canvas>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px">
       <div class="prox-card">
-        <div class="prox-header" style="background:rgba(139,26,74,0.15);color:var(--wine2);border-bottom:1px solid rgba(139,26,74,0.2)">Finalizados</div>
+        <div class="prox-header" style="background:rgba(139,26,74,0.15);color:var(--wine2);border-bottom:1px solid rgba(139,26,74,0.2)">Completed</div>
         <div id="ds-finalizados"></div>
       </div>
       <div class="prox-card">
-        <div class="prox-header green">Por ingresar — próximos 30 días</div>
+        <div class="prox-header green">Upcoming arrivals — next 30 days</div>
         <div id="ds-ingresar"></div>
       </div>
       <div class="prox-card">
-        <div class="prox-header amber">Por finalizar — próximos 30 días</div>
+        <div class="prox-header amber">Upcoming departures — next 30 days</div>
         <div id="ds-finalizar"></div>
       </div>
     </div>
@@ -352,23 +396,23 @@
     <table class="main">
       <thead>
         <tr>
-          <th onclick="sortBy('nombre')">Nombre</th>
-          <th onclick="sortBy('departamento')">Departamento</th>
-          <th onclick="sortBy('nivel')">Nivel</th>
+          <th onclick="sortBy('nombre')">Name</th>
+          <th onclick="sortBy('departamento')">Department</th>
+          <th onclick="sortBy('nivel')">Level</th>
           <th onclick="sortBy('location')">Location</th>
-          <th onclick="sortBy('nacionalidad')">Nacionalidad</th>
-          <th onclick="sortBy('contacto')">Primary contact</th>
+          <th onclick="sortBy('nacionalidad')">Nationality</th>
+          <th onclick="sortBy('contacto')">Primary Contact</th>
           <th>Email</th>
           <th onclick="sortBy('inicio')">Inicio</th>
-          <th onclick="sortBy('inicioOnSite')">Onsite desde</th>
-          <th onclick="sortBy('finEstimado')">Fin estimado</th>
-          <th onclick="sortBy('antiguedad')">Antigüedad</th>
+          <th onclick="sortBy('inicioOnSite')">Onsite from</th>
+          <th onclick="sortBy('finEstimado')">Estimated end</th>
+          <th onclick="sortBy('antiguedad')">Seniority</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
     </table>
   </div>
-  <div id="empty" class="empty" style="display:none"><strong>Sin resultados</strong>Prueba con otro término.</div>
+  <div id="empty" class="empty" style="display:none"><strong>No results</strong>Try a different search term.</div>
 
 
 </div>
@@ -377,26 +421,26 @@
 <div id="page-proximos" class="page">
   <div class="kpi-grid" id="kpi-proximos" style="margin-bottom:20px"></div>
   <div class="prox-card">
-    <div class="prox-header blue">Ingresan hoy</div>
+    <div class="prox-header blue">Starting today</div>
     <div id="list-hoy"></div>
   </div>
   <div class="proximos-grid">
     <div class="prox-card">
-      <div class="prox-header green">Por ingresar — próximos 30 días</div>
+      <div class="prox-header green">Upcoming arrivals — next 30 days</div>
       <div id="list-ingresar"></div>
     </div>
     <div class="prox-card">
-      <div class="prox-header amber">Por finalizar — próximos 30 días</div>
+      <div class="prox-header amber">Upcoming departures — next 30 days</div>
       <div id="list-finalizar"></div>
     </div>
   </div>
   <div class="proximos-grid" style="margin-top:14px">
     <div class="prox-card">
-      <div class="prox-header blue">Próximos onsite — 30 días</div>
+      <div class="prox-header blue">Upcoming onsite — 30 días</div>
       <div id="list-onsite-prox"></div>
     </div>
     <div class="prox-card">
-      <div class="prox-header green">Todos con fecha onsite</div>
+      <div class="prox-header green">All con fecha onsite</div>
       <div id="list-onsite-all"></div>
     </div>
   </div>
@@ -406,14 +450,14 @@
 <div id="page-pendientes" class="page">
   <div class="kpi-grid" id="kpi-pendientes" style="margin-bottom:20px"></div>
   <div class="kpi-grid" id="kpi-medical" style="margin-bottom:24px"></div>
-  <div class="section-title" style="margin-bottom:16px">Pendientes por checklist — activos</div>
+  <div class="section-title" style="margin-bottom:16px">Pending por checklist — active</div>
   <div class="pending-summary" id="pending-summary"></div>
 
-  <div class="section-title" style="margin-bottom:12px">Pendientes por persona</div>
+  <div class="section-title" style="margin-bottom:12px">Pending por person</div>
   <div class="pending-filter">
-    <button class="filter-btn active" data-pf="todos" onclick="setPendingFilter(this)">Todos</button>
-    <button class="filter-btn" data-pf="conpendientes" onclick="setPendingFilter(this)">Con pendientes</button>
-    <button class="filter-btn" data-pf="completos" onclick="setPendingFilter(this)">Completos</button>
+    <button class="filter-btn active" data-pf="todos" onclick="setPendingFilter(this)">All</button>
+    <button class="filter-btn" data-pf="conpendientes" onclick="setPendingFilter(this)">With pending items</button>
+    <button class="filter-btn" data-pf="completos" onclick="setPendingFilter(this)">Completed</button>
   </div>
   <div class="pending-person-list" id="pending-person-list"></div>
 </div>
@@ -468,10 +512,10 @@ const ONBOARDING_KEYS_UI = ONBOARDING_KEYS.filter(k =>
   k.key !== "medicalCheckYes" && k.key !== "medicalCheckManaged"
 );
 
-let allData = [], activos = [], finalizados = [], ingresanHoy = [], porIngresar = [], porFinalizar = [];
+let allData = [], activos = [], active = [], finalizados = [], ingresanHoy = [], porIngresar = [], porFinalizar = [];
 let activeYear = 'todos';
 let deptCharts = {};
-let sortCol = "nombre", sortAsc = true, activeFilter = "Todos", activePendingFilter = "todos";
+let sortCol = "nombre", sortAsc = true, activeFilter = "All", activePendingFilter = "todos";
 let charts = {};
 
 const PALETTE = ["#00b4d8","#10b981","#f59e0b","#8b1a4a","#6366f1","#ec4899","#14b8a6","#f97316","#a855f7","#84cc16","#ef4444","#06b6d4"];
@@ -485,7 +529,7 @@ function showPage(id, btn) {
 
 function openModal(title, rows, dateField) {
   document.getElementById("modal-title").textContent = title;
-  document.getElementById("modal-count").textContent = `${rows.length} persona${rows.length !== 1 ? "s" : ""}`;
+  document.getElementById("modal-count").textContent = `${rows.length} person${rows.length !== 1 ? "s" : ""}`;
   document.getElementById("modal-body").innerHTML = rows.length
     ? rows.map(r => `
         <div class="modal-row">
@@ -495,7 +539,7 @@ function openModal(title, rows, dateField) {
           </div>
           <div class="modal-date">${dateField ? fmtDate(r[dateField]) : (r.contacto || "")}</div>
         </div>`).join("")
-    : `<div class="modal-empty">Sin resultados</div>`;
+    : `<div class="modal-empty">No results</div>`;
   document.getElementById("modal").classList.add("open");
 }
 
@@ -506,13 +550,14 @@ function closeModal(e) {
 
 async function loadData() {
   const btn = document.getElementById("btn-refresh");
-  btn.classList.add("loading"); btn.textContent = "Cargando…";
+  btn.classList.add("loading"); btn.textContent = "Loading…";
   try {
     const res  = await fetch(APPS_SCRIPT_URL);
     const json = await res.json();
     if (!json.ok) throw new Error("Respuesta inesperada");
     allData = json.equipo.map(p => ({ ...p, antiguedad: calcAntiguedad(p.inicio) }));
     activos = allData.filter(isActive);
+    active = activos;
     const now = new Date();
     finalizados  = allData.filter(p => { const f = parseDate(p.finEstimado); return f && f < now; });
     ingresanHoy  = allData.filter(p => daysFrom(p.inicio) === 0);
@@ -522,14 +567,14 @@ async function loadData() {
     buildFilters();
     renderDir();
     renderProximos();
-    renderPendientes();
+    renderPending();
     buildProximosKPIs();
-    buildPendientesKPIs();
+    buildPendingKPIs();
     buildUniverso();
     document.getElementById("last-update").textContent =
-      "Actualizado: " + new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+      "Updated: " + new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
   } catch(err) { alert("Error: " + err.message); }
-  finally { btn.classList.remove("loading"); btn.textContent = "↻ Actualizar"; }
+  finally { btn.classList.remove("loading"); btn.textContent = "↻ Refresh"; }
 }
 
 function parseDate(v) {
@@ -564,11 +609,11 @@ function calcAntiguedad(inicio) {
 }
 function antLabel(m) {
   if (m === null) return "—";
-  if (m < 6)  return "< 6 meses";
-  if (m < 12) return "6-12 meses";
-  if (m < 24) return "1-2 años";
-  if (m < 36) return "2-3 años";
-  return "+ 3 años";
+  if (m < 6)  return "< 6 months";
+  if (m < 12) return "6-12 months";
+  if (m < 24) return "1-2 years";
+  if (m < 36) return "2-3 years";
+  return "+ 3 years";
 }
 const MONTH_NAMES = ["ene","feb","mar","abr","may","jun","jul","ago","sept","oct","nov","dic"];
 
@@ -693,101 +738,164 @@ function makeLine(id, labels, datasets) {
 }
 
 function buildStats() {
-  const total = allData.length, activosN = activos.length;
+  const total = allData.length, activeN = active.length;
 
   // KPIs onsite
-  const proxOnsite = allData.filter(p => { const d = daysFrom(p.inicioOnSite); return d !== null && d >= 0 && d <= 30; });
+  proxOnsite = allData.filter(p => { const d = daysFrom(p.inicioOnSite); return d !== null && d >= 0 && d <= 30; });
   const totalOnsite = allData.filter(p => p.inicioOnSite && p.inicioOnSite !== "");
 
+  // Location breakdown for active today
+  const locActive2 = {};
+  active.forEach(p=>{ const l=(p.location||"").toUpperCase(); locActive2[l]=(locActive2[l]||0)+1; });
+  const onSiteN  = locActive2["ON SITE"]||0;
+  const hybridN  = locActive2["HYBRID"]||0;
+  const remoteN  = locActive2["REMOTE TNF"]||0;
+
+  // This week arrivals/departures — global scope
+  // This week = from last Monday to next Sunday (full calendar week)
+  const todayD = new Date();
+  const dayOfWeek = todayD.getDay(); // 0=Sun, 1=Mon...6=Sat
+  const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+  thisWeekIn    = allData.filter(p=>{ const d=daysFrom(p.inicio); return d!==null&&d>=-daysSinceMonday&&d<=daysUntilSunday; });
+  thisWeekOut   = allData.filter(p=>{ const d=daysFrom(p.finEstimado); return d!==null&&d>=-daysSinceMonday&&d<=daysUntilSunday; });
+  window._nextWeekIn  = allData.filter(p=>{ const d=daysFrom(p.inicio); return d!==null&&d>daysUntilSunday&&d<=daysUntilSunday+7; });
+  window._nextWeekOut = allData.filter(p=>{ const d=daysFrom(p.finEstimado); return d!==null&&d>daysUntilSunday&&d<=daysUntilSunday+7; });
+  departuresToday = allData.filter(p=>daysFrom(p.finEstimado)===0);
+
   document.getElementById("kpi-grid").innerHTML = `
-    <div class="kpi accent" onclick="openModal('Todo el personal', allData, 'inicio')">
-      <div class="kpi-value">${total}</div><div class="kpi-label">Total personal</div><div class="kpi-hint">↗ ver lista</div>
-    </div>
-    <div class="kpi green" onclick="openModal('Activos hoy', activos, 'inicio')">
-      <div class="kpi-value">${activosN}</div><div class="kpi-label">Activos hoy</div>
-      <div class="kpi-sub">${pct(activosN,total)}% del total</div><div class="kpi-hint">↗ ver lista</div>
-    </div>
-    <div class="kpi wine" onclick="openModal('Finalizados', finalizados, 'finEstimado')">
-      <div class="kpi-value">${finalizados.length}</div><div class="kpi-label">Finalizados</div>
-      <div class="kpi-sub">${pct(finalizados.length,total)}% del total</div><div class="kpi-hint">↗ ver lista</div>
-    </div>
-    <div class="kpi ${ingresanHoy.length > 0 ? 'accent' : 'amber'}" onclick="openModal('Ingresan hoy', ingresanHoy, 'inicio')">
-      <div class="kpi-value">${ingresanHoy.length}</div><div class="kpi-label">Ingresan hoy</div><div class="kpi-hint">↗ ver lista</div>
-    </div>
-    <div class="kpi amber" onclick="openModal('Por ingresar — próximos 30 días', porIngresar, 'inicio')">
-      <div class="kpi-value">${porIngresar.length}</div><div class="kpi-label">Por ingresar</div>
-      <div class="kpi-sub">próximos 30 días</div><div class="kpi-hint">↗ ver lista</div>
-    </div>
-    <div class="kpi red" onclick="openModal('Por finalizar — próximos 30 días', porFinalizar, 'finEstimado')">
-      <div class="kpi-value">${porFinalizar.length}</div><div class="kpi-label">Por finalizar</div>
-      <div class="kpi-sub">próximos 30 días</div><div class="kpi-hint">↗ ver lista</div>
-    </div>
-    <div class="kpi blue" onclick="openModal('Próximos onsite — 30 días', proxOnsite, 'inicioOnSite')">
-      <div class="kpi-value">${proxOnsite.length}</div><div class="kpi-label">Próximos onsite</div>
-      <div class="kpi-sub">próximos 30 días</div><div class="kpi-hint">↗ ver lista</div>
+    <!-- ACTIVE TODAY -->
+    <div class="kpi-big green" onclick="openModal('Active today', active, 'inicio')">
+      <div class="kpi-big-value">${activeN}</div>
+      <div class="kpi-big-label" style="color:var(--green)">Active today</div>
+      <hr class="kpi-big-divider">
+      <div class="kpi-big-row" onclick="event.stopPropagation();openModal('ON SITE — active', active.filter(p=>(p.location||'').toUpperCase()==='ON SITE'), 'inicio')">
+        <span class="kpi-big-row-label">ON SITE</span>
+        <span class="kpi-big-row-value">${onSiteN} <span style="color:var(--muted);font-weight:400">${pct(onSiteN,activeN)}%</span></span>
+      </div>
+      <div class="kpi-big-row" onclick="event.stopPropagation();openModal('HYBRID — active', active.filter(p=>(p.location||'').toUpperCase()==='HYBRID'), 'inicio')">
+        <span class="kpi-big-row-label">HYBRID</span>
+        <span class="kpi-big-row-value">${hybridN} <span style="color:var(--muted);font-weight:400">${pct(hybridN,activeN)}%</span></span>
+      </div>
+      ${remoteN>0?`<div class="kpi-big-row" onclick="event.stopPropagation();openModal('REMOTE — active', active.filter(p=>(p.location||'').toUpperCase()==='REMOTE TNF'), 'inicio')">
+        <span class="kpi-big-row-label">REMOTE</span>
+        <span class="kpi-big-row-value">${remoteN} <span style="color:var(--muted);font-weight:400">${pct(remoteN,activeN)}%</span></span>
+      </div>`:''}
     </div>
 
+    <!-- TOTAL STAFF -->
+    <div class="kpi-big accent" onclick="openModal('All staff', allData, 'inicio')">
+      <div class="kpi-big-value">${total}</div>
+      <div class="kpi-big-label" style="color:var(--accent)">Total staff</div>
+      <hr class="kpi-big-divider">
+      <div class="kpi-big-row" onclick="event.stopPropagation();openModal('Completed', finalizados, 'finEstimado')">
+        <span class="kpi-big-row-label">Completed</span>
+        <span class="kpi-big-row-value">${finalizados.length} <span style="color:var(--muted);font-weight:400">${pct(finalizados.length,total)}%</span></span>
+      </div>
+      <div class="kpi-big-row" onclick="event.stopPropagation();openModal('Active today', active, 'inicio')">
+        <span class="kpi-big-row-label">Active</span>
+        <span class="kpi-big-row-value">${activeN} <span style="color:var(--muted);font-weight:400">${pct(activeN,total)}%</span></span>
+      </div>
+    </div>
+
+    <!-- STARTING TODAY -->
+    <div class="kpi-big amber" onclick="openModal('Starting today', ingresanHoy, 'inicio')">
+      <div class="kpi-big-value">${ingresanHoy.length}</div>
+      <div class="kpi-big-label" style="color:var(--amber)">Starting today</div>
+      <hr class="kpi-big-divider">
+      <div class="kpi-big-row" onclick="event.stopPropagation();openModal('Starting this week', thisWeekIn, 'inicio')">
+        <span class="kpi-big-row-label">This week</span>
+        <span class="kpi-big-row-value">${thisWeekIn.length}</span>
+      </div>
+      <div class="kpi-big-row" onclick="event.stopPropagation();openModal('Starting next week', window._nextWeekIn, 'inicio')">
+        <span class="kpi-big-row-label">Next week</span>
+        <span class="kpi-big-row-value">${window._nextWeekIn.length}</span>
+      </div>
+      <div class="kpi-big-row" onclick="event.stopPropagation();openModal('Upcoming arrivals — next 30 days', porIngresar, 'inicio')">
+        <span class="kpi-big-row-label">Next 30 days</span>
+        <span class="kpi-big-row-value">${porIngresar.length}</span>
+      </div>
+    </div>
+
+    <!-- DEPARTURES TODAY -->
+    <div class="kpi-big red" onclick="openModal('Departures today', departuresToday, 'finEstimado')">
+      <div class="kpi-big-value">${departuresToday.length}</div>
+      <div class="kpi-big-label" style="color:var(--red)">Departures today</div>
+      <hr class="kpi-big-divider">
+      <div class="kpi-big-row" onclick="event.stopPropagation();openModal('Departures this week', thisWeekOut, 'finEstimado')">
+        <span class="kpi-big-row-label">This week</span>
+        <span class="kpi-big-row-value">${thisWeekOut.length}</span>
+      </div>
+      <div class="kpi-big-row" onclick="event.stopPropagation();openModal('Departures next week', window._nextWeekOut, 'finEstimado')">
+        <span class="kpi-big-row-label">Next week</span>
+        <span class="kpi-big-row-value">${window._nextWeekOut.length}</span>
+      </div>
+      <div class="kpi-big-row" onclick="event.stopPropagation();openModal('Upcoming departures — next 30 days', porFinalizar, 'finEstimado')">
+        <span class="kpi-big-row-label">Next 30 days</span>
+        <span class="kpi-big-row-value">${porFinalizar.length}</span>
+      </div>
+    </div>
   `;
 
   // Location
   const locTotal = {}, locActive = {};
-  allData.forEach(p => { const l=p.location||"Sin datos"; locTotal[l]=(locTotal[l]||0)+1; });
-  activos.forEach(p => { const l=p.location||"Sin datos"; locActive[l]=(locActive[l]||0)+1; });
+  allData.forEach(p => { const l=p.location||"No data"; locTotal[l]=(locTotal[l]||0)+1; });
+  active.forEach(p => { const l=p.location||"No data"; locActive[l]=(locActive[l]||0)+1; });
   const allLocs = Object.keys(locTotal).sort((a,b)=>(locTotal[b]||0)-(locTotal[a]||0));
 
   document.getElementById("loc-grid").innerHTML = allLocs.map(loc => {
     const an=locActive[loc]||0, tn=locTotal[loc]||0;
-    return `<div class="loc-card" onclick="openModal('Location: ${loc} — activos', activos.filter(p=>(p.location||'Sin datos')==='${loc}'), 'inicio')">
+    return `<div class="loc-card" onclick="openModal('Location: ${loc} — active', active.filter(p=>(p.location||'No data')==='${loc}'), 'inicio')">
       <div class="loc-name">${loc}</div>
-      <div class="loc-active-row"><span class="loc-active-n">${an}</span><span class="loc-active-pct">${pct(an,activosN)}%</span></div>
+      <div class="loc-active-row"><span class="loc-active-n">${an}</span><span class="loc-active-pct">${pct(an,activeN)}%</span></div>
       <div class="loc-total-row">Total: ${tn} · ${pct(tn,total)}%</div>
-      <div class="loc-hint">↗ ver activos</div>
+      <div class="loc-hint">↗ view active</div>
     </div>`;
   }).join("");
 
   // Donuts
   const nivelTotal={}, nivelActive={};
-  allData.forEach(p=>{const n=p.nivel||"Sin nivel";nivelTotal[n]=(nivelTotal[n]||0)+1;});
-  activos.forEach(p=>{const n=p.nivel||"Sin nivel";nivelActive[n]=(nivelActive[n]||0)+1;});
+  allData.forEach(p=>{const n=p.nivel||"No level";nivelTotal[n]=(nivelTotal[n]||0)+1;});
+  active.forEach(p=>{const n=p.nivel||"No level";nivelActive[n]=(nivelActive[n]||0)+1;});
 
-  makeDonut("chart-location-active", Object.keys(locActive), Object.values(locActive), l=>activos.filter(p=>(p.location||"Sin datos")===l));
-  makeDonut("chart-nivel-active",    Object.keys(nivelActive), Object.values(nivelActive), l=>activos.filter(p=>(p.nivel||"Sin nivel")===l));
-  makeDonut("chart-location-total",  Object.keys(locTotal), Object.values(locTotal), l=>allData.filter(p=>(p.location||"Sin datos")===l));
-  makeDonut("chart-nivel-total",     Object.keys(nivelTotal), Object.values(nivelTotal), l=>allData.filter(p=>(p.nivel||"Sin nivel")===l));
+  makeDonut("chart-location-active", Object.keys(locActive), Object.values(locActive), l=>active.filter(p=>(p.location||"No data")===l));
+  makeDonut("chart-nivel-active",    Object.keys(nivelActive), Object.values(nivelActive), l=>active.filter(p=>(p.nivel||"No level")===l));
+  makeDonut("chart-location-total",  Object.keys(locTotal), Object.values(locTotal), l=>allData.filter(p=>(p.location||"No data")===l));
+  makeDonut("chart-nivel-total",     Object.keys(nivelTotal), Object.values(nivelTotal), l=>allData.filter(p=>(p.nivel||"No level")===l));
 
   const nacCount={}, nacCountActive={};
-  allData.forEach(p=>{const n=p.nacionalidad||"Sin datos";nacCount[n]=(nacCount[n]||0)+1;});
-  activos.forEach(p=>{const n=p.nacionalidad||"Sin datos";nacCountActive[n]=(nacCountActive[n]||0)+1;});
+  allData.forEach(p=>{const n=p.nacionalidad||"No data";nacCount[n]=(nacCount[n]||0)+1;});
+  active.forEach(p=>{const n=p.nacionalidad||"No data";nacCountActive[n]=(nacCountActive[n]||0)+1;});
   const nacSorted=Object.entries(nacCount).sort((a,b)=>b[1]-a[1]);
   const nacTop10=nacSorted.slice(0,10).map(e=>e[0]);
   makeBar("chart-nac", nacTop10, [
     {label:"Total",   data:nacTop10.map(n=>nacCount[n]||0),       backgroundColor:"rgba(139,26,74,0.7)",  borderRadius:3},
-    {label:"Activos", data:nacTop10.map(n=>nacCountActive[n]||0), backgroundColor:"rgba(0,180,216,0.7)", borderRadius:3}
+    {label:"Active", data:nacTop10.map(n=>nacCountActive[n]||0), backgroundColor:"rgba(0,180,216,0.7)", borderRadius:3}
   ], false, (nac, dsIdx) => {
-    const lista = dsIdx===0 ? allData.filter(p=>(p.nacionalidad||"Sin datos")===nac) : activos.filter(p=>(p.nacionalidad||"Sin datos")===nac);
-    openModal(`${nac} — ${dsIdx===0?"total":"activos"}`, lista, "inicio");
+    const lista = dsIdx===0 ? allData.filter(p=>(p.nacionalidad||"No data")===nac) : active.filter(p=>(p.nacionalidad||"No data")===nac);
+    openModal(`${nac} — ${dsIdx===0?"total":"active"}`, lista, "inicio");
   });
 
-  const antRanges={"< 6 meses":0,"6-12 meses":0,"1-2 años":0,"2-3 años":0,"+ 3 años":0};
-  activos.forEach(p=>{const l=antLabel(p.antiguedad);if(l!=="—")antRanges[l]++;});
+  const antRanges={"< 6 months":0,"6-12 months":0,"1-2 years":0,"2-3 years":0,"+ 3 years":0};
+  active.forEach(p=>{const l=antLabel(p.antiguedad);if(l!=="—")antRanges[l]++;});
   const antL=Object.keys(antRanges).filter(k=>antRanges[k]>0);
-  makeDonut("chart-antiguedad", antL, antL.map(k=>antRanges[k]), l=>activos.filter(p=>antLabel(p.antiguedad)===l));
+  makeDonut("chart-antiguedad", antL, antL.map(k=>antRanges[k]), l=>active.filter(p=>antLabel(p.antiguedad)===l));
 
   // Dept stats
   const deptTot={}, deptAct={};
-  allData.forEach(p=>{const d=p.departamento||"Sin dept.";deptTot[d]=(deptTot[d]||0)+1;});
-  activos.forEach(p=>{const d=p.departamento||"Sin dept.";deptAct[d]=(deptAct[d]||0)+1;});
+  allData.forEach(p=>{const d=p.departamento||"No dept.";deptTot[d]=(deptTot[d]||0)+1;});
+  active.forEach(p=>{const d=p.departamento||"No dept.";deptAct[d]=(deptAct[d]||0)+1;});
   const depts=[...new Set(Object.keys(deptTot))].sort();
 
   makeLine("chart-dept", depts, [
     {label:"Total",   data:depts.map(d=>deptTot[d]||0), borderColor:"#8b1a4a", backgroundColor:"rgba(139,26,74,0.1)",  tension:0.3, fill:true, pointRadius:3},
-    {label:"Activos", data:depts.map(d=>deptAct[d]||0), borderColor:"#00b4d8", backgroundColor:"rgba(0,180,216,0.08)", tension:0.3, fill:true, pointRadius:3}
+    {label:"Active", data:depts.map(d=>deptAct[d]||0), borderColor:"#00b4d8", backgroundColor:"rgba(0,180,216,0.08)", tension:0.3, fill:true, pointRadius:3}
   ]);
 
   // Ratio ON SITE vs HYBRID por dept
   const deptOnsite={}, deptHybrid={};
-  activos.forEach(p=>{
-    const d=p.departamento||"Sin dept.";
+  active.forEach(p=>{
+    const d=p.departamento||"No dept.";
     if((p.location||"").toUpperCase()==="ON SITE") deptOnsite[d]=(deptOnsite[d]||0)+1;
     if((p.location||"").toUpperCase()==="HYBRID")  deptHybrid[d]=(deptHybrid[d]||0)+1;
   });
@@ -820,7 +928,7 @@ function buildStats() {
         if(!elements.length) return;
         const dept=depts[elements[0].index];
         const loc=elements[0].datasetIndex===0?"ON SITE":"HYBRID";
-        openModal(`${dept} — ${loc}`, activos.filter(p=>(p.departamento||"Sin dept.")===dept&&(p.location||"").toUpperCase()===loc), "inicio");
+        openModal(`${dept} — ${loc}`, active.filter(p=>(p.departamento||"No dept.")===dept&&(p.location||"").toUpperCase()===loc), "inicio");
       }
     },
     plugins:[{
@@ -842,18 +950,18 @@ function buildStats() {
 
   // Permanencia > 6 meses por dept
   const deptPerm={};
-  activos.forEach(p=>{
+  active.forEach(p=>{
     if(p.antiguedad===null||p.antiguedad<6) return;
-    const d=p.departamento||"Sin dept.";
+    const d=p.departamento||"No dept.";
     deptPerm[d]=(deptPerm[d]||0)+1;
   });
   const deptPermSorted = [...depts].sort((a,b)=>(deptPerm[b]||0)-(deptPerm[a]||0));
   makeBar("chart-ant-dept", deptPermSorted, [{
-    label:"Activos > 6 meses",
+    label:"Active > 6 months",
     data: deptPermSorted.map(d=>deptPerm[d]||0),
     backgroundColor:"rgba(245,158,11,0.75)", borderRadius:4
   }], false, (dept) => {
-    openModal(`${dept} — más de 6 meses`, activos.filter(p=>(p.departamento||"Sin dept.")===dept&&p.antiguedad!==null&&p.antiguedad>=6), "inicio");
+    openModal(`${dept} — more than 6 months`, active.filter(p=>(p.departamento||"No dept.")===dept&&p.antiguedad!==null&&p.antiguedad>=6), "inicio");
   });
 
   // Timeline con filtro por año
@@ -871,7 +979,7 @@ function buildStats() {
   const yf = document.getElementById("year-filter");
   if(yf) {
     yf.innerHTML = ['todos',...years].map(y=>
-      `<button class="filter-btn ${activeYear===y?'active':''}" onclick="setYearFilter('${y}')">${y==='todos'?'Todos':y}</button>`
+      `<button class="filter-btn ${activeYear===y?'active':''}" onclick="setYearFilter('${y}')">${y==='todos'?'All':y}</button>`
     ).join("");
   }
   buildTimeline();
@@ -883,42 +991,42 @@ function buildStats() {
   const nivTotList = Object.entries(nivelTotal).sort((a,b)=>b[1]-a[1]);
   document.getElementById("totals-nivel").innerHTML = nivTotList.map(([n,c])=>
     `<span style="margin-right:10px">${n}: <b style="color:var(--white)">${c}</b></span>`).join("");
-  const antTotList = Object.entries({"< 6 meses":0,"6-12 meses":0,"1-2 años":0,"2-3 años":0,"+ 3 años":0});
+  const antTotList = Object.entries({"< 6 months":0,"6-12 months":0,"1-2 years":0,"2-3 years":0,"+ 3 years":0});
   allData.forEach(p=>{const l=antLabel(p.antiguedad);if(l!=="—"&&antTotList.find(x=>x[0]===l))antTotList.find(x=>x[0]===l)[1]++;});
   document.getElementById("totals-antiguedad").innerHTML = antTotList.filter(([,v])=>v>0).map(([l,n])=>
     `<span style="margin-right:10px">${l}: <b style="color:var(--white)">${n}</b></span>`).join("");
 
   // Dept table
   document.getElementById("dept-body").innerHTML = depts.map(d=>`
-    <tr onclick="openModal('Depto: ${d}', activos.filter(p=>(p.departamento||'Sin dept.')==='${d}'), 'inicio')">
+    <tr onclick="openModal('Depto: ${d}', active.filter(p=>(p.departamento||'No dept.')==='${d}'), 'inicio')">
       <td>${d}</td><td>${deptAct[d]||0}</td><td>${deptTot[d]||0}</td><td>${pct(deptTot[d]||0,total)}%</td>
     </tr>`).join("");
-  document.getElementById("dept-active-sum").textContent = activosN;
+  document.getElementById("dept-active-sum").textContent = activeN;
   document.getElementById("dept-total-sum").textContent  = total;
 
   // Nac table
   document.getElementById("nac-body").innerHTML = nacSorted.map(([n,c])=>{ const ca=nacCountActive[n]||0; return `
-    <tr onclick="openModal('Nacionalidad: ${n}', allData.filter(p=>(p.nacionalidad||'Sin datos')==='${n}'), 'inicio')">
+    <tr onclick="openModal('Nationality: ${n}', allData.filter(p=>(p.nacionalidad||'No data')==='${n}'), 'inicio')">
       <td>${n}</td><td>${ca}</td><td>${c}</td><td>${pct(c,total)}%</td>
     </tr>`;}).join("");
   document.getElementById("nac-sum").textContent = total;
 
-  // Rotación últimos 6 meses
+  // Turnover last 6 months
   const now6 = new Date(); now6.setMonth(now6.getMonth()-6);
   const rotIn  = allData.filter(p=>{ const d=parseDate(p.inicio); return d&&d>=now6; });
   const rotOut = allData.filter(p=>{ const d=parseDate(p.finEstimado); const n=new Date(); return d&&d>=now6&&d<=n; });
   document.getElementById("rotacion-body").innerHTML = `
-    <tr onclick="openModal('Ingresos últimos 6 meses', rotIn, 'inicio')"><td>Ingresos</td><td>${rotIn.length}</td></tr>
-    <tr onclick="openModal('Salidas últimos 6 meses', rotOut, 'finEstimado')"><td>Salidas</td><td>${rotOut.length}</td></tr>
+    <tr onclick="openModal('Arrivals últimos 6 meses', rotIn, 'inicio')"><td>Arrivals</td><td>${rotIn.length}</td></tr>
+    <tr onclick="openModal('Departures últimos 6 meses', rotOut, 'finEstimado')"><td>Departures</td><td>${rotOut.length}</td></tr>
     <tr><td style="color:var(--muted)">Balance</td><td style="color:${rotIn.length-rotOut.length>=0?'var(--green)':'var(--red)'}">${rotIn.length-rotOut.length>=0?'+':''}${rotIn.length-rotOut.length}</td></tr>
   `;
 }
 
 // DIRECTORIO
 function buildFilters() {
-  const depts=["Todos",...new Set(allData.map(p=>p.departamento).filter(Boolean))].sort();
+  const depts=["All",...new Set(allData.map(p=>p.departamento).filter(Boolean))].sort();
   document.getElementById("filter-group").innerHTML = depts.map(d=>
-    `<button class="filter-btn ${d==="Todos"?"active":""}" data-dept="${d}" onclick="setFilter(this)">${d}</button>`
+    `<button class="filter-btn ${d==="All"?"active":""}" data-dept="${d}" onclick="setFilter(this)">${d}</button>`
   ).join("");
 }
 function setFilter(btn) {
@@ -932,8 +1040,8 @@ function sortBy(col) {
 }
 function renderDir() {
   const query=(document.getElementById("search").value||"").toLowerCase().trim();
-  let filtered=activos.filter(p=>{
-    const md=activeFilter==="Todos"||p.departamento===activeFilter;
+  let filtered=active.filter(p=>{
+    const md=activeFilter==="All"||p.departamento===activeFilter;
     const ms=!query||Object.values(p).some(v=>String(v).toLowerCase().includes(query));
     return md&&ms;
   });
@@ -942,7 +1050,7 @@ function renderDir() {
     const vb=sortCol==="antiguedad"?(b.antiguedad??-1):String(b[sortCol]||"").toLowerCase();
     return typeof va==="number"?(sortAsc?va-vb:vb-va):(sortAsc?va.localeCompare(vb):vb.localeCompare(va));
   });
-  document.getElementById("results-count").textContent=`${filtered.length} persona${filtered.length!==1?"s":""}`;
+  document.getElementById("results-count").textContent=`${filtered.length} person${filtered.length!==1?"s":""}`;
   const empty=document.getElementById("empty"),table=document.querySelector("table.main");
   if(!filtered.length){empty.style.display="block";table.style.display="none";return;}
   empty.style.display="none";table.style.display="table";
@@ -977,21 +1085,21 @@ function renderProximos() {
   const row=(p,f)=>`<div class="prox-row"><div><div style="font-weight:500">${p.nombre}</div><div style="font-size:11px;color:var(--muted)">${p.departamento} · ${p.nivel} · ${p.location||""}</div></div><div class="prox-date">${fmtDate(p[f])}</div></div>`;
   const none=t=>`<div class="prox-row" style="color:var(--muted)">${t}</div>`;
 
-  document.getElementById("list-hoy").innerHTML       = hoy.length       ? hoy.map(p=>row(p,"inicio")).join("")           : none("Nadie ingresa hoy");
-  document.getElementById("list-ingresar").innerHTML  = entr.length      ? entr.map(p=>row(p,"inicio")).join("")          : none("Ninguno en los próximos 30 días");
-  document.getElementById("list-finalizar").innerHTML = sal.length       ? sal.map(p=>row(p,"finEstimado")).join("")      : none("Ninguno en los próximos 30 días");
-  document.getElementById("list-onsite-prox").innerHTML = onsiteProx.length ? onsiteProx.map(p=>row(p,"inicioOnSite")).join("") : none("Ninguno en los próximos 30 días");
-  document.getElementById("list-onsite-all").innerHTML  = onsiteAll.length  ? onsiteAll.map(p=>row(p,"inicioOnSite")).join("")  : none("Sin fechas onsite registradas");
+  document.getElementById("list-hoy").innerHTML       = hoy.length       ? hoy.map(p=>row(p,"inicio")).join("")           : none("No one starting today");
+  document.getElementById("list-ingresar").innerHTML  = entr.length      ? entr.map(p=>row(p,"inicio")).join("")          : none("None en los next 30 days");
+  document.getElementById("list-finalizar").innerHTML = sal.length       ? sal.map(p=>row(p,"finEstimado")).join("")      : none("None en los next 30 days");
+  document.getElementById("list-onsite-prox").innerHTML = onsiteProx.length ? onsiteProx.map(p=>row(p,"inicioOnSite")).join("") : none("None en los next 30 days");
+  document.getElementById("list-onsite-all").innerHTML  = onsiteAll.length  ? onsiteAll.map(p=>row(p,"inicioOnSite")).join("")  : none("No onsite dates registered");
 }
 
 // PENDIENTES
 function setPendingFilter(btn) {
   document.querySelectorAll(".pending-filter .filter-btn").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active"); activePendingFilter=btn.dataset.pf; renderPendientes();
+  btn.classList.add("active"); activePendingFilter=btn.dataset.pf; renderPending();
 }
 
-function renderPendientes() {
-  const base = activos;
+function renderPending() {
+  const base = active;
   const total = base.length;
 
   // Guardar referencia global para los onclicks
@@ -1005,22 +1113,22 @@ function renderPendientes() {
       <div class="pending-label">${label}</div>
       <div class="pending-count">${n}</div>
       <div class="pending-pct">${pct(n,total)}% pendiente · ${nd} ok</div>
-      <div class="pending-hint">↗ ver lista</div>
+      <div class="pending-hint">↗ view list</div>
     </div>`;
   }).join("");
 
-  // Por persona
-  let personas = base.map(p => {
+  // Por person
+  let persons = base.map(p => {
     const pend = ONBOARDING_KEYS_UI.filter(({key}) => isPending(key, p.onboarding));
     const done = ONBOARDING_KEYS_UI.filter(({key}) => isDone(key, p.onboarding));
     return { ...p, pendientes: pend, done };
   });
 
-  if (activePendingFilter === "conpendientes") personas = personas.filter(p=>p.pendientes.length>0);
-  if (activePendingFilter === "completos")     personas = personas.filter(p=>p.pendientes.length===0);
-  personas.sort((a,b)=>b.pendientes.length-a.pendientes.length);
+  if (activePendingFilter === "conpendientes") persons = persons.filter(p=>p.pendientes.length>0);
+  if (activePendingFilter === "completos")     persons = persons.filter(p=>p.pendientes.length===0);
+  persons.sort((a,b)=>b.pendientes.length-a.pendientes.length);
 
-  document.getElementById("pending-person-list").innerHTML = personas.map(p => `
+  document.getElementById("pending-person-list").innerHTML = persons.map(p => `
     <div class="pending-person-card" style="cursor:pointer" onclick="openPersonPendingModal('${p.nombre.replace(/'/g,"\\'")}')">
       <div class="pending-person-name">
         <span>${p.nombre} <span style="font-size:11px;color:var(--muted);font-weight:400">${p.departamento}</span></span>
@@ -1036,7 +1144,7 @@ function renderPendientes() {
 }
 
 function openPendingModal(key, label) {
-  const base = window._pendingBase || activos;
+  const base = window._pendingBase || active;
   const pendientes = base.filter(p => isPending(key, p.onboarding));
   const completados = base.filter(p => isDone(key, p.onboarding));
 
@@ -1044,7 +1152,7 @@ function openPendingModal(key, label) {
   document.getElementById("modal-count").textContent = `${pendientes.length} pendiente${pendientes.length!==1?'s':''} · ${completados.length} completado${completados.length!==1?'s':''}`;
   document.getElementById("modal-body").innerHTML = `
     ${pendientes.length ? `
-      <div style="font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:.06em;padding:10px 0 6px">Pendientes</div>
+      <div style="font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:.06em;padding:10px 0 6px">Pending</div>
       ${pendientes.map(p=>`
         <div class="modal-row">
           <div class="modal-row-left">
@@ -1068,7 +1176,7 @@ function openPendingModal(key, label) {
 }
 
 function openPersonPendingModal(nombre) {
-  const base = window._pendingBase || activos;
+  const base = window._pendingBase || active;
   const p = base.find(x => x.nombre === nombre);
   if (!p) return;
   const pend = ONBOARDING_KEYS.filter(({key}) => p.onboarding && !p.onboarding[key]);
@@ -1078,7 +1186,7 @@ function openPersonPendingModal(nombre) {
   document.getElementById("modal-count").textContent = `${pend.length} pendiente${pend.length!==1?'s':''} · ${done.length} completado${done.length!==1?'s':''}`;
   document.getElementById("modal-body").innerHTML = `
     ${pend.length ? `
-      <div style="font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:.06em;padding:10px 0 6px">Pendientes</div>
+      <div style="font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:.06em;padding:10px 0 6px">Pending</div>
       ${pend.map(({label})=>`<div class="modal-row"><div class="modal-row-left"><strong>${label}</strong></div><div class="modal-date" style="color:var(--amber)">⏳</div></div>`).join("")}` : ""}
     ${done.length ? `
       <div style="font-size:11px;color:var(--green);text-transform:uppercase;letter-spacing:.06em;padding:10px 0 6px">Completados</div>
@@ -1095,20 +1203,20 @@ function buildTimeline() {
   if (activeYear !== 'todos') keys = keys.filter(k=>k.startsWith(activeYear+'-'));
   const displayLabels = keys.map(k => monthLabel(k));
   makeBar("chart-timeline", displayLabels, [
-    {label:"Ingresos", data:keys.map(k=>ing[k]||0), backgroundColor:"rgba(0,180,216,0.75)", borderRadius:3},
-    {label:"Salidas",  data:keys.map(k=>sal[k]||0), backgroundColor:"rgba(139,26,74,0.75)",  borderRadius:3}
+    {label:"Arrivals", data:keys.map(k=>ing[k]||0), backgroundColor:"rgba(0,180,216,0.75)", borderRadius:3},
+    {label:"Departures",  data:keys.map(k=>sal[k]||0), backgroundColor:"rgba(139,26,74,0.75)",  borderRadius:3}
   ], false, (mes, dsIdx) => {
     const keyIdx = displayLabels.indexOf(mes);
     const rawKey = keyIdx >= 0 ? keys[keyIdx] : mes;
-    if(dsIdx===0) openModal(`Ingresos: ${mes}`, allData.filter(p=>monthKey(p.inicio)===rawKey), "inicio");
-    else          openModal(`Salidas: ${mes}`,  allData.filter(p=>monthKey(p.finEstimado)===rawKey), "finEstimado");
+    if(dsIdx===0) openModal(`Arrivals: ${mes}`, allData.filter(p=>monthKey(p.inicio)===rawKey), "inicio");
+    else          openModal(`Departures: ${mes}`,  allData.filter(p=>monthKey(p.finEstimado)===rawKey), "finEstimado");
   });
 }
 
 function setYearFilter(y) {
   activeYear = y;
   document.querySelectorAll("#year-filter .filter-btn").forEach(b=>{
-    b.classList.toggle("active", b.textContent===(y==='todos'?'Todos':y));
+    b.classList.toggle("active", b.textContent===(y==='todos'?'All':y));
   });
   buildTimeline();
 }
@@ -1121,93 +1229,93 @@ function buildProximosKPIs() {
   const onst = allData.filter(p=>{const d=daysFrom(p.inicioOnSite);return d!==null&&d>=0&&d<=30;});
   document.getElementById("kpi-proximos").innerHTML = `
     <div class="kpi accent" onclick="document.getElementById('list-hoy').scrollIntoView({behavior:'smooth'})">
-      <div class="kpi-value">${hoy.length}</div><div class="kpi-label">Ingresan hoy</div><div class="kpi-hint">↓ ver</div>
+      <div class="kpi-value">${hoy.length}</div><div class="kpi-label">Starting today</div><div class="kpi-hint">↓ ver</div>
     </div>
     <div class="kpi green" onclick="document.getElementById('list-ingresar').scrollIntoView({behavior:'smooth'})">
-      <div class="kpi-value">${entr.length}</div><div class="kpi-label">Por ingresar</div>
-      <div class="kpi-sub">próx. 30 días</div><div class="kpi-hint">↓ ver</div>
+      <div class="kpi-value">${entr.length}</div><div class="kpi-label">Upcoming arrivals</div>
+      <div class="kpi-sub">next 30 days</div><div class="kpi-hint">↓ ver</div>
     </div>
     <div class="kpi amber" onclick="document.getElementById('list-finalizar').scrollIntoView({behavior:'smooth'})">
-      <div class="kpi-value">${sal.length}</div><div class="kpi-label">Por finalizar</div>
-      <div class="kpi-sub">próx. 30 días</div><div class="kpi-hint">↓ ver</div>
+      <div class="kpi-value">${sal.length}</div><div class="kpi-label">Upcoming departures</div>
+      <div class="kpi-sub">next 30 days</div><div class="kpi-hint">↓ ver</div>
     </div>
     <div class="kpi blue" onclick="document.getElementById('list-onsite-prox').scrollIntoView({behavior:'smooth'})">
-      <div class="kpi-value">${onst.length}</div><div class="kpi-label">Próximos onsite</div>
-      <div class="kpi-sub">próx. 30 días</div><div class="kpi-hint">↓ ver</div>
+      <div class="kpi-value">${onst.length}</div><div class="kpi-label">Upcoming onsite</div>
+      <div class="kpi-sub">next 30 days</div><div class="kpi-hint">↓ ver</div>
     </div>
   `;
 }
 
-// Pendientes KPIs
-function buildPendientesKPIs() {
-  const base = activos;
+// Pending KPIs
+function buildPendingKPIs() {
+  const base = active;
   const total = base.length;
   const completos = base.filter(p => p.onboarding && ONBOARDING_KEYS_UI.every(({key})=>isDone(key, p.onboarding)));
   const conPend   = base.filter(p => p.onboarding && ONBOARDING_KEYS_UI.some(({key})=>isPending(key, p.onboarding)));
   document.getElementById("kpi-pendientes").innerHTML = `
     <div class="kpi green" onclick="setPendingFilter(document.querySelector('[data-pf=completos]'))">
-      <div class="kpi-value">${completos.length}</div><div class="kpi-label">Onboarding completo</div>
-      <div class="kpi-sub">${pct(completos.length,total)}% del total activos</div><div class="kpi-hint">↗ ver lista</div>
+      <div class="kpi-value">${completos.length}</div><div class="kpi-label">Onboarding complete</div>
+      <div class="kpi-sub">${pct(completos.length,total)}% of total active</div><div class="kpi-hint">↗ view list</div>
     </div>
     <div class="kpi amber" onclick="setPendingFilter(document.querySelector('[data-pf=conpendientes]'))">
-      <div class="kpi-value">${conPend.length}</div><div class="kpi-label">Con pendientes</div>
-      <div class="kpi-sub">${pct(conPend.length,total)}% del total activos</div><div class="kpi-hint">↗ ver lista</div>
+      <div class="kpi-value">${conPend.length}</div><div class="kpi-label">With pending items</div>
+      <div class="kpi-sub">${pct(conPend.length,total)}% of total active</div><div class="kpi-hint">↗ view list</div>
     </div>
     <div class="kpi accent">
-      <div class="kpi-value">${total}</div><div class="kpi-label">Total activos</div>
+      <div class="kpi-value">${total}</div><div class="kpi-label">Total active</div>
     </div>
   `;
 
   // Medical KPIs — stored globally so onclick can access them
-  window._medCompletos     = base.filter(p => isMedicalDone(p.onboarding));
+  window._medCompleted     = base.filter(p => isMedicalDone(p.onboarding));
   window._medEnProceso     = base.filter(p => p.onboarding && p.onboarding.medicalCheck && p.onboarding.medicalCheckYes && !p.onboarding.medicalCheckManaged);
   window._medSinGestionar  = base.filter(p => p.onboarding && !p.onboarding.medicalCheck);
 
   document.getElementById("kpi-medical").innerHTML = `
-    <div style="grid-column:1/-1;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding-bottom:4px;border-bottom:1px solid var(--border);margin-bottom:4px">Reconocimiento médico</div>
-    <div class="kpi green" onclick="openModal('Medical check — completos', window._medCompletos, 'inicio')">
-      <div class="kpi-value">${window._medCompletos.length}</div>
-      <div class="kpi-label">Completos</div>
-      <div class="kpi-sub">${pct(window._medCompletos.length,total)}% activos</div>
-      <div class="kpi-hint">↗ ver lista</div>
+    <div style="grid-column:1/-1;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding-bottom:4px;border-bottom:1px solid var(--border);margin-bottom:4px">Medical check</div>
+    <div class="kpi green" onclick="openModal('Medical check — completos', window._medCompleted, 'inicio')">
+      <div class="kpi-value">${window._medCompleted.length}</div>
+      <div class="kpi-label">Completed</div>
+      <div class="kpi-sub">${pct(window._medCompleted.length,total)}% active</div>
+      <div class="kpi-hint">↗ view list</div>
     </div>
     <div class="kpi amber" onclick="openModal('Medical check — aceptaron, pendiente gestión', window._medEnProceso, 'inicio')">
       <div class="kpi-value">${window._medEnProceso.length}</div>
-      <div class="kpi-label">Aceptaron, pendiente gestión</div>
-      <div class="kpi-sub">${pct(window._medEnProceso.length,total)}% activos</div>
-      <div class="kpi-hint">↗ ver lista</div>
+      <div class="kpi-label">Accepted, pending management</div>
+      <div class="kpi-sub">${pct(window._medEnProceso.length,total)}% active</div>
+      <div class="kpi-hint">↗ view list</div>
     </div>
     <div class="kpi red" onclick="openModal('Medical check — sin consultar', window._medSinGestionar, 'inicio')">
       <div class="kpi-value">${window._medSinGestionar.length}</div>
-      <div class="kpi-label">Sin consultar</div>
-      <div class="kpi-sub">${pct(window._medSinGestionar.length,total)}% activos</div>
-      <div class="kpi-hint">↗ ver lista</div>
+      <div class="kpi-label">Not yet consulted</div>
+      <div class="kpi-sub">${pct(window._medSinGestionar.length,total)}% active</div>
+      <div class="kpi-hint">↗ view list</div>
     </div>
   `;
 }
 
-// Dept stats panel (Departamentos page)
+// Dept stats panel (Departments page)
 function buildDeptStatsPanel(dept) {
   const panel = document.getElementById("dept-stats-panel");
-  if (!dept || dept === "Todos") { panel.style.display="none"; return; }
+  if (!dept || dept === "All") { panel.style.display="none"; return; }
   panel.style.display = "block";
-  document.getElementById("dept-stats-title").textContent = `Estadísticas — ${dept}`;
+  document.getElementById("dept-stats-title").textContent = `Statistics — ${dept}`;
 
-  const deptActivos = activos.filter(p=>(p.departamento||"Sin dept.")===dept);
-  const deptAll     = allData.filter(p=>(p.departamento||"Sin dept.")===dept);
+  const deptActive = active.filter(p=>(p.departamento||"No dept.")===dept);
+  const deptAll     = allData.filter(p=>(p.departamento||"No dept.")===dept);
 
   // Location donut
   const locC={};
-  deptActivos.forEach(p=>{const l=p.location||"Sin datos";locC[l]=(locC[l]||0)+1;});
+  deptActive.forEach(p=>{const l=p.location||"No data";locC[l]=(locC[l]||0)+1;});
   if(deptCharts.loc) deptCharts.loc.destroy();
   deptCharts.loc = new Chart(document.getElementById("ds-location"), {
     type:"doughnut", data:{labels:Object.keys(locC),datasets:[{data:Object.values(locC),backgroundColor:["#10b981","#00b4d8","#f59e0b","#8b1a4a"],borderWidth:0}]},
     options:{responsive:true,cutout:"55%",plugins:{legend:{position:"bottom",labels:{color:"#9ca3af",boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw}`}}}}
   });
 
-  // Nivel donut
+  // Level donut
   const nivC={};
-  deptActivos.forEach(p=>{const n=p.nivel||"Sin nivel";nivC[n]=(nivC[n]||0)+1;});
+  deptActive.forEach(p=>{const n=p.nivel||"No level";nivC[n]=(nivC[n]||0)+1;});
   if(deptCharts.niv) deptCharts.niv.destroy();
   deptCharts.niv = new Chart(document.getElementById("ds-nivel"), {
     type:"doughnut", data:{labels:Object.keys(nivC),datasets:[{data:Object.values(nivC),backgroundColor:["#00b4d8","#10b981","#f59e0b","#8b1a4a","#6366f1"],borderWidth:0}]},
@@ -1216,7 +1324,7 @@ function buildDeptStatsPanel(dept) {
 
   // Nac donut
   const nacC={};
-  deptActivos.forEach(p=>{const n=p.nacionalidad||"Sin datos";nacC[n]=(nacC[n]||0)+1;});
+  deptActive.forEach(p=>{const n=p.nacionalidad||"No data";nacC[n]=(nacC[n]||0)+1;});
   if(deptCharts.nac) deptCharts.nac.destroy();
   deptCharts.nac = new Chart(document.getElementById("ds-nac"), {
     type:"doughnut", data:{labels:Object.keys(nacC),datasets:[{data:Object.values(nacC),backgroundColor:["#00b4d8","#10b981","#f59e0b","#8b1a4a","#6366f1","#ec4899","#f97316"],borderWidth:0}]},
@@ -1232,16 +1340,16 @@ function buildDeptStatsPanel(dept) {
   const entr = deptAll.filter(p=>{const d=daysFrom(p.inicio);return d!==null&&d>0&&d<=30;}).sort((a,b)=>new Date(a.inicio)-new Date(b.inicio));
   const sal  = deptAll.filter(p=>{const d=daysFrom(p.finEstimado);return d!==null&&d>=0&&d<=30;}).sort((a,b)=>new Date(a.finEstimado)-new Date(b.finEstimado));
 
-  document.getElementById("ds-finalizados").innerHTML = fin.length  ? fin.map(p=>row(p,"finEstimado")).join("") : none("Ninguno");
-  document.getElementById("ds-ingresar").innerHTML    = entr.length ? entr.map(p=>row(p,"inicio")).join("")     : none("Ninguno próximos 30 días");
-  document.getElementById("ds-finalizar").innerHTML   = sal.length  ? sal.map(p=>row(p,"finEstimado")).join("") : none("Ninguno próximos 30 días");
+  document.getElementById("ds-finalizados").innerHTML = fin.length  ? fin.map(p=>row(p,"finEstimado")).join("") : none("None");
+  document.getElementById("ds-ingresar").innerHTML    = entr.length ? entr.map(p=>row(p,"inicio")).join("")     : none("None next 30 days");
+  document.getElementById("ds-finalizar").innerHTML   = sal.length  ? sal.map(p=>row(p,"finEstimado")).join("") : none("None next 30 days");
 
   // Build timeline for this dept
   buildDeptTimeline(dept, "todos");
 }
 
 function buildDeptTimeline(dept, year) {
-  const deptAll = allData.filter(p=>(p.departamento||"Sin dept.")===dept);
+  const deptAll = allData.filter(p=>(p.departamento||"No dept.")===dept);
   const ing={}, sal={};
   deptAll.forEach(p=>{
     const ki=monthKey(p.inicio), ks=monthKey(p.finEstimado);
@@ -1257,12 +1365,12 @@ function buildDeptTimeline(dept, year) {
   if(yf && yf.dataset.dept !== dept) {
     yf.dataset.dept = dept;
     yf.innerHTML = ["todos",...years].map(y=>
-      `<button class="filter-btn ${y===year?"active":""}" style="padding:4px 10px;font-size:11px" onclick="buildDeptTimeline('${dept}','${y}')">${y==="todos"?"Todos":y}</button>`
+      `<button class="filter-btn ${y===year?"active":""}" style="padding:4px 10px;font-size:11px" onclick="buildDeptTimeline('${dept}','${y}')">${y==="todos"?"All":y}</button>`
     ).join("");
   } else if(yf) {
     // update active state
     yf.querySelectorAll(".filter-btn").forEach(b=>{
-      b.classList.toggle("active", b.textContent===(year==="todos"?"Todos":year));
+      b.classList.toggle("active", b.textContent===(year==="todos"?"All":year));
     });
   }
 
@@ -1275,8 +1383,8 @@ function buildDeptTimeline(dept, year) {
     data:{
       labels,
       datasets:[
-        {label:"Ingresos", data:keys.map(k=>ing[k]||0), backgroundColor:"rgba(0,180,216,0.75)", borderRadius:3},
-        {label:"Salidas",  data:keys.map(k=>sal[k]||0), backgroundColor:"rgba(139,26,74,0.75)",  borderRadius:3}
+        {label:"Arrivals", data:keys.map(k=>ing[k]||0), backgroundColor:"rgba(0,180,216,0.75)", borderRadius:3},
+        {label:"Departures",  data:keys.map(k=>sal[k]||0), backgroundColor:"rgba(139,26,74,0.75)",  borderRadius:3}
       ]
     },
     options:{
@@ -1292,8 +1400,8 @@ function buildDeptTimeline(dept, year) {
         if(!elements.length) return;
         const k=keys[elements[0].index];
         const dsIdx=elements[0].datasetIndex;
-        if(dsIdx===0) openModal(`Ingresos ${monthLabel(k)} — ${dept}`, deptAll.filter(p=>monthKey(p.inicio)===k), "inicio");
-        else          openModal(`Salidas ${monthLabel(k)} — ${dept}`,  deptAll.filter(p=>monthKey(p.finEstimado)===k), "finEstimado");
+        if(dsIdx===0) openModal(`Arrivals ${monthLabel(k)} — ${dept}`, deptAll.filter(p=>monthKey(p.inicio)===k), "inicio");
+        else          openModal(`Departures ${monthLabel(k)} — ${dept}`,  deptAll.filter(p=>monthKey(p.finEstimado)===k), "finEstimado");
       }
     }
   });
@@ -1301,8 +1409,227 @@ function buildDeptTimeline(dept, year) {
 
 loadData();
 
+// ── PASSWORD ──────────────────────────────────────────────────
+const DASHBOARD_PASSWORD = "potroclo";
+function checkPw() {
+  const val = document.getElementById("pw-input").value;
+  if (val === DASHBOARD_PASSWORD) {
+    document.getElementById("pw-screen").style.display = "none";
+    document.getElementById("pw-input").value = "";
+  } else {
+    document.getElementById("pw-error").style.display = "block";
+    document.getElementById("pw-input").value = "";
+    document.getElementById("pw-input").focus();
+  }
+}
+document.getElementById("pw-input").focus();
+
+// ── UNIVERSO ORBITAL VIEW ─────────────────────────────────────
+function switchUniversoView(view) {
+  const grid    = document.getElementById("uv-grid-view");
+  const orbital = document.getElementById("uv-orbital-view");
+  const btnG    = document.getElementById("uv-btn-grid");
+  const btnO    = document.getElementById("uv-btn-orbital");
+  if (view === "grid") {
+    grid.style.display    = "block";
+    orbital.style.display = "none";
+    btnG.style.background = "rgba(0,180,216,0.2)"; btnG.style.color = "var(--accent)"; btnG.style.borderColor = "var(--accent)";
+    btnO.style.background = "rgba(255,255,255,0.05)"; btnO.style.color = "var(--muted)"; btnO.style.borderColor = "var(--border)";
+  } else {
+    grid.style.display    = "none";
+    orbital.style.display = "block";
+    btnO.style.background = "rgba(0,180,216,0.2)"; btnO.style.color = "var(--accent)"; btnO.style.borderColor = "var(--accent)";
+    btnG.style.background = "rgba(255,255,255,0.05)"; btnG.style.color = "var(--muted)"; btnG.style.borderColor = "var(--border)";
+    buildOrbitalUniverse();
+  }
+}
+
+function buildOrbitalUniverse() {
+  if (!allData.length) return;
+
+  const container = document.getElementById("uv-orbital-view");
+  container.style.display = "block";
+
+  // Wait for DOM to settle
+  setTimeout(() => {
+    const W = container.offsetWidth || window.innerWidth;
+    const H = Math.max(container.offsetHeight, window.innerHeight * 0.88, 600);
+    const cx = W/2, cy = H/2;
+    const dpr = Math.min(window.devicePixelRatio||1, 2);
+
+    // Stars canvas
+    const sc = document.getElementById("uv-stars");
+    sc.width = W*dpr; sc.height = H*dpr;
+    sc.style.width = W+"px"; sc.style.height = H+"px"; sc.style.position="absolute"; sc.style.top="0"; sc.style.left="0";
+    const sx = sc.getContext("2d");
+    sx.scale(dpr, dpr);
+
+    // Space background
+    const sbg = sx.createRadialGradient(cx, cy*0.7, 0, cx, cy, Math.max(W,H));
+    sbg.addColorStop(0, "#0d2048"); sbg.addColorStop(0.65, "#040a1c"); sbg.addColorStop(1, "#020508");
+    sx.fillStyle = sbg; sx.fillRect(0,0,W,H);
+
+    // Nebulae
+    [[W*0.2,H*0.25,200,"rgba(30,80,200,0.1)"],[W*0.8,H*0.6,240,"rgba(0,180,216,0.07)"],[W*0.5,H*0.85,180,"rgba(139,26,74,0.09)"]].forEach(([x,y,r,c])=>{
+      const g=sx.createRadialGradient(x,y,0,x,y,r);
+      g.addColorStop(0,c); g.addColorStop(1,"transparent");
+      sx.fillStyle=g; sx.fillRect(0,0,W,H);
+    });
+
+    // Stars
+    for(let i=0;i<220;i++){
+      const x=Math.random()*W, y=Math.random()*H, r=Math.random()*1.6+0.2;
+      sx.beginPath(); sx.arc(x,y,r,0,Math.PI*2);
+      sx.fillStyle=`rgba(255,255,255,${0.2+Math.random()*0.75})`; sx.fill();
+    }
+
+    // Orbits canvas
+    const oc = document.getElementById("uv-orbits");
+    oc.width = W*dpr; oc.height = H*dpr;
+    oc.style.width = W+"px"; oc.style.height = H+"px";
+    const ox = oc.getContext("2d");
+    ox.scale(dpr, dpr);
+
+    const COLORS = ["#00b4d8","#10b981","#f59e0b","#8b1a4a","#6366f1","#ec4899","#14b8a6","#f97316","#a855f7","#84cc16","#ef4444","#06b6d4","#e11d48","#0ea5e9","#d97706","#7c3aed","#059669","#2563eb","#d946ef","#16a34a","#ea580c","#9333ea","#0891b2","#ca8a04","#dc2626"];
+    const ICONS = {"ANIMATION":"🎬","PRODUCTION":"🎬","DESIGN":"✏️","STORYBOARD":"🎨","MODELING":"🧊","IT":"💻","LAYOUT":"📐","LIGHTING":"💡","RIGGING":"🔧","COMPOSITING":"🔬","VFX":"✨","RENDER":"⚡","TECHNICAL":"⚙️","ADMIN":"📋","EDITING":"✂️","FX - LIGHTING":"🌟","MATTE PAINTING":"🖌️","TXT SHADING":"🎭","TEXTURING":"🎨","2DFX":"💫","3DFX":"🌀","CG SUPERVISOR":"👁️","VFX - COMPOSITING":"🔭"};
+
+    const depts = [...new Set(allData.map(p=>p.departamento).filter(Boolean))].sort();
+    const present={}, hist={}, futIn={}, futOut={};
+    activos.forEach(p=>{const d=p.departamento||"?"; present[d]=(present[d]||0)+1;});
+    allData.forEach(p=>{const d=p.departamento||"?"; hist[d]=(hist[d]||0)+1;});
+    allData.forEach(p=>{
+      const d=p.departamento||"?";
+      const di=daysFrom(p.inicio), ds=daysFrom(p.finEstimado);
+      if(di!==null&&di>0&&di<=90) futIn[d]=(futIn[d]||0)+1;
+      if(ds!==null&&ds>=0&&ds<=90) futOut[d]=(futOut[d]||0)+1;
+    });
+
+    const maxP = Math.max(...depts.map(d=>present[d]||0), 1);
+
+    // Sort by present count, assign to 4 rings
+    const sorted = [...depts].sort((a,b)=>(present[b]||0)-(present[a]||0));
+    const rings = [[],[],[],[]];
+    sorted.forEach((d,i) => {
+      const ri = i < 2 ? 0 : i < 5 ? 1 : i < 10 ? 2 : 3;
+      rings[ri].push(d);
+    });
+
+    const maxR = Math.min(W, H) / 2 * 0.85;
+    const orbitRs = [maxR*0.22, maxR*0.44, maxR*0.66, maxR*0.88];
+
+    // Draw orbit rings
+    orbitRs.forEach(r => {
+      ox.beginPath(); ox.arc(cx, cy, r, 0, Math.PI*2);
+      ox.strokeStyle = "rgba(255,255,255,0.06)"; ox.lineWidth = 1; ox.stroke();
+    });
+
+    // Core
+    const core = document.getElementById("uv-core");
+    core.style.left = cx+"px"; core.style.top = cy+"px";
+    core.innerHTML = `
+  <div style="position:relative;display:flex;align-items:center;justify-content:center">
+    <div style="position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(0,180,216,0.07),transparent 70%);animation:float0 5s ease-in-out infinite"></div>
+    <div style="position:absolute;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(0,180,216,0.1),transparent 70%);animation:float1 3.5s ease-in-out infinite"></div>
+    <div style="position:absolute;width:105px;height:105px;border-radius:50%;border:1px solid rgba(0,180,216,0.2)"></div>
+    <div style="
+      width:90px;height:90px;border-radius:50%;
+      background:white;
+      box-shadow:0 0 35px rgba(180,80,255,0.7),0 0 80px rgba(100,0,255,0.3),0 0 140px rgba(255,50,120,0.15);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      position:relative;z-index:1;overflow:hidden;
+    ">
+      <img src="data:image/png;base64,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" style="width:70%;height:70%;object-fit:contain;filter:drop-shadow(0 0 6px rgba(180,80,255,0.8))">
+    </div>
+  </div>
+`;
+
+    // Clear planets
+    const planetsDiv = document.getElementById("uv-planets");
+    planetsDiv.innerHTML = "";
+    const tip = document.getElementById("uv-tip");
+
+    rings.forEach((ring, ri) => {
+      const r = orbitRs[ri];
+      ring.forEach((dept, pi) => {
+        const angle = (pi / Math.max(ring.length,1)) * Math.PI*2 - Math.PI/2;
+        const px = cx + Math.cos(angle) * r;
+        const py = cy + Math.sin(angle) * r;
+        const n = present[dept]||0;
+        const soft = 0.35 + 0.65*(n/maxP);
+        const size = Math.round(22 + 26*soft);
+        const color = COLORS[depts.indexOf(dept) % COLORS.length];
+        const icon = ICONS[dept.toUpperCase()] || "🪐";
+        const fi = futIn[dept]||0, fo = futOut[dept]||0;
+        const animDur = (4 + (ri*0.8) + (pi*0.3)).toFixed(1);
+        const animDelay = (pi*0.4).toFixed(1);
+
+        const wrap = document.createElement("div");
+        wrap.style.cssText = `position:absolute;left:${px}px;top:${py}px;transform:translate(-50%,-50%);z-index:5;`;
+
+        const planet = document.createElement("div");
+        planet.style.cssText = `
+          width:${size}px;height:${size}px;border-radius:50%;cursor:pointer;
+          background:radial-gradient(circle at 36% 36%,${color}ff,${color}88);
+          box-shadow:0 0 ${Math.round(size*0.5)}px ${color}99,0 0 ${Math.round(size*1.2)}px ${color}33;
+          display:flex;align-items:center;justify-content:center;
+          font-size:${Math.round(size*0.45)}px;
+          animation:float${ri%3} ${animDur}s ease-in-out ${animDelay}s infinite;
+          transition:transform 0.2s,box-shadow 0.2s;
+          position:relative;
+        `;
+        planet.textContent = icon;
+
+        // Badges
+        if(fi>0){
+          const b=document.createElement("div");
+          b.style.cssText=`position:absolute;top:-4px;right:-4px;background:#10b981;color:#000;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:3`;
+          b.textContent="+"+fi;
+          b.onclick=e=>{e.stopPropagation();openModal(dept+" — arriving (90d)",allData.filter(p=>{const d=daysFrom(p.inicio);return(p.departamento||"?")===dept&&d!==null&&d>0&&d<=90;}),"inicio");};
+          planet.appendChild(b);
+        }
+        if(fo>0){
+          const b=document.createElement("div");
+          b.style.cssText=`position:absolute;bottom:-4px;right:-4px;background:#f59e0b;color:#000;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:3`;
+          b.textContent="-"+fo;
+          b.onclick=e=>{e.stopPropagation();openModal(dept+" — departing (90d)",allData.filter(p=>{const d=daysFrom(p.finEstimado);return(p.departamento||"?")===dept&&d!==null&&d>=0&&d<=90;}),"finEstimado");};
+          planet.appendChild(b);
+        }
+
+        planet.onmouseenter = () => {
+          planet.style.transform = "scale(1.2)";
+          planet.style.boxShadow = `0 0 ${size}px ${color},0 0 ${size*2}px ${color}66`;
+          const nivCount={};
+          activos.filter(p=>(p.departamento||"?")===dept).forEach(p=>{const nv=p.nivel||"?";nivCount[nv]=(nivCount[nv]||0)+1;});
+          tip.innerHTML = `<div style="font-weight:700;color:${color};margin-bottom:6px">${dept}</div><div style="color:white">👥 Active: <b>${n}</b></div><div style="font-size:11px;color:#6b7280;margin-top:2px">${Object.entries(nivCount).map(([nv,c])=>`${nv}: ${c}`).join(" · ")||"—"}</div><div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.1);color:#6b7280;font-size:11px">📚 Historical: ${hist[dept]||0}${fi?`<br><span style="color:#10b981">✨ +${fi} arriving</span>`:""}${fo?`<br><span style="color:#f59e0b">🌑 -${fo} departing</span>`:""}</div><div style="font-size:10px;color:#00b4d8;margin-top:4px">Click to view list →</div>`;
+          tip.style.display = "block";
+        };
+        planet.onmouseleave = () => { planet.style.transform=""; planet.style.boxShadow=""; tip.style.display="none"; };
+        planet.onclick = () => openModal(dept+" — active", activos.filter(p=>(p.departamento||"?")===dept), "inicio");
+
+        const lbl = document.createElement("div");
+        lbl.style.cssText = `text-align:center;font-size:9px;color:rgba(255,255,255,0.75);margin-top:3px;white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,0.9);pointer-events:none`;
+        lbl.textContent = dept.length > 11 ? dept.slice(0,11)+"…" : dept;
+
+        wrap.appendChild(planet);
+        wrap.appendChild(lbl);
+        planetsDiv.appendChild(wrap);
+      });
+    });
+
+    // Tooltip follow mouse
+    container.onmousemove = e => {
+      let x=e.clientX+14, y=e.clientY-10;
+      if(x+210>innerWidth) x=e.clientX-220;
+      if(y+160>innerHeight) y=innerHeight-165;
+      tip.style.left=x+"px"; tip.style.top=y+"px";
+    };
+
+  }, 50); // small delay to ensure container is rendered
+}
+
+
 function openPendingModal(label, key) {
-  const base = activos;
+  const base = active;
   const sort = arr => [...arr].sort((a,b) => (parseDate(b.inicio)||0) - (parseDate(a.inicio)||0));
   const pendientes = sort(base.filter(p => isPending(key, p.onboarding)));
   const completados = sort(base.filter(p => isDone(key, p.onboarding)));
@@ -1322,9 +1649,9 @@ function openPendingModal(label, key) {
       </div>`).join('')}` : '';
 
   document.getElementById("modal-body").innerHTML =
-    section('Pendientes', pendientes, 'var(--amber)') +
+    section('Pending', pendientes, 'var(--amber)') +
     section('Completados', completados, 'var(--green)') ||
-    '<div class="modal-empty">Sin datos</div>';
+    '<div class="modal-empty">No data</div>';
 
   document.getElementById("modal").classList.add("open");
 }
@@ -1396,7 +1723,7 @@ function buildUniverso() {
   const depts = [...new Set(allData.map(p=>p.departamento).filter(Boolean))].sort();
   const hist={}, present={}, futIn={}, futOut={};
   allData.forEach(p=>{const d=p.departamento||"?";hist[d]=(hist[d]||0)+1;});
-  activos.forEach(p=>{const d=p.departamento||"?";present[d]=(present[d]||0)+1;});
+  active.forEach(p=>{const d=p.departamento||"?";present[d]=(present[d]||0)+1;});
   allData.forEach(p=>{
     const d=p.departamento||"?";
     const di=daysFrom(p.inicio), ds=daysFrom(p.finEstimado);
@@ -1439,18 +1766,18 @@ function buildUniverso() {
     `;
 
     const nivCount = {};
-    activos.filter(p=>(p.departamento||"?")===dept).forEach(p=>{
+    active.filter(p=>(p.departamento||"?")===dept).forEach(p=>{
       const nv=p.nivel||"?"; nivCount[nv]=(nivCount[nv]||0)+1;
     });
     const nivStr = Object.entries(nivCount).map(([nv,c])=>`${nv}: ${c}`).join(" · ")||"—";
 
     // Escape for inline onclick
     const deptSafe = dept.replace(/'/g,"\'");
-    const tipHtml = `<div style='font-weight:700;color:${color};margin-bottom:6px'>${dept}</div><div>👥 Activos: <b>${n}</b></div><div style='font-size:11px;color:var(--muted);margin-top:2px'>${nivStr}</div><div style='border-top:1px solid rgba(255,255,255,.1);margin-top:6px;padding-top:6px;color:var(--muted)'>📚 Histórico: ${h}${fi?`<br>✨ Ingresan (90d): <span style='color:var(--green)'>${fi}</span>`:''}${fo?`<br>🌑 Salen (90d): <span style='color:var(--amber)'>${fo}</span>`:''}</div><div style='font-size:10px;color:var(--accent);margin-top:6px'>Clic para ver lista →</div>`;
+    const tipHtml = `<div style='font-weight:700;color:${color};margin-bottom:6px'>${dept}</div><div>👥 Active: <b>${n}</b></div><div style='font-size:11px;color:var(--muted);margin-top:2px'>${nivStr}</div><div style='border-top:1px solid rgba(255,255,255,.1);margin-top:6px;padding-top:6px;color:var(--muted)'>📚 Histórico: ${h}${fi?`<br>✨ Ingresan (90d): <span style='color:var(--green)'>${fi}</span>`:''}${fo?`<br>🌑 Salen (90d): <span style='color:var(--amber)'>${fo}</span>`:''}</div><div style='font-size:10px;color:var(--accent);margin-top:6px'>Clic para ver lista →</div>`;
 
     return `<div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 4px">
       <div
-        onclick="openModal('${deptSafe} — activos', activos.filter(p=>(p.departamento||'?')==='${deptSafe}'), 'inicio')"
+        onclick="openModal('${deptSafe} — active', active.filter(p=>(p.departamento||'?')==='${deptSafe}'), 'inicio')"
         onmouseover="this.style.transform='scale(1.14) translateY(-4px)';this.style.boxShadow='0 8px 32px ${color}99, inset -${Math.round(size*0.15)}px -${Math.round(size*0.1)}px ${Math.round(size*0.3)}px rgba(0,0,0,0.5), inset ${Math.round(size*0.05)}px ${Math.round(size*0.05)}px ${Math.round(size*0.15)}px rgba(255,255,255,0.2)';document.getElementById('universo-tooltip').style.display='block';document.getElementById('universo-tooltip').innerHTML=\`${tipHtml.replace(/`/g,"'")}\`;"
         onmousemove="var t=document.getElementById('universo-tooltip');t.style.left=(event.clientX+14)+'px';t.style.top=(event.clientY-10)+'px';"
         onmouseleave="this.style.transform='';this.style.boxShadow='';document.getElementById('universo-tooltip').style.display='none';"
@@ -1470,43 +1797,59 @@ function buildUniverso() {
 
 </script>
 
-<!-- UNIVERSO ATLANTIS -->
+<!-- ATLANTIS UNIVERSE -->
 <div id="page-universo" class="page" style="position:relative;overflow:hidden;min-height:calc(100vh - 80px);background:#030810;padding:20px 32px 32px">
+  <!-- Toggle between grid and orbital -->
+  <div style="position:absolute;top:16px;right:20px;z-index:10;display:flex;gap:8px">
+    <button id="uv-btn-grid" onclick="switchUniversoView('grid')" style="background:rgba(0,180,216,0.2);border:1px solid var(--accent);color:var(--accent);padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer">⊞ Grid</button>
+    <button id="uv-btn-orbital" onclick="switchUniversoView('orbital')" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer">🌌 Orbital</button>
+  </div>
+  <div id="uv-grid-view">
   <!-- Starfield background -->
   <canvas id="universo-stars-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0"></canvas>
 
   <!-- Content -->
   <div style="position:relative;z-index:1">
     <div style="text-align:center;margin-bottom:20px">
-      <h2 style="font-size:20px;font-weight:700;letter-spacing:0.06em;color:var(--accent);text-shadow:0 0 20px rgba(0,180,216,0.5)">🌊 UNIVERSO ATLANTIS</h2>
-      <p style="font-size:12px;color:var(--muted);margin-top:4px">Cada planeta = un departamento · Tamaño = personas activas · Clic para ver lista</p>
+      <h2 style="font-size:20px;font-weight:700;letter-spacing:0.06em;color:var(--accent);text-shadow:0 0 20px rgba(0,180,216,0.5)">🌊 ATLANTIS UNIVERSE</h2>
+      <p style="font-size:12px;color:var(--muted);margin-top:4px">Cada planeta = un departamento · Tamaño = persons activas · Clic para ver lista</p>
     </div>
     <div id="universo-tooltip" style="display:none;position:fixed;background:rgba(15,25,40,0.97);border:1px solid rgba(0,180,216,0.3);border-radius:10px;padding:12px 16px;font-size:13px;z-index:200;pointer-events:none;max-width:220px"></div>
     <div id="universo-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:24px;align-items:center"></div>
+  </div>
+  </div><!-- end uv-grid-view -->
+
+  <!-- Orbital view -->
+  <div id="uv-orbital-view" style="display:none;position:relative;width:100%;height:90vh;min-height:600px;background:#020508;overflow:hidden">
+    <canvas id="uv-stars" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
+    <canvas id="uv-orbits" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
+    <div id="uv-planets" style="position:absolute;top:0;left:0;width:100%;height:100%"></div>
+    <div id="uv-core" style="position:absolute;transform:translate(-50%,-50%);pointer-events:none;z-index:6"></div>
+    <div id="uv-tip" style="display:none;position:fixed;background:rgba(10,18,35,0.97);border:1px solid rgba(88,170,255,0.4);border-radius:12px;padding:14px 16px;font-size:12px;z-index:200;pointer-events:none;max-width:200px"></div>
   </div>
 </div>
 
 <!-- CHATS -->
 <div id="page-chats" class="page">
   <div class="chat-tabs">
-    <button id="chat-tab-equipo"   class="chat-tab active"  onclick="switchChatTab('equipo')">🧑‍💼 Chat Equipo</button>
-    <button id="chat-tab-atlantis" class="chat-tab"         onclick="switchChatTab('atlantis')">🎬 Chat ATLANTIS</button>
+    <button id="chat-tab-equipo"   class="chat-tab active"  onclick="switchChatTab('equipo')">🧑‍💼 Team Chat</button>
+    <button id="chat-tab-atlantis" class="chat-tab"         onclick="switchChatTab('atlantis')">🎬 ATLANTIS Chat</button>
   </div>
   <div id="chat-equipo-panel" class="chat-panel">
     <div class="chat-messages" id="chat-messages-equipo">
-      <div class="chat-msg chat-msg-assistant">Hola, soy el asistente del equipo ATLANTIS. Puedo ayudarte a encontrar información sobre cualquier persona, departamento, fechas de contrato, y más. ¿Qué necesitas?</div>
+      <div class="chat-msg chat-msg-assistant">Hola, soy el asistente del equipo ATLANTIS. Puedo ayudarte a encontrar información sobre cualquier person, departamento, fechas de contrato, y más. ¿Qué necesitas?</div>
     </div>
     <div class="chat-input-row">
-      <textarea id="chat-input-equipo" class="chat-input" placeholder="Ej: ¿Quiénes son los SENIOR de Animation?" onkeydown="handleChatKey(event,'equipo')" rows="1"></textarea>
+      <textarea id="chat-input-equipo" class="chat-input" placeholder="E.g.: Who are the SENIOR staff in Animation?" onkeydown="handleChatKey(event,'equipo')" rows="1"></textarea>
       <button class="chat-send" onclick="sendChat('equipo')">↑</button>
     </div>
   </div>
   <div id="chat-atlantis-panel" class="chat-panel" style="display:none">
     <div class="chat-messages" id="chat-messages-atlantis">
-      <div class="chat-msg chat-msg-assistant">¡Hola! Soy el asistente de ATLANTIS Animation. Puedo contarte sobre el estudio, nuestros proyectos, nuestra filosofía creativa y mucho más. ¿En qué puedo ayudarte?</div>
+      <div class="chat-msg chat-msg-assistant">Hi! I'm the ATLANTIS Animation assistant. I can tell you about the studio, our projects, our creative philosophy and much more. How can I help you?</div>
     </div>
     <div class="chat-input-row">
-      <textarea id="chat-input-atlantis" class="chat-input" placeholder="Ej: ¿En qué proyectos ha trabajado ATLANTIS?" onkeydown="handleChatKey(event,'atlantis')" rows="1"></textarea>
+      <textarea id="chat-input-atlantis" class="chat-input" placeholder="E.g.: What projects has ATLANTIS worked on?" onkeydown="handleChatKey(event,'atlantis')" rows="1"></textarea>
       <button class="chat-send" onclick="sendChat('atlantis')">↑</button>
     </div>
   </div>
