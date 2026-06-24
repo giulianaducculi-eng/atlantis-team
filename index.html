@@ -319,6 +319,11 @@ document.getElementById("pw-input").focus();
     <canvas id="chart-dept" style="max-height:260px"></canvas>
   </div>
 
+  <div class="chart-card full" style="margin-bottom:20px">
+    <div class="chart-title">Gender by department — active</div>
+    <canvas id="chart-genero-dept" style="max-height:280px"></canvas>
+  </div>
+
   <div class="dept-grid" style="margin-bottom:28px">
     <div class="data-table">
       <table>
@@ -387,10 +392,11 @@ document.getElementById("pw-input").focus();
   <!-- Panel estadísticas por departamento — aparece arriba cuando se filtra -->
   <div id="dept-stats-panel" style="display:none;margin-bottom:24px">
     <div class="section-title" id="dept-stats-title" style="margin-bottom:16px"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;margin-bottom:20px">
       <div class="chart-card"><div class="chart-title">Location</div><canvas id="ds-location" style="max-height:180px"></canvas></div>
       <div class="chart-card"><div class="chart-title">Level</div><canvas id="ds-nivel" style="max-height:180px"></canvas></div>
       <div class="chart-card"><div class="chart-title">Nationality</div><canvas id="ds-nac" style="max-height:180px"></canvas></div>
+      <div class="chart-card"><div class="chart-title">Gender</div><canvas id="ds-genero" style="max-height:180px"></canvas></div>
     </div>
     <div class="chart-card full" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap">
@@ -537,7 +543,7 @@ document.getElementById("pw-input").focus();
 </div>
 
 <script>
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzG4glszRH1AF945Wxa44pqeWWLbPNqC8EYcHrRXh9WXTe6UVh0owVbv9GF-pbwxa0/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNya16sVB-9Z1ycbOqBKTEaa44dG4X3dPYEquvzp2aHWiOWUHdu72gfg2z4OJAGGPR/exec";
 
 const ONBOARDING_KEYS = [
   { key: "laboralDocs",             label: "Laboral Docs" },
@@ -722,7 +728,7 @@ function makeDonut(id, labels, data, clickFn, customColors) {
   const total = data.reduce((a,b)=>a+b,0);
   charts[id] = new Chart(document.getElementById(id), {
     type: "doughnut",
-    data: { labels, datasets: [{ data, backgroundColor: PALETTE, borderWidth: 0 }] },
+    data: { labels, datasets: [{ data, backgroundColor: customColors || PALETTE, borderWidth: 0 }] },
     options: {
       responsive: true, cutout: "52%",
       onClick(evt, elements) {
@@ -951,6 +957,25 @@ function buildStats() {
   makeDonut("chart-location-total",  Object.keys(locTotal), Object.values(locTotal), l=>allData.filter(p=>(p.location||"No data")===l));
   makeDonut("chart-nivel-total",     Object.keys(nivelTotal), Object.values(nivelTotal), l=>allData.filter(p=>(p.nivel||"No level")===l));
 
+  // Gender chart
+  const generoActive = {};
+  active.forEach(p => {
+    const g = p.genero === "M" ? "Male" : p.genero === "F" ? "Female" : "Not specified";
+    generoActive[g] = (generoActive[g]||0)+1;
+  });
+  makeDonut("chart-genero",
+    Object.keys(generoActive),
+    Object.values(generoActive),
+    l => active.filter(p=>{
+      const g = p.genero === "M" ? "Male" : p.genero === "F" ? "Female" : "Not specified";
+      return g === l;
+    }),
+    ["#60c8f5","#f472b6","#9ca3af"]
+  );
+  const gTotal = active.length;
+  document.getElementById("totals-genero").innerHTML = Object.entries(generoActive)
+    .map(([g,n])=>`<span style="margin-right:8px">${g}: <b>${n}</b> (${pct(n,gTotal)}%)</span>`).join("");
+
   const nacCount={}, nacCountActive={};
   allData.forEach(p=>{const n=p.nacionalidad||"No data";nacCount[n]=(nacCount[n]||0)+1;});
   active.forEach(p=>{const n=p.nacionalidad||"No data";nacCountActive[n]=(nacCountActive[n]||0)+1;});
@@ -990,6 +1015,49 @@ function buildStats() {
   });
   // Ratio horizontal stacked
   // Sort presence chart by total (ON SITE + HYBRID) descending
+  // Gender by department chart
+  const generoByDept = {};
+  active.forEach(p => {
+    const d = p.departamento || "No dept.";
+    const g = p.genero === "M" ? "Male" : p.genero === "F" ? "Female" : "Not specified";
+    if (!generoByDept[d]) generoByDept[d] = { Male: 0, Female: 0, "Not specified": 0 };
+    generoByDept[d][g]++;
+  });
+  const genderDepts = [...depts].sort((a,b) => {
+    const ta = (generoByDept[a]?.Male||0) + (generoByDept[a]?.Female||0);
+    const tb = (generoByDept[b]?.Male||0) + (generoByDept[b]?.Female||0);
+    return tb - ta;
+  });
+  if (charts["chart-genero-dept"]) charts["chart-genero-dept"].destroy();
+  charts["chart-genero-dept"] = new Chart(document.getElementById("chart-genero-dept"), {
+    type: "bar",
+    data: {
+      labels: genderDepts,
+      datasets: [
+        { label: "Male",   data: genderDepts.map(d=>generoByDept[d]?.Male||0),   backgroundColor: "rgba(96,200,245,0.8)", borderRadius: 3, stack: "g" },
+        { label: "Female", data: genderDepts.map(d=>generoByDept[d]?.Female||0), backgroundColor: "rgba(244,114,182,0.8)", borderRadius: 3, stack: "g" },
+      ]
+    },
+    options: {
+      indexAxis: "y", responsive: true,
+      scales: {
+        x: { stacked: true, grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#6b7280"}, beginAtZero: true },
+        y: { stacked: true, grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#e5e7eb", font:{size:11}} }
+      },
+      plugins: {
+        legend: { position:"top", labels:{color:"#9ca3af",boxWidth:12,font:{size:11}} },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}` } }
+      },
+      onClick(evt, elements) {
+        if (!elements.length) return;
+        const dept = genderDepts[elements[0].index];
+        const gender = elements[0].datasetIndex === 0 ? "M" : "F";
+        openModal(`${dept} — ${gender === "M" ? "Male" : "Female"}`,
+          active.filter(p => (p.departamento||"No dept.") === dept && p.genero === gender), "inicio");
+      }
+    }
+  });
+
   const presenceSorted = [...depts]
     .filter(d=>(deptOnsite[d]||0)+(deptHybrid[d]||0)>0)
     .sort((a,b)=>((deptOnsite[b]||0)+(deptHybrid[b]||0))-((deptOnsite[a]||0)+(deptHybrid[a]||0)));
@@ -1575,15 +1643,31 @@ function buildDeptStatsPanel(dept) {
   if(deptCharts.loc) deptCharts.loc.destroy();
   // Gender donut for dept
   const deptGenero = {};
-  deptActivos.forEach(p=>{
+  deptActive.forEach(p=>{
     const g = p.genero==="M"?"Male":p.genero==="F"?"Female":"Not specified";
     deptGenero[g]=(deptGenero[g]||0)+1;
   });
   if(deptCharts.genero) deptCharts.genero.destroy();
   deptCharts.genero = new Chart(document.getElementById("ds-genero"),{
     type:"doughnut",
-    data:{labels:Object.keys(deptGenero),datasets:[{data:Object.values(deptGenero),backgroundColor:["#6366f1","#ec4899","#9ca3af"],borderWidth:0}]},
+    data:{labels:Object.keys(deptGenero),datasets:[{data:Object.values(deptGenero),backgroundColor:["#60c8f5","#f472b6","#9ca3af"],borderWidth:0}]},
     options:{responsive:true,cutout:"55%",plugins:{legend:{position:"bottom",labels:{color:"#9ca3af",boxWidth:10,font:{size:10}}}}}
+  });
+
+  // Gender donut
+  const generoC = {};
+  deptActive.forEach(p=>{
+    const g = p.genero==="M"?"Male":p.genero==="F"?"Female":"Not specified";
+    generoC[g]=(generoC[g]||0)+1;
+  });
+  if(deptCharts.genero) deptCharts.genero.destroy();
+  deptCharts.genero = new Chart(document.getElementById("ds-genero"),{
+    type:"doughnut",
+    data:{labels:Object.keys(generoC),datasets:[{data:Object.values(generoC),backgroundColor:["#60c8f5","#f472b6","#9ca3af"],borderWidth:0}]},
+    options:{responsive:true,cutout:"55%",plugins:{
+      legend:{position:"bottom",labels:{color:"#9ca3af",boxWidth:10,font:{size:10}}},
+      tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw}`}}
+    }}
   });
 
   deptCharts.loc = new Chart(document.getElementById("ds-location"), {
@@ -2064,17 +2148,25 @@ const STUDIO_CLOSURES_2026 = new Set([
   "2026-12-21", "2026-12-22", "2026-12-23", "2026-12-24", "2026-12-25",
 ]);
 
+function dateToISO(date) {
+  // Use local date to avoid UTC offset issues
+  const y = date.getFullYear();
+  const m = String(date.getMonth()+1).padStart(2,"0");
+  const d = String(date.getDate()).padStart(2,"0");
+  return `${y}-${m}-${d}`;
+}
+
 function isWeekend(date) {
   const dow = date.getDay();
   return dow === 0 || dow === 6;
 }
 
 function isHoliday(date) {
-  return HOLIDAYS_2026.has(date.toISOString().slice(0, 10));
+  return HOLIDAYS_2026.has(dateToISO(date));
 }
 
 function isStudioClosure(date) {
-  return STUDIO_CLOSURES_2026.has(date.toISOString().slice(0, 10));
+  return STUDIO_CLOSURES_2026.has(dateToISO(date));
 }
 
 // A "workable" day = not weekend and not public holiday (studio closures are workable but mandatory)
@@ -2230,7 +2322,7 @@ function simSearchEmployee(q) {
 function simSelectEmployee(nombre, dept) {
   document.getElementById("sim-employee-search").value = `${nombre} · ${dept}`;
   document.getElementById("sim-employee").value = nombre;
-  simRecalc();
+  setTimeout(simRecalc, 50); // small delay so auto-fill completes first
 }
 
 // Close dropdown on outside click
@@ -2259,8 +2351,8 @@ function simRecalc() {
   const vacTo       = document.getElementById("sim-vac-to").value;
   const pending2025 = parseFloat(document.getElementById("sim-pending2025").value) || 0;
   const takenVar    = parseFloat(document.getElementById("sim-taken-var").value)    || 0;
-  const takenFix    = parseFloat(document.getElementById("sim-taken-fix").value)    || 0;
-  const requested   = parseFloat(document.getElementById("sim-requested").value)    || 1;
+  const takenFix    = parseFloat(document.getElementById("sim-taken-fix").value) || 0;
+  const requested   = 1;
 
   const banner       = document.getElementById("sim-result-banner");
   const breakdown    = document.getElementById("sim-breakdown");
@@ -2274,7 +2366,7 @@ function simRecalc() {
     return;
   }
 
-  const p = allData.find(x => x.nombre === nombre);
+  const p = allData.find(x => x.nombre?.trim() === nombre?.trim()) || activos.find(x => x.nombre?.trim() === nombre?.trim());
   if (!p) return;
 
   document.getElementById("sim-start").value = p.inicio || "";
@@ -2287,11 +2379,27 @@ function simRecalc() {
     pendingField.style.background = "rgba(16,185,129,0.1)";
   }
 
+  // Auto-fill variable days taken from Sheet
+  const varField = document.getElementById("sim-taken-var");
+  if (p.diasVariables !== undefined && p.diasVariables !== null) {
+    varField.value = parseFloat(p.diasVariables) || 0;
+    varField.style.background = "rgba(16,185,129,0.1)";
+  }
+
+  // Fixed days field removed
+
+  // Re-read after auto-fill
+  const pending2025Final = parseFloat(document.getElementById("sim-pending2025").value) || 0;
+  const takenVarFinal    = parseFloat(document.getElementById("sim-taken-var").value)    || 0;
+  const takenFixFinal    = parseFloat(document.getElementById("sim-taken-fix").value)    || 0;
+
   if (!vacFrom || !vacTo) {
     banner.innerHTML = `<div style="font-size:48px;margin-bottom:8px">📅</div><div style="font-size:16px;color:var(--muted)">Enter vacation dates</div>`;
     breakdown.style.display = "none"; contractInfo.style.display = "none";
     return;
   }
+
+  if (!p.inicio) return;
 
   const rawStart    = new Date(p.inicio + "T00:00:00");
   const rawEnd      = p.finEstimado ? new Date(p.finEstimado + "T00:00:00") : null;
@@ -2315,7 +2423,23 @@ function simRecalc() {
   const totalContractDays        = endDate ? (endDate - startDate) / 86400000 : null;
   const totalVacationEntitlement = totalContractDays ? totalContractDays * VACATION_RATE : null;
 
-  const available = accrued + pending2025 - takenVar - takenFix;
+  const available = accrued + pending2025Final - takenVarFinal - takenFixFinal;
+  
+  // Total contract entitlement (start to end, no capping)
+  const rawStartFull = new Date(p.inicio + "T00:00:00");
+  const rawEndFull   = p.finEstimado ? new Date(p.finEstimado + "T00:00:00") : null;
+  const totalContractEntitlement = rawEndFull 
+    ? Math.max(0, (rawEndFull - rawStartFull) / 86400000 + 1) * VACATION_RATE 
+    : null;
+
+  // 2027 carry = total entitlement - 2026 entitlement  
+  const carry2027 = totalContractEntitlement && totalVacationEntitlement
+    ? Math.max(0, totalContractEntitlement - totalVacationEntitlement)
+    : null;
+  if (carry2027 !== null) {
+    const c27Field = document.getElementById("sim-carry2027");
+    if (c27Field) c27Field.value = carry2027.toFixed(2);
+  }
   const reqFinal  = workingDaysReq;
   document.getElementById("sim-requested").value = reqFinal;
 
@@ -2328,11 +2452,7 @@ function simRecalc() {
     <div style="font-size:56px;margin-bottom:8px">${ok?"✅":"❌"}</div>
     <div style="font-size:22px;font-weight:800;color:${ok?"var(--green)":"var(--red)"}">${ok?"Approved":"Insufficient days"}</div>
     <div style="font-size:13px;color:var(--muted);margin-top:6px">${ok?`${balance.toFixed(2)} days remaining after approval`:`${Math.abs(balance).toFixed(2)} days short`}</div>
-    <div style="margin-top:10px;display:flex;justify-content:center;gap:16px;flex-wrap:wrap;font-size:12px">
-      <span style="color:var(--accent)">📅 ${dayAnalysis.normalDays} personal days</span>
-      ${dayAnalysis.closureDays>0?`<span style="color:#f472b6">🏢 ${dayAnalysis.closureDays} studio closure days</span>`:""}
-      ${dayAnalysis.holidayDays>0?`<span style="color:var(--muted)">🎉 ${dayAnalysis.holidayDays} public holidays (not counted)</span>`:""}
-    </div>
+
   `;
 
   const line = (label, val, color="#e5e7eb", sign="") =>
@@ -2341,31 +2461,56 @@ function simRecalc() {
       <span style="font-weight:600;color:${color}">${sign}${val}</span>
     </div>`;
 
+  // Hours helper: decimal part * 8
+  const daysHours = d => {
+    const dec = Math.abs(d) % 1;
+    const hrs = Math.round(dec * 8 * 10) / 10;
+    return hrs > 0 ? ` <span style="font-size:10px;color:var(--muted)">(${Math.floor(Math.abs(d))}d ${hrs}h)</span>` : "";
+  };
+
   document.getElementById("sim-lines").innerHTML =
-    line(`Calendar days (contract start → ${vacFrom})`, `${Math.round(calDaysToVacation)} days`) +
-    line("Accrual rate", "× 0.063 (23 days/year)") +
-    line("Days accrued", accrued.toFixed(2), "var(--accent)", "+") +
-    (pending2025 !== 0 ? line("Remaining Dec 2025", pending2025.toFixed(2), pending2025>=0?"var(--green)":"var(--red)", pending2025>=0?"+":"") : "") +
-    (takenVar > 0 ? line("Variable days taken 2026", takenVar.toFixed(2), "var(--amber)", "−") : "") +
-    (takenFix > 0 ? line("Fixed days deducted 2026", takenFix.toFixed(2), "var(--amber)", "−") : "") +
+    line("Days accrued (based on vacation from date)", accrued.toFixed(2) + daysHours(accrued), "var(--accent)", "+") +
+    line(`  → ${Math.round(calDaysToVacation)} calendar days × 0.063`, "") +
+    (pending2025 !== 0 ? line("2025 — Dec 2025 days", pending2025.toFixed(2) + daysHours(pending2025), pending2025>=0?"var(--green)":"var(--red)", pending2025>=0?"+":"") : "") +
+    (takenVar > 0 ? line("2026 — Days taken 2026", takenVar.toFixed(2) + daysHours(takenVar), "var(--amber)", "−") : "") +
     `<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);font-size:11px;color:var(--muted)">
       Days requested breakdown: ${dayAnalysis.normalDays} personal${dayAnalysis.closureDays>0?` + ${dayAnalysis.closureDays} studio closure`:""}${dayAnalysis.holidayDays>0?` · ${dayAnalysis.holidayDays} festivo(s) not counted`:""}
     </div>`;
 
-  document.getElementById("sim-available-final").textContent = available.toFixed(2);
-  document.getElementById("sim-requested-final").textContent = `${reqFinal} working days`;
-  document.getElementById("sim-balance").textContent = balance.toFixed(2);
+  const daysHoursStr = d => {
+    const dec = Math.abs(d) % 1;
+    const hrs = Math.round(dec * 8 * 10) / 10;
+    return hrs > 0 ? `${Math.floor(Math.abs(d))} days (${hrs}h)` : `${d.toFixed(2)} days`;
+  };
+  document.getElementById("sim-available-final").textContent = daysHoursStr(available);
+  document.getElementById("sim-requested-final").innerHTML = `${reqFinal} working days
+    <div style="font-size:11px;color:var(--muted);margin-top:4px">
+      ${dayAnalysis.normalDays} personal${dayAnalysis.closureDays>0?` + ${dayAnalysis.closureDays} studio closure`:""}${dayAnalysis.holidayDays>0?` · ${dayAnalysis.holidayDays} holiday(s) not counted`:""}
+    </div>`;
+  const balDec = Math.abs(balance) % 1;
+  const balHrs = Math.round(balDec * 8 * 10) / 10;
+  document.getElementById("sim-balance").textContent = balHrs > 0 
+    ? `${balance < 0 ? "-" : ""}${Math.floor(Math.abs(balance))} days (${balHrs}h)` 
+    : `${balance.toFixed(2)} days`;
   document.getElementById("sim-balance").style.color = ok ? "var(--green)" : "var(--red)";
   breakdown.style.display = "block";
 
   if (totalVacationEntitlement) {
+    // Days requested info line
+    const reqInfoEl = document.getElementById("sim-days-requested-info");
+    if(reqInfoEl) {
+      reqInfoEl.style.display = "block";
+      reqInfoEl.innerHTML = `📅 <b>${reqFinal} working days</b> requested&nbsp;&nbsp;·&nbsp;&nbsp;
+        <span style="color:var(--accent)">${dayAnalysis.normalDays} personal</span>
+        ${dayAnalysis.closureDays>0?`&nbsp;+&nbsp;<span style="color:#f472b6">${dayAnalysis.closureDays} studio closure</span>`:""}
+        ${dayAnalysis.holidayDays>0?`&nbsp;·&nbsp;<span style="color:var(--muted)">${dayAnalysis.holidayDays} holiday(s) not counted</span>`:""}`;
+    }
+
     document.getElementById("sim-contract-lines").innerHTML = `
-      <div style="display:flex;justify-content:space-between"><span>Contract (2026 period)</span><span style="color:var(--white)">${Math.round(totalContractDays)} calendar days</span></div>
-      <div style="display:flex;justify-content:space-between"><span>Total vacation entitlement</span><span style="color:var(--white)">${totalVacationEntitlement.toFixed(2)} days</span></div>
-      <div style="display:flex;justify-content:space-between"><span>Calendar days to vacation start</span><span style="color:var(--white)">${Math.round(calDaysToVacation)} days</span></div>
-      <div style="display:flex;justify-content:space-between"><span>Personal vacation days</span><span style="color:var(--accent)">${dayAnalysis.normalDays}</span></div>
-      ${dayAnalysis.closureDays>0?`<div style="display:flex;justify-content:space-between"><span>Studio closure days</span><span style="color:#f472b6">${dayAnalysis.closureDays}</span></div>`:""}
-      ${dayAnalysis.holidayDays>0?`<div style="display:flex;justify-content:space-between"><span>Public holidays (not counted)</span><span style="color:var(--muted)">${dayAnalysis.holidayDays}</span></div>`:""}
+      <div style="display:flex;justify-content:space-between"><span>Total contract entitlement</span><span style="color:var(--white)">${totalContractEntitlement ? totalContractEntitlement.toFixed(2) + daysHours(totalContractEntitlement) : "—"}</span></div>
+      <div style="display:flex;justify-content:space-between"><span>2026 entitlement</span><span style="color:var(--accent)">${totalVacationEntitlement.toFixed(2)}${daysHours(totalVacationEntitlement)}</span></div>
+      <div style="display:flex;justify-content:space-between"><span>2027 carry forward</span><span style="color:var(--white)">${carry2027 !== null ? carry2027.toFixed(2) + daysHours(carry2027) : "—"}</span></div>
+
     `;
     contractInfo.style.display = "block";
   }
@@ -2409,7 +2554,7 @@ function simRecalc() {
 <!-- SIMULADOR DE VACACIONES -->
 <div id="page-simulador" class="page">
   <h2 style="font-size:20px;font-weight:700;color:var(--accent);margin-bottom:4px">🏖️ Vacation Calculator</h2>
-  <p style="font-size:12px;color:var(--muted);margin-bottom:24px">23 days/year · 0.063 days/day worked · Based on contract dates</p>
+  
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:900px">
 
@@ -2418,12 +2563,12 @@ function simRecalc() {
       <div class="chart-title" style="margin-bottom:16px">Employee & Request</div>
 
       <!-- Employee selector -->
-      <div style="margin-bottom:16px">
+      <div style="margin-bottom:16px;position:relative">
         <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Employee</label>
         <input id="sim-employee-search" type="text" placeholder="Type 3+ letters to search…" autocomplete="off"
           oninput="simSearchEmployee(this.value)"
-          style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);padding:10px 12px;border-radius:8px;font-size:13px;outline:none">
-        <div id="sim-employee-dropdown" style="display:none;position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:100;width:calc(100% - 48px)"></div>
+          style="width:100%;background:var(--bg);border:1px solid rgba(0,180,216,0.3);color:var(--white);padding:11px 14px;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box">
+        <div id="sim-employee-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#0f1c2e;border:1px solid rgba(0,180,216,0.25);border-radius:10px;max-height:220px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,0.5)"></div>
         <input type="hidden" id="sim-employee">
       </div>
 
@@ -2471,16 +2616,8 @@ function simRecalc() {
             <input id="sim-taken-var" type="number" step="0.01" value="0" oninput="simRecalc()"
               style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);padding:8px 10px;border-radius:6px;font-size:13px;outline:none">
           </div>
-          <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Fixed days deducted 2026</label>
-            <input id="sim-taken-fix" type="number" step="0.01" value="0" oninput="simRecalc()"
-              style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);padding:8px 10px;border-radius:6px;font-size:13px;outline:none">
-          </div>
-          <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Days requested</label>
-            <input id="sim-requested" type="number" step="0.5" value="1" oninput="simRecalc()"
-              style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);padding:8px 10px;border-radius:6px;font-size:13px;outline:none">
-          </div>
+
+
         </div>
       </div>
     </div>
