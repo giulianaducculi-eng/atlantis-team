@@ -543,7 +543,7 @@ document.getElementById("pw-input").focus();
 </div>
 
 <script>
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNya16sVB-9Z1ycbOqBKTEaa44dG4X3dPYEquvzp2aHWiOWUHdu72gfg2z4OJAGGPR/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx4pRZbPqZUARkXqpmQN5MvSPfxkgp0aGXWKzndZ96_b2UGQ121RNemQLzdBeOqRA-w/exec";
 
 const ONBOARDING_KEYS = [
   { key: "laboralDocs",             label: "Laboral Docs" },
@@ -2162,7 +2162,12 @@ function isWeekend(date) {
 }
 
 function isHoliday(date) {
-  return HOLIDAYS_2026.has(dateToISO(date));
+  const iso = dateToISO(date);
+  if (HOLIDAYS_2026.has(iso)) return true;
+  // Recurring holidays any year: Dec 24, Dec 31, Jan 1
+  const md = iso.slice(5); // MM-DD
+  if (md === "12-24" || md === "12-31" || md === "01-01") return true;
+  return false;
 }
 
 function isStudioClosure(date) {
@@ -2351,7 +2356,7 @@ function simRecalc() {
   const vacTo       = document.getElementById("sim-vac-to").value;
   const pending2025 = parseFloat(document.getElementById("sim-pending2025").value) || 0;
   const takenVar    = parseFloat(document.getElementById("sim-taken-var").value)    || 0;
-  const takenFix    = parseFloat(document.getElementById("sim-taken-fix").value) || 0;
+  const takenFix    = parseFloat(document.getElementById("sim-taken-fix")?.value) || 0;
   const requested   = 1;
 
   const banner       = document.getElementById("sim-result-banner");
@@ -2386,12 +2391,46 @@ function simRecalc() {
     varField.style.background = "rgba(16,185,129,0.1)";
   }
 
+  // Calculate studio closure days based on contract dates
+  if (p.inicio && p.finEstimado) {
+    const cStart = new Date(p.inicio + "T00:00:00");
+    const cEnd   = new Date(p.finEstimado + "T00:00:00");
+    const aug10  = new Date("2026-08-10T00:00:00");
+    const aug14  = new Date("2026-08-14T00:00:00");
+    const dec21  = new Date("2026-12-21T00:00:00");
+    const dec23  = new Date("2026-12-23T00:00:00");
+    const coversAug = cStart <= aug14 && cEnd >= aug10;
+    const coversDec = cStart <= dec23 && cEnd >= dec21;
+    // Total studio days by contract (shown in breakdown regardless of timing)
+    const totalStudioDays = (coversAug ? 5 : 0) + (coversDec ? 3 : 0);
+    // Personal days = total taken - total studio days
+    const personalDays = Math.max(0, (parseFloat(p.diasVariables) || 0) - totalStudioDays);
+    // Only deduct studio closure days that already occurred before vacation FROM date
+    const vacFrom2 = document.getElementById("sim-vac-from").value;
+    const vacFromD = vacFrom2 ? new Date(vacFrom2 + "T00:00:00") : new Date();
+    const augPassed = vacFromD > aug14;
+    const decPassed = vacFromD > dec23;
+    const studioDaysDeducted = (coversAug && augPassed ? 5 : 0) + (coversDec && decPassed ? 3 : 0);
+    // Store for use in simRecalc
+    window._studioDaysDeducted = studioDaysDeducted;
+    window._personalDays       = personalDays;
+    window._totalStudioDays    = totalStudioDays;
+    const infoEl = document.getElementById("sim-var-breakdown");
+    if (infoEl) {
+      infoEl.style.display = "flex";
+      infoEl.innerHTML = [
+        personalDays > 0     ? `<span style="background:rgba(0,180,216,0.15);border:1px solid rgba(0,180,216,0.3);color:var(--accent);padding:4px 12px;border-radius:20px;font-weight:600">👤 ${personalDays} personal</span>` : "",
+        totalStudioDays > 0  ? `<span style="background:rgba(249,200,70,0.12);border:1px solid rgba(249,200,70,0.3);color:#f9c846;padding:4px 12px;border-radius:20px;font-weight:600">🏢 ${totalStudioDays} studio closure${coversDec && !decPassed ? ` (${coversAug?5:0} Aug${coversAug && coversDec?" + ":""}${coversDec?"3 Dec":""}${!decPassed?" pending":""})` : ""}</span>` : ""
+      ].filter(Boolean).join("");
+    }
+  }
+
   // Fixed days field removed
 
   // Re-read after auto-fill
-  const pending2025Final = parseFloat(document.getElementById("sim-pending2025").value) || 0;
-  const takenVarFinal    = parseFloat(document.getElementById("sim-taken-var").value)    || 0;
-  const takenFixFinal    = parseFloat(document.getElementById("sim-taken-fix").value)    || 0;
+  const pending2025Final = parseFloat(document.getElementById("sim-pending2025")?.value) || 0;
+  const takenVarFinal    = parseFloat(document.getElementById("sim-taken-var")?.value)    || 0;
+  const takenFixFinal    = parseFloat(document.getElementById("sim-taken-fix")?.value)    || 0;
 
   if (!vacFrom || !vacTo) {
     banner.innerHTML = `<div style="font-size:48px;margin-bottom:8px">📅</div><div style="font-size:16px;color:var(--muted)">Enter vacation dates</div>`;
@@ -2423,7 +2462,29 @@ function simRecalc() {
   const totalContractDays        = endDate ? (endDate - startDate) / 86400000 : null;
   const totalVacationEntitlement = totalContractDays ? totalContractDays * VACATION_RATE : null;
 
-  const available = accrued + pending2025Final - takenVarFinal - takenFixFinal;
+  const available = (() => {
+    // Recalculate studio vs personal split based on current vacation from date
+    const aug10b = new Date("2026-08-10T00:00:00");
+    const aug14b = new Date("2026-08-14T00:00:00");
+    const dec21b = new Date("2026-12-21T00:00:00");
+    const dec23b = new Date("2026-12-23T00:00:00");
+    const rawStartB = new Date((p.inicio||"2026-01-01") + "T00:00:00");
+    const rawEndB   = p.finEstimado ? new Date(p.finEstimado + "T00:00:00") : null;
+    const coversAugB = rawStartB <= aug14b && rawEndB && rawEndB >= aug10b;
+    const coversDecB = rawStartB <= dec23b && rawEndB && rawEndB >= dec21b;
+    const totalStudioB = (coversAugB ? 5 : 0) + (coversDecB ? 3 : 0);
+    const personalB    = Math.max(0, takenVarFinal - totalStudioB);
+    const augPassedB   = vacFromDate > aug14b;
+    const decPassedB   = vacFromDate > dec23b;
+    const studioDeductedB = (coversAugB && augPassedB ? 5 : 0) + (coversDecB && decPassedB ? 3 : 0);
+    // Update window vars for breakdown display
+    window._personalDays       = personalB;
+    window._studioDaysDeducted = studioDeductedB;
+    window._totalStudioDays    = totalStudioB;
+    window._coversAug = coversAugB; window._coversDec = coversDecB;
+    window._augPassed = augPassedB; window._decPassed = decPassedB;
+    return accrued + pending2025Final - personalB - studioDeductedB - takenFixFinal;
+  })();
   
   // Total contract entitlement (start to end, no capping)
   const rawStartFull = new Date(p.inicio + "T00:00:00");
@@ -2470,28 +2531,37 @@ function simRecalc() {
 
   document.getElementById("sim-lines").innerHTML =
     line("Days accrued (based on vacation from date)", accrued.toFixed(2) + daysHours(accrued), "var(--accent)", "+") +
-    line(`  → ${Math.round(calDaysToVacation)} calendar days × 0.063`, "") +
     (pending2025 !== 0 ? line("2025 — Dec 2025 days", pending2025.toFixed(2) + daysHours(pending2025), pending2025>=0?"var(--green)":"var(--red)", pending2025>=0?"+":"") : "") +
-    (takenVar > 0 ? line("2026 — Days taken 2026", takenVar.toFixed(2) + daysHours(takenVar), "var(--amber)", "−") : "") +
+    (takenVar > 0 ? line("2026 — Días disfrutados/aceptados en 2026", 
+      `${((window._personalDays||0) + (window._studioDaysDeducted||0)).toFixed(2)}` + 
+      (window._totalStudioDays > (window._studioDaysDeducted||0) ? ` <span style="font-size:10px;color:var(--muted)">(3 Dec pending)</span>` : ""),
+      "var(--amber)", "−") : "") +
     `<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);font-size:11px;color:var(--muted)">
       Days requested breakdown: ${dayAnalysis.normalDays} personal${dayAnalysis.closureDays>0?` + ${dayAnalysis.closureDays} studio closure`:""}${dayAnalysis.holidayDays>0?` · ${dayAnalysis.holidayDays} festivo(s) not counted`:""}
     </div>`;
 
   const daysHoursStr = d => {
-    const dec = Math.abs(d) % 1;
+    const abs = Math.abs(d);
+    const dec = abs % 1;
     const hrs = Math.round(dec * 8 * 10) / 10;
-    return hrs > 0 ? `${Math.floor(Math.abs(d))} days (${hrs}h)` : `${d.toFixed(2)} days`;
+    const sign = d < 0 ? "-" : "";
+    return hrs > 0 ? `${sign}${Math.floor(abs)} days (${hrs}h)` : `${sign}${Math.floor(abs)} days`;
   };
   document.getElementById("sim-available-final").textContent = daysHoursStr(available);
   document.getElementById("sim-requested-final").innerHTML = `${reqFinal} working days
     <div style="font-size:11px;color:var(--muted);margin-top:4px">
       ${dayAnalysis.normalDays} personal${dayAnalysis.closureDays>0?` + ${dayAnalysis.closureDays} studio closure`:""}${dayAnalysis.holidayDays>0?` · ${dayAnalysis.holidayDays} holiday(s) not counted`:""}
     </div>`;
-  const balDec = Math.abs(balance) % 1;
+  const balAbs = Math.abs(balance);
+  const balDec = balAbs % 1;
   const balHrs = Math.round(balDec * 8 * 10) / 10;
+  const balDays = Math.floor(balAbs);
+  const balSign = balance < 0 ? "-" : "";
   document.getElementById("sim-balance").textContent = balHrs > 0 
-    ? `${balance < 0 ? "-" : ""}${Math.floor(Math.abs(balance))} days (${balHrs}h)` 
-    : `${balance.toFixed(2)} days`;
+    ? `${balSign}${balDays} days (${balHrs}h)` 
+    : `${balSign}${balDays} days`;
+  document.getElementById("sim-balance").style.fontWeight = "800";
+  document.getElementById("sim-balance").style.fontSize = "18px";
   document.getElementById("sim-balance").style.color = ok ? "var(--green)" : "var(--red)";
   breakdown.style.display = "block";
 
@@ -2553,10 +2623,10 @@ function simRecalc() {
 
 <!-- SIMULADOR DE VACACIONES -->
 <div id="page-simulador" class="page">
-  <h2 style="font-size:20px;font-weight:700;color:var(--accent);margin-bottom:4px">🏖️ Vacation Calculator</h2>
+  <h2 style="font-size:24px;font-weight:800;color:#f9c846;margin-bottom:4px;text-align:center;letter-spacing:0.12em;font-family:'Google Sans','Product Sans','Nunito',sans-serif;text-transform:uppercase">🏖️ Vacation Calculator</h2>
   
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:900px">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:960px;margin:0 auto">
 
     <!-- LEFT: Inputs -->
     <div class="chart-card">
@@ -2583,10 +2653,11 @@ function simRecalc() {
           <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Contract end</label>
           <input id="sim-end" type="date" readonly
             style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);padding:10px 12px;border-radius:8px;font-size:13px;outline:none">
+          <!-- Hidden fields needed for calculation -->
+          <input type="hidden" id="sim-taken-fix" value="0">
+          <input type="hidden" id="sim-requested" value="1">
         </div>
       </div>
-
-      <hr style="border:none;border-top:1px solid var(--border);margin:0 0 16px">
 
       <!-- Vacation request dates -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
@@ -2612,9 +2683,10 @@ function simRecalc() {
               style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);padding:8px 10px;border-radius:6px;font-size:13px;outline:none">
           </div>
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Variable days taken 2026</label>
+            <label style="font-size:12px;color:var(--white);font-weight:600;display:block;margin-bottom:4px">2026 — Days taken in 2026</label>
             <input id="sim-taken-var" type="number" step="0.01" value="0" oninput="simRecalc()"
               style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);padding:8px 10px;border-radius:6px;font-size:13px;outline:none">
+            <div id="sim-var-breakdown" style="display:none;margin-top:8px;font-size:12px;display:flex;gap:12px;flex-wrap:wrap"></div>
           </div>
 
 
