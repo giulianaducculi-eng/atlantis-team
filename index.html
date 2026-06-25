@@ -285,6 +285,43 @@ document.getElementById("pw-input").focus();
   <!-- KPIs -->
   <div class="kpi-big-grid" id="kpi-grid"></div>
 
+  <div class="charts-row-3" style="margin-bottom:20px">
+    <div class="chart-card">
+      <div class="chart-title">Location — active</div>
+      <canvas id="chart-location-active"></canvas>
+      <div id="totals-location" style="margin-top:10px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Gender — active</div>
+      <canvas id="chart-genero"></canvas>
+      <div id="totals-genero" style="margin-top:10px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Level — active</div>
+      <canvas id="chart-nivel-active"></canvas>
+      <div id="totals-nivel" style="margin-top:10px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px"></div>
+    </div>
+  </div>
+  <!-- Hidden canvas for presence (rendered in admin KPIs) -->
+  <div style="display:none"><canvas id="chart-ratio-dept"></canvas></div>
+
+  <!-- Active staff charts -->
+  <div class="chart-card full" style="margin-bottom:20px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+      <div class="chart-title" style="margin-bottom:0">Total active staff by month</div>
+      <div id="active-month-year-filter" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    </div>
+    <canvas id="chart-active-month" style="max-height:240px"></canvas>
+  </div>
+
+  <div class="chart-card full" style="margin-bottom:20px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+      <div class="chart-title" style="margin-bottom:0">Active staff by month — by department</div>
+      <span style="font-size:11px;color:var(--muted)">(same year filter as above)</span>
+    </div>
+    <canvas id="chart-active-month-dept" style="max-height:320px"></canvas>
+  </div>
+
   <!-- Arrivals/departures timeline right below KPIs -->
   <div class="chart-card full" style="margin-bottom:20px">
     <div class="chart-title">Arrivals and departures by month</div>
@@ -295,33 +332,10 @@ document.getElementById("pw-input").focus();
     <canvas id="chart-timeline" style="max-height:240px"></canvas>
   </div>
 
-  <!-- Level donut + Presence by dept -->
-  <div class="charts-row-3" style="margin-bottom:20px">
-    <div class="chart-card">
-      <div class="chart-title">Level — active</div>
-      <canvas id="chart-nivel-active"></canvas>
-      <div id="totals-nivel" style="margin-top:10px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px"></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Gender — active</div>
-      <canvas id="chart-genero"></canvas>
-      <div id="totals-genero" style="margin-top:10px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px"></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Presence by department <span style="font-size:10px;color:var(--muted);font-weight:400">sorted by total</span></div>
-      <canvas id="chart-ratio-dept" style="max-height:280px"></canvas>
-    </div>
-  </div>
-
   <!-- Staff by dept + table -->
   <div class="chart-card full" style="margin-bottom:20px">
     <div class="chart-title">Staff by department — total vs active</div>
     <canvas id="chart-dept" style="max-height:260px"></canvas>
-  </div>
-
-  <div class="chart-card full" style="margin-bottom:20px">
-    <div class="chart-title">Gender by department — active</div>
-    <canvas id="chart-genero-dept" style="max-height:280px"></canvas>
   </div>
 
   <div class="dept-grid" style="margin-bottom:28px">
@@ -343,17 +357,17 @@ document.getElementById("pw-input").focus();
 
   <!-- Hidden canvases still needed for JS -->
   <div style="display:none">
-    <canvas id="chart-location-active"></canvas>
     <canvas id="chart-location-total"></canvas>
     <canvas id="chart-nivel-total"></canvas>
     <canvas id="chart-antiguedad"></canvas>
-    <div id="totals-location"></div>
     <div id="totals-antiguedad"></div>
     <div id="loc-grid"></div>
   </div>
 
   <!-- KPIs Admin section -->
-  <div class="section-title" style="margin-top:8px;margin-bottom:20px">📊 Admin KPIs</div>
+  <div style="font-size:18px;font-weight:800;color:var(--white);text-transform:uppercase;letter-spacing:0.08em;margin-top:8px;margin-bottom:20px;padding-bottom:10px;border-bottom:2px solid rgba(0,180,216,0.3)">📊 Admin KPIs</div>
+
+
 
   <div class="charts-row-3" style="margin-bottom:20px">
     <div class="chart-card">
@@ -364,6 +378,16 @@ document.getElementById("pw-input").focus();
       <div class="chart-title">Nationality — active vs total (top 10 + others)</div>
       <canvas id="chart-nac" style="max-height:220px"></canvas>
     </div>
+  </div>
+
+  <div class="chart-card full" style="margin-bottom:20px">
+    <div class="chart-title">Gender by department — active</div>
+    <canvas id="chart-genero-dept" style="max-height:280px"></canvas>
+  </div>
+
+  <div class="chart-card full" style="margin-bottom:20px">
+    <div class="chart-title">Presence by department — active (ON SITE vs HYBRID) <span style="font-size:10px;color:var(--muted);font-weight:400">sorted by total</span></div>
+    <canvas id="chart-ratio-dept-admin" style="max-height:340px"></canvas>
   </div>
 
   <div class="chart-card full" style="margin-bottom:20px">
@@ -831,6 +855,55 @@ function makeLine(id, labels, datasets) {
   });
 }
 
+function buildActiveMonthYear(year) {
+  // Update active buttons
+  document.querySelectorAll("#active-month-year-filter .filter-btn").forEach(b=>{
+    b.classList.toggle("active", b.textContent===(year==="todos"?"All":year));
+  });
+  // Rebuild charts with year filter
+  const allMonthsSetB = new Set();
+  allData.forEach(p => {
+    if (p.inicio) allMonthsSetB.add(monthKey(p.inicio));
+    if (p.finEstimado) allMonthsSetB.add(monthKey(p.finEstimado));
+  });
+  const sortedMonthsB = [...allMonthsSetB].filter(Boolean).sort();
+  const firstMonthB = sortedMonthsB[0];
+  const todayKeyB   = monthKey(new Date().toISOString().slice(0,10));
+  let monthRangeB = [];
+  if (firstMonthB) {
+    let cur = new Date(firstMonthB + "-01T00:00:00");
+    const endM = new Date(todayKeyB + "-01T00:00:00");
+    while (cur <= endM) {
+      monthRangeB.push(monthKey(cur.toISOString().slice(0,10)));
+      cur.setMonth(cur.getMonth() + 1);
+    }
+  }
+  if (year !== "todos") monthRangeB = monthRangeB.filter(k=>k.startsWith(year+"-"));
+  
+  const activeByMonthB = monthRangeB.map(mk => allData.filter(p=>{
+    const s=p.inicio?monthKey(p.inicio):null;
+    const e=p.finEstimado?monthKey(p.finEstimado):"9999-12";
+    return s&&s<=mk&&e>=mk;
+  }).length);
+
+  if(charts["chart-active-month"]) charts["chart-active-month"].destroy();
+  charts["chart-active-month"] = new Chart(document.getElementById("chart-active-month"),{
+    type:"line",data:{labels:monthRangeB.map(k=>monthLabel(k)),datasets:[{label:"Active staff",data:activeByMonthB,borderColor:"#00b4d8",backgroundColor:"rgba(0,180,216,0.1)",tension:0.3,fill:true,pointRadius:3,pointBackgroundColor:"#00b4d8"}]},
+    options:{responsive:true,scales:{x:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#6b7280",maxRotation:45}},y:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#6b7280"},beginAtZero:false}},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.raw} active staff`}}},
+    onClick(evt,els){if(!els.length)return;const mk=monthRangeB[els[0].index];openModal(`Active in ${monthLabel(mk)}`,allData.filter(p=>{const s=p.inicio?monthKey(p.inicio):null;const e=p.finEstimado?monthKey(p.finEstimado):"9999-12";return s&&s<=mk&&e>=mk;}),"inicio");}}
+  });
+
+  const DEPT_COLOR_PALETTE2=["#00b4d8","#10b981","#f59e0b","#8b1a4a","#6366f1","#ec4899","#14b8a6","#f97316","#a855f7","#84cc16","#ef4444","#06b6d4","#e11d48","#0ea5e9","#d97706","#7c3aed","#059669","#2563eb","#d946ef","#16a34a","#ea580c","#9333ea","#0891b2","#ca8a04","#dc2626"];
+  const allDepts3=[...new Set(allData.map(p=>p.departamento).filter(Boolean))].sort();
+  const deptDatasets2=allDepts3.map((dept,i)=>({label:dept,data:monthRangeB.map(mk=>allData.filter(p=>{const s=p.inicio?monthKey(p.inicio):null;const e=p.finEstimado?monthKey(p.finEstimado):"9999-12";return (p.departamento||"")===dept&&s&&s<=mk&&e>=mk;}).length),backgroundColor:DEPT_COLOR_PALETTE2[i%DEPT_COLOR_PALETTE2.length]+"cc",borderWidth:0,stack:"s"})).filter(ds=>ds.data.some(v=>v>0));
+  if(charts["chart-active-month-dept"]) charts["chart-active-month-dept"].destroy();
+  charts["chart-active-month-dept"]=new Chart(document.getElementById("chart-active-month-dept"),{
+    type:"bar",data:{labels:monthRangeB.map(k=>monthLabel(k)),datasets:deptDatasets2},
+    options:{responsive:true,scales:{x:{stacked:true,grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#6b7280",maxRotation:45}},y:{stacked:true,grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#6b7280"},beginAtZero:true}},plugins:{legend:{position:"right",labels:{color:"#9ca3af",boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.raw}`}}},
+    animation:{onComplete(anim){const chart=anim.chart;const ctx2=chart.ctx;ctx2.save();ctx2.font="bold 11px Inter,sans-serif";ctx2.fillStyle="rgba(255,255,255,0.85)";ctx2.textAlign="center";ctx2.textBaseline="bottom";chart.data.labels.forEach((_,i)=>{const total=activeByMonthB[i];if(!total)return;const meta=chart.getDatasetMeta(chart.data.datasets.length-1);if(!meta.data[i])return;ctx2.fillText(total,meta.data[i].x,meta.data[i].y-3);});ctx2.restore();}}}
+  });
+}
+
 function buildStats() {
   const total = allData.length, activeN = active.length;
 
@@ -963,14 +1036,17 @@ function buildStats() {
     const g = p.genero === "M" ? "Male" : p.genero === "F" ? "Female" : "Not specified";
     generoActive[g] = (generoActive[g]||0)+1;
   });
+  // Sort labels so Male=first, Female=second for consistent color mapping
+  const generoLabels = ["Male","Female","Not specified"].filter(l => generoActive[l] > 0);
+  const generoValues = generoLabels.map(l => generoActive[l] || 0);
+  const generoColors = generoLabels.map(l => l==="Male"?"#4c1d95":l==="Female"?"#c084fc":"#9ca3af");
   makeDonut("chart-genero",
-    Object.keys(generoActive),
-    Object.values(generoActive),
+    generoLabels, generoValues,
     l => active.filter(p=>{
       const g = p.genero === "M" ? "Male" : p.genero === "F" ? "Female" : "Not specified";
       return g === l;
     }),
-    ["#60c8f5","#f472b6","#9ca3af"]
+    generoColors
   );
   const gTotal = active.length;
   document.getElementById("totals-genero").innerHTML = Object.entries(generoActive)
@@ -994,6 +1070,139 @@ function buildStats() {
   const antL=Object.keys(antRanges).filter(k=>antRanges[k]>0);
   makeDonut("chart-antiguedad", antL, antL.map(k=>antRanges[k]), l=>active.filter(p=>antLabel(p.antiguedad)===l));
   makeDonut("chart-antiguedad-vis", antL, antL.map(k=>antRanges[k]), l=>active.filter(p=>antLabel(p.antiguedad)===l));
+
+  // Active staff by month chart
+  // For each month, count how many people were active (started before or on that month AND ended after or on that month)
+  const allMonthsSet = new Set();
+  allData.forEach(p => {
+    if (p.inicio) allMonthsSet.add(monthKey(p.inicio));
+    if (p.finEstimado) allMonthsSet.add(monthKey(p.finEstimado));
+  });
+  // Generate months from min to today
+  const sortedMonths = [...allMonthsSet].filter(Boolean).sort();
+  const firstMonth = sortedMonths[0];
+  const todayKey   = monthKey(new Date().toISOString().slice(0,10));
+  let monthRange = [];
+  if (firstMonth) {
+    let cur = new Date(firstMonth + "-01T00:00:00");
+    const endM = new Date(todayKey + "-01T00:00:00");
+    while (cur <= endM) {
+      monthRange.push(monthKey(cur.toISOString().slice(0,10)));
+      cur.setMonth(cur.getMonth() + 1);
+    }
+  }
+  // Year filter applied by buildActiveMonthYear() — show all months here
+  const activeByMonth = monthRange.map(mk => {
+    return allData.filter(p => {
+      const s = p.inicio      ? monthKey(p.inicio)      : null;
+      const e = p.finEstimado ? monthKey(p.finEstimado) : "9999-12";
+      return s && s <= mk && e >= mk;
+    }).length;
+  });
+  if (charts["chart-active-month"]) charts["chart-active-month"].destroy();
+  charts["chart-active-month"] = new Chart(document.getElementById("chart-active-month"), {
+    type: "line",
+    data: {
+      labels: monthRange.map(k => monthLabel(k)),
+      datasets: [{
+        label: "Active staff",
+        data: activeByMonth,
+        borderColor: "#00b4d8",
+        backgroundColor: "rgba(0,180,216,0.1)",
+        tension: 0.3,
+        fill: true,
+        pointRadius: 3,
+        pointBackgroundColor: "#00b4d8"
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: { grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#6b7280", maxRotation:45} },
+        y: { grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#6b7280"}, beginAtZero: false }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.raw} active staff` } }
+      },
+      onClick(evt, elements) {
+        if (!elements.length) return;
+        const mk = monthRange[elements[0].index];
+        openModal(`Active in ${monthLabel(mk)}`, allData.filter(p => {
+          const s = p.inicio      ? monthKey(p.inicio)      : null;
+          const e = p.finEstimado ? monthKey(p.finEstimado) : "9999-12";
+          return s && s <= mk && e >= mk;
+        }), "inicio");
+      }
+    }
+  });
+
+// Stacked bar chart: active by month split by department
+  const DEPT_COLORS_MAP = {};
+  const DEPT_COLOR_PALETTE = ["#00b4d8","#10b981","#f59e0b","#8b1a4a","#6366f1","#ec4899","#14b8a6","#f97316","#a855f7","#84cc16","#ef4444","#06b6d4","#e11d48","#0ea5e9","#d97706","#7c3aed","#059669","#2563eb","#d946ef","#16a34a","#ea580c","#9333ea","#0891b2","#ca8a04","#dc2626"];
+  const allDepts2 = [...new Set(allData.map(p=>p.departamento).filter(Boolean))].sort();
+  allDepts2.forEach((d,i) => DEPT_COLORS_MAP[d] = DEPT_COLOR_PALETTE[i % DEPT_COLOR_PALETTE.length]);
+
+  const deptDatasets = allDepts2.map(dept => ({
+    label: dept,
+    data: monthRange.map(mk => allData.filter(p => {
+      const s = p.inicio      ? monthKey(p.inicio)      : null;
+      const e = p.finEstimado ? monthKey(p.finEstimado) : "9999-12";
+      return (p.departamento||"") === dept && s && s <= mk && e >= mk;
+    }).length),
+    backgroundColor: DEPT_COLORS_MAP[dept] + "cc",
+    borderWidth: 0,
+    stack: "s"
+  })).filter(ds => ds.data.some(v => v > 0));
+
+  if (charts["chart-active-month-dept"]) charts["chart-active-month-dept"].destroy();
+  charts["chart-active-month-dept"] = new Chart(document.getElementById("chart-active-month-dept"), {
+    type: "bar",
+    data: { labels: monthRange.map(k => monthLabel(k)), datasets: deptDatasets },
+    options: {
+      responsive: true,
+      scales: {
+        x: { stacked:true, grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#6b7280",maxRotation:45} },
+        y: { stacked:true, grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#6b7280"}, beginAtZero:true }
+      },
+      plugins: {
+        legend: { position:"right", labels:{color:"#9ca3af",boxWidth:10,font:{size:10}} },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}` } },
+        datalabels: false
+      },
+      animation: { onComplete(anim) {
+        const chart = anim.chart;
+        const ctx2 = chart.ctx;
+        ctx2.save();
+        ctx2.font = "bold 11px Inter,sans-serif";
+        ctx2.fillStyle = "rgba(255,255,255,0.85)";
+        ctx2.textAlign = "center";
+        ctx2.textBaseline = "bottom";
+        chart.data.labels.forEach((lbl, i) => {
+          const total = activeByMonth[i];
+          if (!total) return;
+          const meta = chart.getDatasetMeta(chart.data.datasets.length - 1);
+          if (!meta.data[i]) return;
+          const bar = meta.data[i];
+          ctx2.fillText(total, bar.x, bar.y - 3);
+        });
+        ctx2.restore();
+      }}
+    }
+  });
+
+  // Build year filter buttons
+  const activeMonthYears = [...new Set(monthRange.map(k=>k.split("-")[0]))].sort();
+  const yfEl = document.getElementById("active-month-year-filter");
+  if(yfEl) {
+    yfEl.innerHTML = ["todos",...activeMonthYears].map(y=>
+      `<button class="filter-btn ${y==="todos"?"active":""}" 
+       style="padding:4px 10px;font-size:11px" 
+       onclick="buildActiveMonthYear('${y}')">${y==="todos"?"All":y}</button>`
+    ).join("");
+  }
+
+
 
   // Dept stats
   const deptTot={}, deptAct={};
@@ -1034,8 +1243,8 @@ function buildStats() {
     data: {
       labels: genderDepts,
       datasets: [
-        { label: "Male",   data: genderDepts.map(d=>generoByDept[d]?.Male||0),   backgroundColor: "rgba(96,200,245,0.8)", borderRadius: 3, stack: "g" },
-        { label: "Female", data: genderDepts.map(d=>generoByDept[d]?.Female||0), backgroundColor: "rgba(244,114,182,0.8)", borderRadius: 3, stack: "g" },
+        { label: "Male",   data: genderDepts.map(d=>generoByDept[d]?.Male||0),   backgroundColor: "rgba(76,29,149,0.85)", borderRadius: 3, stack: "g" },
+        { label: "Female", data: genderDepts.map(d=>generoByDept[d]?.Female||0), backgroundColor: "rgba(192,132,252,0.85)", borderRadius: 3, stack: "g" },
       ]
     },
     options: {
@@ -1108,6 +1317,39 @@ function buildStats() {
         });
       }
     }]
+  });
+
+  // Duplicate presence chart for admin section (larger)
+  if (charts["chart-ratio-dept-admin"]) charts["chart-ratio-dept-admin"].destroy();
+  charts["chart-ratio-dept-admin"] = new Chart(document.getElementById("chart-ratio-dept-admin"), {
+    type: "bar",
+    data: {
+      labels: presenceSorted,
+      datasets: [
+        {label:"ON SITE", data:presenceSorted.map(d=>deptOnsite[d]||0), backgroundColor:"rgba(16,185,129,0.8)", borderRadius:0},
+        {label:"HYBRID",  data:presenceSorted.map(d=>deptHybrid[d]||0), backgroundColor:"rgba(0,180,216,0.8)",  borderRadius:0},
+      ]
+    },
+    options: {
+      indexAxis: "y", responsive: true,
+      scales: {
+        x: { stacked:true, grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#6b7280"}, beginAtZero:true },
+        y: { stacked:true, grid:{color:"rgba(255,255,255,0.04)"}, ticks:{color:"#e5e7eb", font:{size:11}} }
+      },
+      plugins: {
+        legend:{position:"top",labels:{color:"#9ca3af",boxWidth:12,font:{size:11}}},
+        tooltip:{callbacks:{label:ctx=>{
+          const d=ctx.label; const tot=(deptOnsite[d]||0)+(deptHybrid[d]||0);
+          return ` ${ctx.dataset.label}: ${ctx.raw} (${tot?Math.round(ctx.raw/tot*100):0}%)`;
+        }}}
+      },
+      onClick(evt,elements){
+        if(!elements.length) return;
+        const dept=presenceSorted[elements[0].index];
+        const loc=elements[0].datasetIndex===0?"ON SITE":"HYBRID";
+        openModal(`${dept} — ${loc}`, active.filter(p=>(p.departamento||"No dept.")===dept&&(p.location||"").toUpperCase()===loc), "inicio");
+      }
+    }
   });
 
   // Permanencia > 6 meses por dept
@@ -1650,7 +1892,7 @@ function buildDeptStatsPanel(dept) {
   if(deptCharts.genero) deptCharts.genero.destroy();
   deptCharts.genero = new Chart(document.getElementById("ds-genero"),{
     type:"doughnut",
-    data:{labels:Object.keys(deptGenero),datasets:[{data:Object.values(deptGenero),backgroundColor:["#60c8f5","#f472b6","#9ca3af"],borderWidth:0}]},
+    data:{labels:Object.keys(deptGenero),datasets:[{data:Object.values(deptGenero),backgroundColor:["#4c1d95","#c084fc","#9ca3af"],borderWidth:0}]},
     options:{responsive:true,cutout:"55%",plugins:{legend:{position:"bottom",labels:{color:"#9ca3af",boxWidth:10,font:{size:10}}}}}
   });
 
@@ -1663,7 +1905,7 @@ function buildDeptStatsPanel(dept) {
   if(deptCharts.genero) deptCharts.genero.destroy();
   deptCharts.genero = new Chart(document.getElementById("ds-genero"),{
     type:"doughnut",
-    data:{labels:Object.keys(generoC),datasets:[{data:Object.values(generoC),backgroundColor:["#60c8f5","#f472b6","#9ca3af"],borderWidth:0}]},
+    data:{labels:Object.keys(generoC),datasets:[{data:Object.values(generoC),backgroundColor:["#4c1d95","#c084fc","#9ca3af"],borderWidth:0}]},
     options:{responsive:true,cutout:"55%",plugins:{
       legend:{position:"bottom",labels:{color:"#9ca3af",boxWidth:10,font:{size:10}}},
       tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw}`}}
@@ -2524,9 +2766,13 @@ function simRecalc() {
 
   // Hours helper: decimal part * 8
   const daysHours = d => {
-    const dec = Math.abs(d) % 1;
+    const abs = Math.abs(d);
+    const dec = abs % 1;
     const hrs = Math.round(dec * 8 * 10) / 10;
-    return hrs > 0 ? ` <span style="font-size:10px;color:var(--muted)">(${Math.floor(Math.abs(d))}d ${hrs}h)</span>` : "";
+    const sign = d < 0 ? "-" : "";
+    return hrs > 0 
+      ? ` <span style="font-size:10px;color:var(--muted)">(${sign}${d.toFixed(2)} = ${Math.floor(abs)}d ${hrs}h)</span>` 
+      : "";
   };
 
   document.getElementById("sim-lines").innerHTML =
@@ -2545,9 +2791,11 @@ function simRecalc() {
     const dec = abs % 1;
     const hrs = Math.round(dec * 8 * 10) / 10;
     const sign = d < 0 ? "-" : "";
-    return hrs > 0 ? `${sign}${Math.floor(abs)} days (${hrs}h)` : `${sign}${Math.floor(abs)} days`;
+    return hrs > 0 
+      ? `${sign}${Math.floor(abs)} days <span style="font-size:11px;color:var(--muted)">(${d.toFixed(2)} = ${Math.floor(abs)}d ${hrs}h)</span>` 
+      : `${sign}${Math.floor(abs)} days`;
   };
-  document.getElementById("sim-available-final").textContent = daysHoursStr(available);
+  document.getElementById("sim-available-final").innerHTML = daysHoursStr(available);
   document.getElementById("sim-requested-final").innerHTML = `${reqFinal} working days
     <div style="font-size:11px;color:var(--muted);margin-top:4px">
       ${dayAnalysis.normalDays} personal${dayAnalysis.closureDays>0?` + ${dayAnalysis.closureDays} studio closure`:""}${dayAnalysis.holidayDays>0?` · ${dayAnalysis.holidayDays} holiday(s) not counted`:""}
@@ -2557,8 +2805,8 @@ function simRecalc() {
   const balHrs = Math.round(balDec * 8 * 10) / 10;
   const balDays = Math.floor(balAbs);
   const balSign = balance < 0 ? "-" : "";
-  document.getElementById("sim-balance").textContent = balHrs > 0 
-    ? `${balSign}${balDays} days (${balHrs}h)` 
+  document.getElementById("sim-balance").innerHTML = balHrs > 0 
+    ? `${balSign}${balDays} days <span style="font-size:12px;color:var(--muted);font-weight:400">(${balance.toFixed(2)} = ${balDays}d ${balHrs}h)</span>` 
     : `${balSign}${balDays} days`;
   document.getElementById("sim-balance").style.fontWeight = "800";
   document.getElementById("sim-balance").style.fontSize = "18px";
