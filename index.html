@@ -869,7 +869,7 @@ function buildActiveMonthYear(year) {
   });
   const sortedMonthsB = [...allMonthsSetB].filter(Boolean).sort();
   const firstMonthB = sortedMonthsB[0];
-  const todayKeyB   = monthKey(new Date().toISOString().slice(0,10));
+  const todayKeyB   = monthKey(new Date().toLocaleDateString('en-CA')); // local date YYYY-MM-DD
   let monthRangeB = [];
   if (firstMonthB) {
     let cur = new Date(firstMonthB + "-01T00:00:00");
@@ -1082,17 +1082,17 @@ function buildStats() {
   // Generate months from min to today
   const sortedMonths = [...allMonthsSet].filter(Boolean).sort();
   const firstMonth = sortedMonths[0];
-  const todayKey   = monthKey(new Date().toISOString().slice(0,10));
+  const todayKey   = monthKey(new Date().toLocaleDateString('en-CA')); // local date
   let monthRange = [];
   if (firstMonth) {
     let cur = new Date(firstMonth + "-01T00:00:00");
     const endM = new Date(todayKey + "-01T00:00:00");
     while (cur <= endM) {
-      monthRange.push(monthKey(cur.toISOString().slice(0,10)));
+      const mk = monthKey(cur.toLocaleDateString('en-CA'));
+      if (mk && !monthRange.includes(mk)) monthRange.push(mk);
       cur.setMonth(cur.getMonth() + 1);
     }
   }
-  // Year filter applied by buildActiveMonthYear() — show all months here
   const activeByMonth = monthRange.map(mk => {
     return allData.filter(p => {
       const s = p.inicio      ? monthKey(p.inicio)      : null;
