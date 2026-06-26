@@ -715,9 +715,10 @@ function daysFrom(v) {
   return Math.round((dO - nO) / 86400000);
 }
 function isActive(p) {
-  const now = new Date(), ini = parseDate(p.inicio), fin = parseDate(p.finEstimado);
+  const now = new Date(); now.setHours(0,0,0,0);
+  const ini = parseDate(p.inicio), fin = parseDate(p.finEstimado);
   if (!ini || ini > now) return false;
-  if (fin && fin < now) return false;
+  if (fin) { fin.setHours(0,0,0,0); if (fin < now) return false; }
   return true;
 }
 function calcAntiguedad(inicio) {
