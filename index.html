@@ -261,6 +261,9 @@ function enableVacationOnlyMode() {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   const vacPage = document.getElementById("page-simulador");
   if (vacPage) vacPage.classList.add("active");
+  // Show vacation-only view, hide full view
+  document.getElementById("vac-only-view").style.display = "block";
+  document.getElementById("vac-full-view").style.display = "none";
   // Override showPage to prevent navigation to other pages
   window._origShowPage = window.showPage;
   window.showPage = function(id, btn) {
@@ -2614,6 +2617,151 @@ document.addEventListener("click", e => {
   }
 });
 
+function voSearchEmployee(q) {
+  const dd = document.getElementById("vo-employee-dropdown");
+  if (q.length < 3) { dd.style.display = "none"; return; }
+  const matches = activos.filter(p => p.nombre && p.nombre.toLowerCase().includes(q.toLowerCase())).slice(0,20);
+  if (!matches.length) { dd.style.display = "none"; return; }
+  dd.innerHTML = matches.map(p =>
+    `<div onclick="voSelectEmployee('${p.nombre.replace(/'/g,"\\'")}','${(p.departamento||"").replace(/'/g,"\\'")}');document.getElementById('vo-employee-dropdown').style.display='none'"
+      style="padding:10px 16px;cursor:pointer;font-size:13px;color:var(--white);border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center"
+      onmouseover="this.style.background='rgba(0,180,216,0.08)'" onmouseleave="this.style.background=''"
+    ><span style="font-weight:500">${p.nombre}</span><span style="color:var(--muted);font-size:11px;background:rgba(255,255,255,0.06);padding:2px 8px;border-radius:4px">${p.departamento||""}</span></div>`
+  ).join("");
+  dd.style.display = "block";
+}
+
+function voSelectEmployee(nombre, dept) {
+  document.getElementById("vo-employee-search").value = `${nombre} · ${dept}`;
+  document.getElementById("vo-employee").value = nombre;
+  const p = allData.find(x => x.nombre?.trim() === nombre?.trim());
+  if (p) {
+    document.getElementById("vo-start").value = p.inicio || "—";
+    document.getElementById("vo-end").value   = p.finEstimado || "—";
+  }
+  setTimeout(voRecalc, 50);
+}
+
+function voRecalc() {
+  const nombre  = document.getElementById("vo-employee").value;
+  const vacFrom = document.getElementById("vo-from").value;
+  const vacTo   = document.getElementById("vo-to").value;
+  const p = allData.find(x => x.nombre?.trim() === nombre?.trim());
+  if (!p) return;
+
+  const yearStart = new Date("2026-01-01T00:00:00");
+  const yearEnd   = new Date("2027-01-01T00:00:00");
+  const rawStart  = new Date(p.inicio + "T00:00:00");
+  const startDate = rawStart < yearStart ? yearStart : rawStart;
+
+  const pending2025  = parseFloat(p.remainingDec2025) || 0;
+  const diasVariables = parseFloat(p.diasVariables) || 0;
+
+  // Studio closure days
+  const aug10 = new Date("2026-08-10T00:00:00"), aug14 = new Date("2026-08-14T00:00:00");
+  const dec21 = new Date("2026-12-21T00:00:00"), dec23 = new Date("2026-12-23T00:00:00");
+  const rawEnd = p.finEstimado ? new Date(p.finEstimado + "T00:00:00") : null;
+  const coversAug = rawStart <= aug14 && rawEnd && rawEnd >= aug10;
+  const coversDec = rawStart <= dec23 && rawEnd && rawEnd >= dec21;
+  const totalStudio = (coversAug ? 5 : 0) + (coversDec ? 3 : 0);
+  const personalTaken = Math.max(0, diasVariables - totalStudio);
+
+  // Studio info box
+  const studioInfo = document.getElementById("vo-studio-info");
+  const studioBadge = document.getElementById("vo-studio-badge");
+  const studioNote  = document.getElementById("vo-studio-note");
+  if (totalStudio > 0) {
+    studioInfo.style.display = "block";
+    studioBadge.textContent = `🏢 ${totalStudio} días cierre del estudio${coversAug ? ` (5 ago${coversDec ? " + 3 dic" : ""})` : " (3 dic)"}${coversDec && !new Date(vacFrom+"T00:00:00") > dec23 ? " pendientes" : ""}`;
+    studioNote.textContent = "";
+  } else {
+    studioInfo.style.display = "none";
+  }
+
+  if (!vacFrom) {
+    document.getElementById("vo-accrued").textContent = "—";
+    document.getElementById("vo-available").textContent = "—";
+    document.getElementById("vo-balance").textContent = "—";
+    return;
+  }
+
+  const vacFromDate = new Date(vacFrom + "T00:00:00");
+  const vacToDate2  = vacTo ? new Date(vacTo + "T00:00:00") : vacFromDate;
+  const calDays = Math.max(0, (vacToDate2 - startDate) / 86400000 + 1);
+  const accrued = calDays * VACATION_RATE;
+  const total   = accrued + pending2025;
+
+  // Studio days deducted based on vacation from date
+  const augPassed = vacFromDate > aug14;
+  const decPassed = vacFromDate > dec23;
+  const studioDeducted = (coversAug && augPassed ? 5 : 0) + (coversDec && decPassed ? 3 : 0);
+  const available = total - personalTaken - studioDeducted;
+
+  // Studio note if not all studio days deducted yet
+  const studioPending = totalStudio - studioDeducted;
+  if (studioPending > 0) {
+    studioInfo.style.display = "block";
+    studioBadge.textContent = `🏢 ${totalStudio} días cierre del estudio${coversAug ? ` (5 ago${coversDec?" + 3 dic":""})`:" (3 dic)"}`;
+    studioNote.textContent  = `(${studioPending} días pendientes de cierre no están incluidos en los días aceptados aún)`;
+  }
+
+  // Format helper
+  const fmt = d => {
+    const abs = Math.abs(d), dec = abs % 1;
+    const hrs = Math.round(dec * 8);
+    const sign = d < 0 ? "-" : "";
+    return hrs > 0 ? `${sign}${Math.floor(abs)}d ${hrs}h` : `${sign}${Math.floor(abs)} días`;
+  };
+
+  // Días acumulados
+  document.getElementById("vo-accrued").textContent = fmt(total);
+  document.getElementById("vo-accrued-sub").textContent =
+    `${fmt(accrued)} acumulados${pending2025 > 0 ? ` + ${fmt(pending2025)} pendientes 2025` : ""}`;
+
+  // Días disponibles
+  document.getElementById("vo-available").textContent = fmt(available);
+  document.getElementById("vo-available-sub").innerHTML = "";
+  document.getElementById("vo-available").style.color = available >= 0 ? "var(--green)" : "var(--red)";
+
+  // Taken detail
+  const takenDetail = document.getElementById("vo-taken-detail");
+  if (takenDetail) {
+    takenDetail.style.display = "block";
+    const parts = [];
+    if (personalTaken > 0) parts.push(`<span>👤 ${fmt(personalTaken)} días personales tomados</span>`);
+    if (studioDeducted > 0) parts.push(`<span>🏢 ${studioDeducted} días cierre del estudio descontados</span>`);
+    const totalDeducted = personalTaken + studioDeducted;
+    if (totalDeducted > 0) {
+      takenDetail.innerHTML = 
+        `<div style="font-weight:600;color:var(--white);margin-bottom:8px">${fmt(total)} acumulados − ${fmt(totalDeducted)} descontados</div>` +
+        parts.join('<br>');
+    } else {
+      takenDetail.style.display = "none";
+    }
+  }
+
+  // Balance after
+  if (vacFrom && vacTo) {
+    const analysis = analyzeDays(vacFromDate, new Date(vacTo + "T00:00:00"));
+    const requested = analysis.totalVacationDays;
+    const balance = available - requested;
+    const ok = balance >= 0;
+    document.getElementById("vo-balance").textContent = fmt(balance);
+    document.getElementById("vo-balance").style.color = ok ? "var(--green)" : "var(--red)";
+    document.getElementById("vo-balance-box").style.background = ok ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)";
+    document.getElementById("vo-balance-box").style.borderColor = ok ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)";
+    document.getElementById("vo-balance-sub").textContent = `${requested} días hábiles solicitados`;
+  }
+}
+
+// Close vo dropdown on outside click
+document.addEventListener("click", e => {
+  if (!e.target.closest("#vo-employee-search") && !e.target.closest("#vo-employee-dropdown")) {
+    const dd = document.getElementById("vo-employee-dropdown");
+    if (dd) dd.style.display = "none";
+  }
+});
+
 function buildSimulator() {
   if (!allData.length) return;
   const sel = document.getElementById("sim-employee");
@@ -2727,8 +2875,8 @@ function simRecalc() {
   const startDate     = rawStart < yearStart2026 ? yearStart2026 : rawStart;
   const endDate       = rawEnd && rawEnd > yearEnd2026 ? yearEnd2026 : rawEnd;
 
-  // Accrual: calendar days from contract start to vacation FROM date × 0.063
-  const calDaysToVacation = Math.max(0, (vacFromDate - startDate) / 86400000 + 1);
+  // Accrual: calendar days from contract start to vacation TO date × 0.063
+  const calDaysToVacation = Math.max(0, (vacToDate - startDate) / 86400000 + 1);
   const accrued           = calDaysToVacation * VACATION_RATE;
 
   // Analyze vacation period: normal days, studio closures, public holidays
@@ -2802,7 +2950,7 @@ function simRecalc() {
   const daysHours = d => {
     const abs = Math.abs(d);
     const dec = abs % 1;
-    const hrs = Math.round(dec * 8 * 10) / 10;
+    const hrs = Math.round(dec * 8);
     const sign = d < 0 ? "-" : "";
     return hrs > 0 
       ? ` <span style="font-size:10px;color:var(--muted)">(${sign}${d.toFixed(2)} = ${Math.floor(abs)}d ${hrs}h)</span>` 
@@ -2810,7 +2958,7 @@ function simRecalc() {
   };
 
   document.getElementById("sim-lines").innerHTML =
-    line("Days accrued (based on vacation from date)", accrued.toFixed(2) + daysHours(accrued), "var(--accent)", "+") +
+    line("Days accrued (based on vacation to date)", accrued.toFixed(2) + daysHours(accrued), "var(--accent)", "+") +
     (pending2025 !== 0 ? line("2025 — Dec 2025 days", pending2025.toFixed(2) + daysHours(pending2025), pending2025>=0?"var(--green)":"var(--red)", pending2025>=0?"+":"") : "") +
     (takenVar > 0 ? line("2026 — Días disfrutados/aceptados en 2026", 
       `${((window._personalDays||0) + (window._studioDaysDeducted||0)).toFixed(2)}` + 
@@ -2823,7 +2971,7 @@ function simRecalc() {
   const daysHoursStr = d => {
     const abs = Math.abs(d);
     const dec = abs % 1;
-    const hrs = Math.round(dec * 8 * 10) / 10;
+    const hrs = Math.round(dec * 8);
     const sign = d < 0 ? "-" : "";
     return hrs > 0 
       ? `${sign}${Math.floor(abs)} days <span style="font-size:11px;color:var(--muted)">(${d.toFixed(2)} = ${Math.floor(abs)}d ${hrs}h)</span>` 
@@ -2836,7 +2984,7 @@ function simRecalc() {
     </div>`;
   const balAbs = Math.abs(balance);
   const balDec = balAbs % 1;
-  const balHrs = Math.round(balDec * 8 * 10) / 10;
+  const balHrs = Math.round(balDec * 8);
   const balDays = Math.floor(balAbs);
   const balSign = balance < 0 ? "-" : "";
   document.getElementById("sim-balance").innerHTML = balHrs > 0 
@@ -2905,6 +3053,85 @@ function simRecalc() {
 
 <!-- SIMULADOR DE VACACIONES -->
 <div id="page-simulador" class="page">
+
+  <!-- VACATION ONLY VIEW (password 2906) -->
+  <div id="vac-only-view" style="display:none;max-width:960px;margin:0 auto;padding:8px">
+    <h2 style="font-size:22px;font-weight:800;color:#f9c846;text-align:center;letter-spacing:0.12em;font-family:'Google Sans','Nunito',sans-serif;text-transform:uppercase;margin-bottom:24px">🏖️ Calculadora de Vacaciones</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+      <!-- LEFT: Employee & Request -->
+      <div style="background:var(--surface);border-radius:12px;padding:20px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px">Empleado & Solicitud</div>
+
+        <div style="margin-bottom:14px;position:relative">
+          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px">Empleado</label>
+          <input id="vo-employee-search" type="text" placeholder="Escribí 3+ letras para buscar…" autocomplete="off"
+            oninput="voSearchEmployee(this.value)"
+            style="width:100%;background:var(--bg);border:1px solid rgba(0,180,216,0.3);color:var(--white);padding:10px 12px;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box">
+          <div id="vo-employee-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#0f1c2e;border:1px solid rgba(0,180,216,0.25);border-radius:10px;max-height:200px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,0.5)"></div>
+          <input type="hidden" id="vo-employee">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Inicio contrato</label>
+            <input id="vo-start" type="text" readonly style="width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--muted);padding:8px 10px;border-radius:6px;font-size:12px;outline:none;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Fin contrato</label>
+            <input id="vo-end" type="text" readonly style="width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--muted);padding:8px 10px;border-radius:6px;font-size:12px;outline:none;box-sizing:border-box">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Vacaciones desde</label>
+            <input id="vo-from" type="date" oninput="voRecalc()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);padding:8px 10px;border-radius:6px;font-size:12px;outline:none;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Vacaciones hasta</label>
+            <input id="vo-to" type="date" oninput="voRecalc()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);padding:8px 10px;border-radius:6px;font-size:12px;outline:none;box-sizing:border-box">
+          </div>
+        </div>
+
+        <!-- Studio closure info -->
+        <div id="vo-studio-info" style="display:none;background:rgba(249,200,70,0.08);border:1px solid rgba(249,200,70,0.2);border-radius:8px;padding:12px">
+          <div id="vo-studio-badge" style="font-size:13px;font-weight:600;color:#f9c846;margin-bottom:4px"></div>
+          <div id="vo-studio-note" style="font-size:11px;color:var(--muted)"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Results -->
+      <div style="display:flex;flex-direction:column;gap:14px">
+
+        <!-- Días acumulados KPI -->
+        <div style="background:var(--surface);border-radius:12px;padding:18px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Días acumulados</div>
+          <div id="vo-accrued" style="font-size:36px;font-weight:800;color:var(--accent)">—</div>
+          <div id="vo-accrued-sub" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+        </div>
+
+        <!-- Días disponibles KPI -->
+        <div style="background:var(--surface);border-radius:12px;padding:18px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Días disponibles</div>
+          <div id="vo-available" style="font-size:36px;font-weight:800;color:var(--green)">—</div>
+          <div id="vo-available-sub" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+          <div id="vo-taken-detail" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)"></div>
+        </div>
+
+        <!-- Balance after -->
+        <div id="vo-balance-box" style="border-radius:12px;padding:18px;border:1px solid var(--border);background:rgba(255,255,255,0.05)">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Balance después de la solicitud</div>
+          <div id="vo-balance" style="font-size:32px;font-weight:800;color:var(--white)">—</div>
+          <div id="vo-balance-sub" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- FULL VIEW (password potroclo) -->
+  <div id="vac-full-view">
   <h2 style="font-size:24px;font-weight:800;color:#f9c846;margin-bottom:4px;text-align:center;letter-spacing:0.12em;font-family:'Google Sans','Product Sans','Nunito',sans-serif;text-transform:uppercase">🏖️ Vacation Calculator</h2>
   
 
