@@ -228,17 +228,47 @@
 </div>
 <script>
 const DASHBOARD_PASSWORD = "potroclo";
+const VACATION_PASSWORD  = "2906";
+
 function checkPw() {
   const val = document.getElementById("pw-input").value;
   if (val === DASHBOARD_PASSWORD) {
+    // Full access
     document.getElementById("pw-screen").style.display = "none";
     document.getElementById("pw-input").value = "";
+    window._vacationOnly = false;
+  } else if (val === VACATION_PASSWORD) {
+    // Vacation only access
+    document.getElementById("pw-screen").style.display = "none";
+    document.getElementById("pw-input").value = "";
+    window._vacationOnly = true;
+    enableVacationOnlyMode();
   } else {
     document.getElementById("pw-error").style.display = "block";
     document.getElementById("pw-input").value = "";
     document.getElementById("pw-input").focus();
   }
 }
+
+function enableVacationOnlyMode() {
+  // Hide all nav buttons except Vacaciones
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    if (!btn.textContent.includes("Vac")) btn.style.display = "none";
+  });
+  // Hide refresh button and updated timestamp
+  document.querySelectorAll(".refresh-btn, #last-updated, [onclick*='loadData']").forEach(el => el.style.display = "none");
+  // Show only vacation page
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  const vacPage = document.getElementById("page-simulador");
+  if (vacPage) vacPage.classList.add("active");
+  // Override showPage to prevent navigation to other pages
+  window._origShowPage = window.showPage;
+  window.showPage = function(id, btn) {
+    if (window._vacationOnly && id !== "simulador") return;
+    window._origShowPage(id, btn);
+  };
+}
+
 document.getElementById("pw-input").focus();
 </script>
 
@@ -872,11 +902,13 @@ function buildActiveMonthYear(year) {
   const todayKeyB   = monthKey(new Date().toLocaleDateString('en-CA')); // local date YYYY-MM-DD
   let monthRangeB = [];
   if (firstMonthB) {
-    let cur = new Date(firstMonthB + "-01T00:00:00");
-    const endM = new Date(todayKeyB + "-01T00:00:00");
-    while (cur <= endM) {
-      monthRangeB.push(monthKey(cur.toISOString().slice(0,10)));
-      cur.setMonth(cur.getMonth() + 1);
+    let [cy, cm] = firstMonthB.split("-").map(Number);
+    const [ty, tm] = todayKeyB.split("-").map(Number);
+    while (cy < ty || (cy === ty && cm <= tm)) {
+      const mk = `${cy}-${String(cm).padStart(2,"0")}`;
+      if (!monthRangeB.includes(mk)) monthRangeB.push(mk);
+      cm++;
+      if (cm > 12) { cm = 1; cy++; }
     }
   }
   if (year !== "todos") monthRangeB = monthRangeB.filter(k=>k.startsWith(year+"-"));
@@ -1085,12 +1117,13 @@ function buildStats() {
   const todayKey   = monthKey(new Date().toLocaleDateString('en-CA')); // local date
   let monthRange = [];
   if (firstMonth) {
-    let cur = new Date(firstMonth + "-01T00:00:00");
-    const endM = new Date(todayKey + "-01T00:00:00");
-    while (cur <= endM) {
-      const mk = monthKey(cur.toLocaleDateString('en-CA'));
-      if (mk && !monthRange.includes(mk)) monthRange.push(mk);
-      cur.setMonth(cur.getMonth() + 1);
+    let [cy, cm] = firstMonth.split("-").map(Number);
+    const [ty, tm] = todayKey.split("-").map(Number);
+    while (cy < ty || (cy === ty && cm <= tm)) {
+      const mk = `${cy}-${String(cm).padStart(2,"0")}`;
+      if (!monthRange.includes(mk)) monthRange.push(mk);
+      cm++;
+      if (cm > 12) { cm = 1; cy++; }
     }
   }
   const activeByMonth = monthRange.map(mk => {
