@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ATLANTIS Animation — Equipo</title>
@@ -13,7 +16,7 @@
     --radius: 10px; --green: #10b981; --amber: #f59e0b; --red: #ef4444;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--black); color: var(--white); font-family: 'Inter', system-ui, sans-serif; font-size: 15px; line-height: 1.6; min-height: 100vh; }
+  body { background: var(--black); color: var(--white); font-family: 'Roboto', 'Google Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.6; min-height: 100vh; }
 
   header { background: var(--ocean); padding: 18px 40px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
   .logo { display: flex; align-items: center; gap: 12px; }
@@ -2763,15 +2766,23 @@ function voRecalc() {
     return hrs > 0 ? `${sign}${Math.floor(abs)}d ${hrs}h` : `${sign}${Math.floor(abs)} días`;
   };
 
-  // Días acumulados
+  // Días acumulados (left column, with fecha hasta)
+  const accruedUntilLabel = document.getElementById("vo-accrued-until");
+  if (accruedUntilLabel) {
+    accruedUntilLabel.textContent = vacTo ? `(hasta: ${vacTo.split("-").reverse().join("/")})` : "";
+  }
   document.getElementById("vo-accrued").textContent = fmt(total);
-  document.getElementById("vo-accrued-sub").textContent =
-    `${fmt(accrued)} acumulados${pending2025 > 0 ? ` + ${fmt(pending2025)} pendientes 2025` : ""}`;
+
+  // Días disponibles "hasta fecha"
+  const untilLabel = document.getElementById("vo-available-until");
+  if (untilLabel) {
+    untilLabel.textContent = vacTo ? `(hasta: ${vacTo.split("-").reverse().join("/")})` : "";
+  }
 
   // Días disponibles
   document.getElementById("vo-available").textContent = fmt(available);
   document.getElementById("vo-available-sub").innerHTML = "";
-  document.getElementById("vo-available").style.color = available >= 0 ? "var(--green)" : "var(--red)";
+  document.getElementById("vo-available").style.color = available >= 0 ? "#f9c846" : "var(--red)";
 
   // Taken detail
   const takenDetail = document.getElementById("vo-taken-detail");
@@ -2833,13 +2844,19 @@ function voRecalc() {
   const requestedDays = (vacFrom && vacTo) ? analyzeDays(vacFromDate, new Date(vacTo + "T00:00:00")).totalVacationDays : 0;
 
   // Helper: accrued up to a specific date
+  const dec31 = new Date("2026-12-31T00:00:00");
   const accruedAt = d => Math.max(0, (d - startDate) / 86400000 + 1) * VACATION_RATE;
+
+  // Check if the current request overlaps with each closure period
+  const vacToDateForOverlap = (vacFrom && vacTo) ? new Date(vacTo + "T00:00:00") : null;
+  const requestOverlapsAug = vacFromDate && vacToDateForOverlap && vacFromDate <= aug14 && vacToDateForOverlap >= aug10;
+  const requestOverlapsDec = vacFromDate && vacToDateForOverlap && vacFromDate <= dec23 && vacToDateForOverlap >= dec21;
 
   // WARNING AGOSTO
   const warnAugEl  = document.getElementById("vo-warning-aug");
   const warnAugTxt = document.getElementById("vo-warning-aug-text");
   if (warnAugEl) {
-    if (coversAug && vacFrom && vacFromDate < aug10) {
+    if (coversAug && vacFrom && vacFromDate < aug10 && !requestOverlapsAug) {
       // Accrued from contract start to aug10 (start of closure)
       const accruedAtAug10 = accruedAt(aug10);
       const availableAtAug10 = accruedAtAug10 + pending2025 - personalTaken - requestedDays;
@@ -2861,19 +2878,19 @@ function voRecalc() {
   const warnDecEl  = document.getElementById("vo-warning-dec");
   const warnDecTxt = document.getElementById("vo-warning-dec-text");
   if (warnDecEl) {
-    if (coversDec && vacFrom && vacFromDate < dec21) {
-      // Accrued from contract start to dec21 (start of closure)
-      const accruedAtDec21 = accruedAt(dec21);
-      // By dec21: personal days taken + this request + aug closure if passed
-      const studioDeductedByDec = (coversAug ? 5 : 0);
-      const availableAtDec21 = accruedAtDec21 + pending2025 - personalTaken - studioDeductedByDec - requestedDays;
-      const afterDecClosure = availableAtDec21 - 3;
+    if (coversDec && vacFrom && vacFromDate < dec21 && !requestOverlapsDec) {
+      // Accrued from contract start to dec31 (end of year)
+      const accruedAtDec31 = accruedAt(dec31);
+      // Personal days taken + this request + aug closure if it already passed (and wasn't part of this request)
+      const studioDeductedByDec = (coversAug && !requestOverlapsAug ? 5 : 0);
+      const availableAtDec31 = accruedAtDec31 + pending2025 - personalTaken - studioDeductedByDec - requestedDays;
+      const afterDecClosure = availableAtDec31 - 3;
       warnDecEl.style.display = "block";
       if (afterDecClosure < 0) {
-        warnDecTxt.innerHTML = `Si se aceptan estas vacaciones, al llegar el cierre de diciembre (21-23 dic) tendrá <b>${fmt(availableAtDec21)}</b> disponibles y debe tomar <b>3 días</b> de cierre.<br>
+        warnDecTxt.innerHTML = `Si se aceptan estas vacaciones, al llegar el cierre de diciembre (21-23 dic) tendrá <b>${fmt(availableAtDec31)}</b> disponibles y debe tomar <b>3 días</b> de cierre.<br>
           <span style="color:#ef4444;font-weight:600">⛔ Quedará en ${fmt(afterDecClosure)} → ${fmt(Math.abs(afterDecClosure))} días sin pagar.</span>`;
       } else {
-        warnDecTxt.innerHTML = `Al llegar el cierre de diciembre, tendrá <b>${fmt(availableAtDec21)}</b> disponibles y debe tomar <b>3 días</b> de cierre.<br>
+        warnDecTxt.innerHTML = `Al llegar el cierre de diciembre, tendrá <b>${fmt(availableAtDec31)}</b> disponibles y debe tomar <b>3 días</b> de cierre.<br>
           <span style="color:#10b981">✅ Le quedarán ${fmt(afterDecClosure)} días disponibles.</span>`;
       }
     } else {
@@ -3188,12 +3205,12 @@ function simRecalc() {
   <!-- VACATION ONLY VIEW (password 2906) -->
   <div id="vac-only-view" style="display:none;width:100%;padding:16px;box-sizing:border-box">
     <h2 style="font-size:26px;font-weight:800;color:#f9c846;text-align:center;letter-spacing:0.12em;font-family:'Google Sans','Nunito',sans-serif;text-transform:uppercase;margin-bottom:24px">🏕️ Calculadora de Vacaciones</h2>
-    <div style="display:grid;grid-template-columns:1.4fr 1.2fr 1.4fr;gap:24px;align-items:start">
+    <div style="display:grid;grid-template-columns:1.1fr 1.5fr 0.9fr;gap:24px;align-items:start">
 
       <!-- CALENDAR COLUMN (first) -->
-      <div style="background:var(--surface);border-radius:12px;padding:16px;border:1px solid var(--border)">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Calendario Laboral 2026</div>
-        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;font-size:10px">
+      <div style="background:var(--surface);border-radius:12px;padding:18px;border:1px solid var(--border)">
+        <div style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;font-weight:600">Calendario Laboral 2026</div>
+        <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;font-size:11px">
           <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#3b82f6;border-radius:2px;display:inline-block"></span>Festivo</span>
           <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#f472b6;border-radius:2px;display:inline-block"></span>Cierre estudio</span>
           <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:rgba(0,180,216,0.3);border-radius:2px;display:inline-block"></span>Vacaciones solicitadas</span>
@@ -3202,77 +3219,69 @@ function simRecalc() {
       </div>
 
       <!-- MIDDLE: Employee & Request -->
-      <div style="background:var(--surface);border-radius:12px;padding:20px;border:1px solid var(--border)">
+      <div style="background:var(--surface);border-radius:12px;padding:24px;border:1px solid var(--border)">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px">Empleado & Solicitud</div>
 
         <div style="margin-bottom:14px;position:relative">
-          <label style="font-size:13px;color:var(--muted);font-weight:600;display:block;margin-bottom:6px">Empleado</label>
+          <label style="font-size:14px;color:var(--muted);font-weight:600;display:block;margin-bottom:8px">Empleado</label>
           <input id="vo-employee-search" type="text" placeholder="Escribí 3+ letras para buscar…" autocomplete="off"
             oninput="voSearchEmployee(this.value)"
-            style="width:100%;background:var(--bg);border:1px solid rgba(0,180,216,0.3);color:var(--white);padding:10px 12px;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box">
+            style="width:100%;background:var(--bg);border:1px solid rgba(0,180,216,0.3);color:var(--white);padding:13px 16px;border-radius:8px;font-size:15px;outline:none;box-sizing:border-box">
           <div id="vo-employee-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#0f1c2e;border:1px solid rgba(0,180,216,0.25);border-radius:10px;max-height:200px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,0.5)"></div>
           <input type="hidden" id="vo-employee">
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Inicio contrato</label>
-            <input id="vo-start" type="text" readonly style="width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--muted);padding:8px 10px;border-radius:6px;font-size:12px;outline:none;box-sizing:border-box">
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Inicio contrato</label>
+            <input id="vo-start" type="text" readonly style="width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--muted);padding:10px 12px;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box">
           </div>
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Fin contrato</label>
-            <input id="vo-end" type="text" readonly style="width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--muted);padding:8px 10px;border-radius:6px;font-size:12px;outline:none;box-sizing:border-box">
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Fin contrato</label>
+            <input id="vo-end" type="text" readonly style="width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--muted);padding:10px 12px;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box">
           </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Vacaciones desde</label>
-            <input id="vo-from" type="date" oninput="voRecalc()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);padding:8px 10px;border-radius:6px;font-size:12px;outline:none;box-sizing:border-box">
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Vacaciones desde</label>
+            <input id="vo-from" type="date" oninput="voRecalc()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);padding:10px 12px;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box">
           </div>
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Vacaciones hasta</label>
-            <input id="vo-to" type="date" oninput="voRecalc()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);padding:8px 10px;border-radius:6px;font-size:12px;outline:none;box-sizing:border-box">
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Vacaciones hasta</label>
+            <input id="vo-to" type="date" oninput="voRecalc()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);padding:10px 12px;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box">
           </div>
         </div>
 
         <!-- Studio closure info -->
-        <div id="vo-studio-info" style="display:none;background:rgba(249,200,70,0.08);border:1px solid rgba(249,200,70,0.2);border-radius:8px;padding:12px;margin-bottom:12px">
-          <div id="vo-studio-badge" style="font-size:13px;font-weight:600;color:#f9c846;margin-bottom:4px"></div>
-          <div id="vo-studio-note" style="font-size:11px;color:var(--muted)"></div>
+        <div id="vo-studio-info" style="display:none;background:rgba(249,200,70,0.08);border:1px solid rgba(249,200,70,0.2);border-radius:8px;padding:16px;margin-bottom:14px">
+          <div id="vo-studio-badge" style="font-size:14px;font-weight:600;color:#f9c846;margin-bottom:5px"></div>
+          <div id="vo-studio-note" style="font-size:12px;color:var(--muted)"></div>
         </div>
 
-        <!-- Días solicitados KPI -->
-        <div id="vo-requested-box" style="display:none;background:var(--surface);border-radius:12px;padding:18px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Días solicitados</div>
-          <div id="vo-requested-big" style="font-size:48px;font-weight:800;color:var(--white)">—</div>
-          <div id="vo-requested-detail" style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6"></div>
-        </div>
-
-        <!-- Días solicitados KPI -->
-        <div id="vo-requested-box" style="display:none;background:var(--surface);border-radius:12px;padding:18px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Días solicitados</div>
-          <div id="vo-requested-big" style="font-size:48px;font-weight:800;color:var(--white)">—</div>
-          <div id="vo-requested-detail" style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6"></div>
+        <!-- Días acumulados KPI (left column) -->
+        <div style="background:var(--surface);border-radius:12px;padding:18px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Días acumulados <span id="vo-accrued-until" style="color:#f9c846;text-transform:none;letter-spacing:0;font-weight:600"></span></div>
+          <div id="vo-accrued" style="font-size:36px;font-weight:800;color:var(--accent)">—</div>
         </div>
       </div>
 
       <!-- RIGHT: Results -->
       <div style="display:flex;flex-direction:column;gap:14px">
 
-        <!-- Días acumulados KPI -->
-        <div style="background:var(--surface);border-radius:12px;padding:18px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Días acumulados</div>
-          <div id="vo-accrued" style="font-size:48px;font-weight:800;color:var(--accent)">—</div>
-          <div id="vo-accrued-sub" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
-        </div>
-
         <!-- Días disponibles KPI -->
         <div style="background:var(--surface);border-radius:12px;padding:18px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Días disponibles</div>
-          <div id="vo-available" style="font-size:48px;font-weight:800;color:var(--green)">—</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Días disponibles <span id="vo-available-until" style="color:#f9c846;text-transform:none;letter-spacing:0;font-weight:600"></span></div>
+          <div id="vo-available" style="font-size:48px;font-weight:800;color:#f9c846">—</div>
           <div id="vo-available-sub" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
           <div id="vo-taken-detail" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)"></div>
+        </div>
+
+        <!-- Días solicitados KPI -->
+        <div id="vo-requested-box" style="display:none;background:var(--surface);border-radius:12px;padding:18px;border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Días solicitados</div>
+          <div id="vo-requested-big" style="font-size:48px;font-weight:800;color:var(--white)">—</div>
+          <div id="vo-requested-detail" style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6"></div>
         </div>
 
         <!-- Balance after -->
@@ -3295,7 +3304,7 @@ function simRecalc() {
 
       </div>
 
-    </div>
+    </div> <!-- end 3-column grid -->
   </div>
   <div id="vac-full-view">
   <h2 style="font-size:24px;font-weight:800;color:#f9c846;margin-bottom:4px;text-align:center;letter-spacing:0.12em;font-family:'Google Sans','Product Sans','Nunito',sans-serif;text-transform:uppercase">🏕️ Vacation Calculator</h2>
