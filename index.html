@@ -2672,7 +2672,16 @@ function renderVoCalendar(vacFrom, vacTo) {
 function voSearchEmployee(q) {
   const dd = document.getElementById("vo-employee-dropdown");
   if (q.length < 3) { dd.style.display = "none"; return; }
-  const matches = activos.filter(p => p.nombre && p.nombre.toLowerCase().includes(q.toLowerCase())).slice(0,20);
+  // Include active staff + people with a future start date (not yet active)
+  const today = new Date(); today.setHours(0,0,0,0);
+  const pool = allData.filter(p => {
+    if (!p.nombre) return false;
+    const isAlreadyActive = activos.some(a => a.nombre === p.nombre);
+    if (isAlreadyActive) return true;
+    const ini = p.inicio ? new Date(p.inicio + "T00:00:00") : null;
+    return ini && ini > today; // future starter
+  });
+  const matches = pool.filter(p => p.nombre.toLowerCase().includes(q.toLowerCase())).slice(0,20);
   if (!matches.length) { dd.style.display = "none"; return; }
   dd.innerHTML = matches.map(p =>
     `<div onclick="voSelectEmployee('${p.nombre.replace(/'/g,"\\'")}','${(p.departamento||"").replace(/'/g,"\\'")}');document.getElementById('vo-employee-dropdown').style.display='none'"
