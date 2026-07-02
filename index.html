@@ -563,25 +563,39 @@ document.getElementById("pw-input").focus();
 
 <!-- PENDIENTES -->
 <div id="page-pendientes" class="page">
-  <div class="kpi-grid" id="kpi-pendientes" style="margin-bottom:20px"></div>
-  <div class="kpi-grid" id="kpi-medical" style="margin-bottom:24px"></div>
 
-  <!-- Charts row -->
+  <!-- KPIs row 1: Total active + Onboarding complete + With pending items -->
+  <div class="kpi-grid" id="kpi-pendientes" style="margin-bottom:20px"></div>
+
+  <!-- Charts row 1: Donut % pending/complete + Pending by dept -->
   <div class="charts-row-3" style="margin-bottom:24px">
     <div class="chart-card">
-      <div class="chart-title">Pending items by checklist</div>
+      <div class="chart-title">Pending vs complete</div>
       <canvas id="chart-pend-checklist" style="max-height:220px"></canvas>
     </div>
-    <div class="chart-card">
+    <div class="chart-card" style="grid-column:span 2">
       <div class="chart-title">Pending items by department</div>
       <canvas id="chart-pend-dept" style="max-height:220px"></canvas>
     </div>
-    <div class="chart-card">
-      <div class="chart-title">Onboarding completion over time</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px" id="pend-year-filter"></div>
-      <canvas id="chart-pend-progress" style="max-height:220px"></canvas>
-    </div>
   </div>
+
+  <!-- Chart: Onboarding completion over time -->
+  <div class="chart-card full" style="margin-bottom:24px">
+    <div class="chart-title">Onboarding completion over time</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px" id="pend-year-filter"></div>
+    <canvas id="chart-pend-progress" style="max-height:220px"></canvas>
+  </div>
+
+  <!-- Chart: Pending items by checklist -->
+  <div class="chart-card full" style="margin-bottom:24px">
+    <div class="chart-title">Pending items by checklist</div>
+    <canvas id="chart-pend-people-checklist" style="max-height:200px"></canvas>
+  </div>
+
+  <!-- Medical check KPIs -->
+  <div class="kpi-grid" id="kpi-medical" style="margin-bottom:24px"></div>
+
+  <!-- Top 15 -->
   <div class="chart-card full" style="margin-bottom:24px">
     <div class="chart-title">Top 15 — people with most pending items</div>
     <canvas id="chart-pend-people" style="max-height:260px"></canvas>
@@ -1549,16 +1563,26 @@ function renderPending() {
 
   // ── CHARTS ────────────────────────────────────────────────
 
-  // 1. Donut: pending by checklist item
-  const checklistPending = ONBOARDING_KEYS_UI.map(({key,label}) => ({
-    label, n: base.filter(p=>isPending(key,p.onboarding)).length
-  }));
+  // 1. Donut: pending vs complete (overall)
+  const totalWithPending = base.filter(p=>ONBOARDING_KEYS_UI.some(({key})=>isPending(key,p.onboarding))).length;
+  const totalComplete    = base.filter(p=>ONBOARDING_KEYS_UI.every(({key})=>isDone(key,p.onboarding))).length;
   if (charts["chart-pend-checklist"]) charts["chart-pend-checklist"].destroy();
   charts["chart-pend-checklist"] = new Chart(document.getElementById("chart-pend-checklist"), {
     type:"doughnut",
-    data:{ labels: checklistPending.map(x=>x.label), datasets:[{ data: checklistPending.map(x=>x.n), backgroundColor:["#f59e0b","#ef4444","#6366f1","#ec4899","#10b981","#00b4d8","#f97316","#a855f7","#14b8a6","#84cc16"], borderWidth:0 }] },
-    options:{ responsive:true, cutout:"52%", plugins:{ legend:{position:"bottom",labels:{color:"#9ca3af",boxWidth:10,font:{size:10}}}, tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw} (${pct(ctx.raw,total)}%)`}} },
-      onClick(evt,els){ if(!els.length) return; const {key,label}=ONBOARDING_KEYS_UI[els[0].index]; openPendingModal(label,key); }
+    data:{ labels:["With pending","Complete"], datasets:[{ data:[totalWithPending, totalComplete], backgroundColor:["rgba(245,158,11,0.8)","rgba(16,185,129,0.8)"], borderWidth:0 }] },
+    options:{ responsive:true, cutout:"60%", plugins:{ legend:{position:"bottom",labels:{color:"#9ca3af",boxWidth:10,font:{size:11}}}, tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw} (${pct(ctx.raw,total)}%)`}} } }
+  });
+
+  // Pending items by checklist bar (new full-width chart)
+  const checklistPending = ONBOARDING_KEYS_UI.map(({key,label}) => ({
+    label, n: base.filter(p=>isPending(key,p.onboarding)).length
+  })).sort((a,b)=>b.n-a.n);
+  if (charts["chart-pend-people-checklist"]) charts["chart-pend-people-checklist"].destroy();
+  charts["chart-pend-people-checklist"] = new Chart(document.getElementById("chart-pend-people-checklist"), {
+    type:"bar",
+    data:{ labels:checklistPending.map(x=>x.label), datasets:[{ label:"Pending", data:checklistPending.map(x=>x.n), backgroundColor:"rgba(245,158,11,0.75)", borderRadius:4 }] },
+    options:{ responsive:true, scales:{x:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#6b7280"}},y:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#6b7280"},beginAtZero:true}}, plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.raw} pending (${pct(ctx.raw,total)}%)`}}},
+      onClick(evt,els){ if(!els.length) return; const {key,label}=checklistPending[els[0].index]; openPendingModal(label,key); }
     }
   });
 
@@ -1845,17 +1869,38 @@ function buildPendingKPIs() {
   const conPend   = base.filter(p => p.onboarding && ONBOARDING_KEYS_UI.some(({key})=>isPending(key, p.onboarding)));
   window._conPend = conPend;
 
+  // Location breakdown
+  const onSite  = base.filter(p=>(p.location||"").toUpperCase()==="ON SITE").length;
+  const hybrid  = base.filter(p=>(p.location||"").toUpperCase()==="HYBRID").length;
+  const remote  = base.filter(p=>(p.location||"").toUpperCase()==="REMOTE").length;
+  // Gender breakdown
+  const males   = base.filter(p=>p.genero==="M").length;
+  const females = base.filter(p=>p.genero==="F").length;
+
   document.getElementById("kpi-pendientes").innerHTML = `
+    <div class="kpi accent">
+      <div class="kpi-value">${total}</div>
+      <div class="kpi-label">Total active</div>
+      <div style="margin-top:8px;font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px">
+        ${onSite?`<span>🏢 On Site: <b>${onSite}</b> (${pct(onSite,total)}%)</span>`:""}
+        ${hybrid?`<span>🔀 Hybrid: <b>${hybrid}</b> (${pct(hybrid,total)}%)</span>`:""}
+        ${remote?`<span>🏠 Remote: <b>${remote}</b> (${pct(remote,total)}%)</span>`:""}
+      </div>
+      <div style="margin-top:4px;font-size:11px;color:var(--muted);display:flex;gap:10px">
+        <span style="color:#4c1d95">♂ Male: <b>${males}</b> (${pct(males,total)}%)</span>
+        <span style="color:#c084fc">♀ Female: <b>${females}</b> (${pct(females,total)}%)</span>
+      </div>
+    </div>
     <div class="kpi green" onclick="setPendingFilter(document.querySelector('[data-pf=completos]'))">
       <div class="kpi-value">${completos.length}</div><div class="kpi-label">Onboarding complete</div>
       <div class="kpi-sub">${pct(completos.length,total)}% of total active</div><div class="kpi-hint">↗ view list</div>
     </div>
-    <div class="kpi amber" style="border-color:rgba(245,158,11,0.5);grid-column:span 2">
+    <div class="kpi amber" style="border-color:rgba(245,158,11,0.5)">
       <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px;cursor:pointer" onclick="setPendingFilter(document.querySelector('[data-pf=conpendientes]'))">
         <div class="kpi-value" style="font-size:44px">${conPend.length}</div>
         <div>
           <div class="kpi-label" style="color:var(--amber)">With pending items</div>
-          <div class="kpi-sub">${pct(conPend.length,total)}% of total active · click to view all</div>
+          <div class="kpi-sub">${pct(conPend.length,total)}% of total active · click to view</div>
         </div>
       </div>
       <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;flex-wrap:wrap;gap:6px">
@@ -1865,9 +1910,6 @@ function buildPendingKPIs() {
           return '<span onclick="event.stopPropagation();openModal(\'Pending — '+dept+'\',window._conPend.filter(p=>p.departamento===\''+dept+'\'),\'inicio\')" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);color:var(--amber);padding:3px 10px;border-radius:20px;font-size:11px;cursor:pointer">'+dept+': '+n+' ('+Math.round(n/t*100)+'%)</span>';
         }).join("")}
       </div>
-    </div>
-    <div class="kpi accent">
-      <div class="kpi-value">${total}</div><div class="kpi-label">Total active</div>
     </div>
   `;
 
