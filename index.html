@@ -3469,17 +3469,44 @@ function simRecalc() {
 <div id="page-chats" class="page">
   <div class="chat-tabs">
     <button id="chat-tab-equipo"   class="chat-tab active"  onclick="switchChatTab('equipo')">🧑‍💼 Team Chat</button>
+    <button id="chat-tab-rules"    class="chat-tab"         onclick="switchChatTab('rules')">📋 Company Rules</button>
     <button id="chat-tab-atlantis" class="chat-tab"         onclick="switchChatTab('atlantis')">🎬 ATLANTIS Chat</button>
   </div>
+
+  <!-- Team Chat -->
   <div id="chat-equipo-panel" class="chat-panel">
     <div class="chat-messages" id="chat-messages-equipo">
-      <div class="chat-msg chat-msg-assistant">Hola, soy el asistente del equipo ATLANTIS. Puedo ayudarte a encontrar información sobre cualquier person, departamento, fechas de contrato, y más. ¿Qué necesitas?</div>
+      <div class="chat-msg chat-msg-assistant">Hola, soy el asistente del equipo ATLANTIS. Puedo ayudarte a encontrar información sobre cualquier persona, departamento, fechas de contrato, y más. ¿Qué necesitas?</div>
     </div>
     <div class="chat-input-row">
       <textarea id="chat-input-equipo" class="chat-input" placeholder="E.g.: Who are the SENIOR staff in Animation?" onkeydown="handleChatKey(event,'equipo')" rows="1"></textarea>
       <button class="chat-send" onclick="sendChat('equipo')">↑</button>
     </div>
   </div>
+
+  <!-- Company Rules Chat -->
+  <div id="chat-rules-panel" class="chat-panel" style="display:none">
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap">
+      <span style="font-size:12px;color:var(--muted)">Language / Idioma / Langue / Lingua:</span>
+      <div style="display:flex;gap:6px">
+        <button onclick="setRulesLang('ES')" id="rules-lang-ES" class="filter-btn active" style="padding:4px 12px;font-size:12px">🇪🇸 ES</button>
+        <button onclick="setRulesLang('EN')" id="rules-lang-EN" class="filter-btn"        style="padding:4px 12px;font-size:12px">🇬🇧 EN</button>
+        <button onclick="setRulesLang('FR')" id="rules-lang-FR" class="filter-btn"        style="padding:4px 12px;font-size:12px">🇫🇷 FR</button>
+        <button onclick="setRulesLang('IT')" id="rules-lang-IT" class="filter-btn"        style="padding:4px 12px;font-size:12px">🇮🇹 IT</button>
+      </div>
+    </div>
+    <div class="chat-messages" id="chat-messages-rules">
+      <div class="chat-msg chat-msg-assistant" id="rules-welcome-msg">
+        Hola 👋 Soy el asistente de normas internas de ATLANTIS Animation. Puedo responder preguntas sobre políticas de la empresa, normas del estudio, vacaciones, trabajo remoto, IT, seguridad y más. ¿En qué te puedo ayudar?
+      </div>
+    </div>
+    <div class="chat-input-row">
+      <textarea id="chat-input-rules" class="chat-input" placeholder="Pregunta sobre las normas del estudio…" onkeydown="handleChatKey(event,'rules')" rows="1"></textarea>
+      <button class="chat-send" onclick="sendChat('rules')">↑</button>
+    </div>
+  </div>
+
+  <!-- ATLANTIS Chat -->
   <div id="chat-atlantis-panel" class="chat-panel" style="display:none">
     <div class="chat-messages" id="chat-messages-atlantis">
       <div class="chat-msg chat-msg-assistant">Hi! I'm the ATLANTIS Animation assistant. I can tell you about the studio, our projects, our creative philosophy and much more. How can I help you?</div>
