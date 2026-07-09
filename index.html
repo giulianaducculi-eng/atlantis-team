@@ -2377,8 +2377,16 @@ function buildOrbitalUniverse() {
   const sorted=[...depts].sort((a,b)=>(present[b]||0)-(present[a]||0));
   const rings=[[],[],[],[]];
   sorted.forEach((d,i)=>rings[Math.min(i<2?0:i<5?1:i<10?2:3,3)].push(d));
-  const maxR=Math.min(W,H)/2*0.90;
-  const orbitRs=[maxR*0.28,maxR*0.48,maxR*0.68,maxR*0.90];
+  const maxR=Math.min(W,H)/2*0.95;
+  // Inner rings need more space from center to avoid overlap
+  // Compute minimum radius per ring based on planet count and planet size
+  const baseOrbitRs=[maxR*0.30,maxR*0.52,maxR*0.72,maxR*0.92];
+  const orbitRs=baseOrbitRs.map((r,ri)=>{
+    const count=Math.max(rings[ri].length,1);
+    const avgSize=34+42*0.7; // approx average planet size
+    const minR=(avgSize*1.2*count)/(2*Math.PI); // minimum circumference / 2π
+    return Math.max(r, minR+60);
+  });
 
   // ── STEP 5: Place planets ────────────────────────────────────
   const planetsDiv=document.getElementById("uv-planets");
@@ -2389,7 +2397,9 @@ function buildOrbitalUniverse() {
 
   rings.forEach((ring,ri)=>{
     ring.forEach((dept,pi)=>{
-      const angle=(pi/Math.max(ring.length,1))*Math.PI*2-Math.PI/2;
+      // Add slight offset to first ring to avoid crowding near center
+      const angleOffset = ri === 0 ? Math.PI/6 : 0;
+      const angle=(pi/Math.max(ring.length,1))*Math.PI*2-Math.PI/2+angleOffset;
       const r=orbitRs[ri];
       const px=cx+Math.cos(angle)*r;
       const py=cy+Math.sin(angle)*r;
