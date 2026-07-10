@@ -162,7 +162,7 @@
   .empty strong { display: block; font-size: 18px; color: var(--white); margin-bottom: 8px; }
 
   /* PRÓXIMOS */
-  .prox-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 14px; }
+  .prox-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; }
   .prox-header { padding: 11px 15px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
   .prox-header.blue  { background: rgba(0,180,216,0.15); color: var(--accent); border-bottom: 1px solid rgba(0,180,216,0.2); }
   .prox-header.green { background: rgba(16,185,129,0.15); color: var(--green); border-bottom: 1px solid rgba(16,185,129,0.2); }
@@ -190,21 +190,6 @@
   .pending-filter { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
 
   /* CHATS */
-  .chat-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-  .chat-tab { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 9px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
-  .chat-tab:hover { color: var(--white); border-color: rgba(255,255,255,0.2); }
-  .chat-tab.active { background: var(--accent); border-color: var(--accent); color: var(--black); font-weight: 600; }
-  .chat-panel { display: flex; flex-direction: column; height: 500px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
-  .chat-msg { max-width: 75%; padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
-  .chat-msg-user { background: var(--accent); color: var(--black); align-self: flex-end; border-radius: 12px 12px 2px 12px; }
-  .chat-msg-assistant { background: rgba(255,255,255,0.06); color: var(--white); align-self: flex-start; border-radius: 12px 12px 12px 2px; border: 1px solid var(--border); }
-  .chat-input-row { display: flex; gap: 10px; padding: 14px 16px; border-top: 1px solid var(--border); align-items: flex-end; }
-  .chat-input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--white); padding: 10px 14px; border-radius: 8px; font-size: 14px; resize: none; outline: none; font-family: inherit; line-height: 1.5; max-height: 120px; }
-  .chat-input:focus { border-color: var(--accent); }
-  .chat-input::placeholder { color: var(--muted); }
-  .chat-send { background: var(--accent); border: none; color: var(--black); width: 38px; height: 38px; border-radius: 8px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; flex-shrink: 0; }
-  .chat-send:hover { opacity: 0.85; }
 
   @media (max-width: 768px) {
     header, .page { padding-left: 16px; padding-right: 16px; }
@@ -293,7 +278,6 @@ document.getElementById("pw-input").focus();
     <button class="nav-btn" onclick="showPage('pendientes', this)">Pending</button>
     <button class="nav-btn" onclick="showPage('universo', this)">🌊 Universo</button>
     <button class="nav-btn" onclick="showPage('simulador', this)">🏕️ Vacaciones</button>
-    <button class="nav-btn" onclick="showPage('chats', this)">Chats</button>
   </nav>
   <div class="header-right">
     <span id="last-update"></span>
@@ -477,6 +461,12 @@ document.getElementById("pw-input").focus();
 
 <!-- DIRECTORIO -->
 <div id="page-directorio" class="page">
+
+  <!-- KPIs departamentos -->
+  <div id="dept-kpi-bar" style="margin-bottom:20px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+    <!-- filled by JS -->
+  </div>
+
   <div class="controls">
     <input id="search" type="text" placeholder="Search by name, department, nationality…" oninput="renderDir()">
     <div class="filter-group" id="filter-group"></div>
@@ -550,6 +540,19 @@ document.getElementById("pw-input").focus();
 <div id="page-proximos" class="page">
   <div class="kpi-grid" id="kpi-proximos" style="margin-bottom:20px"></div>
 
+  <!-- Timeline chart -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:12px;font-weight:600">📅 Event timeline — current year</div>
+    <div id="prox-timeline" style="position:relative;overflow-x:auto;padding-bottom:8px"></div>
+    <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;flex-wrap:wrap;color:var(--muted)">
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:#10b981;border-radius:2px;display:inline-block"></span>Arrivals</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:#f59e0b;border-radius:2px;display:inline-block"></span>Departures</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:#00b4d8;border-radius:2px;display:inline-block"></span>Onsite</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:#8b5cf6;border-radius:2px;display:inline-block"></span>Laboral</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:#ec4899;border-radius:2px;display:inline-block"></span>Medical</span>
+    </div>
+  </div>
+
   <!-- Toggle: Calendar / List -->
   <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
     <button id="prox-btn-list" onclick="switchProxView('list')" style="background:rgba(0,180,216,0.2);border:1px solid var(--accent);color:var(--accent);padding:6px 16px;border-radius:6px;font-size:12px;cursor:pointer">☰ List</button>
@@ -599,13 +602,21 @@ document.getElementById("pw-input").focus();
 
   <!-- CALENDAR VIEW -->
   <div id="prox-cal-view" style="display:none">
-    <div id="prox-calendar" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
-    <div style="display:flex;gap:14px;margin-top:12px;font-size:11px;flex-wrap:wrap;color:var(--muted)">
+    <div id="prox-calendar" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px"></div>
+    <div style="display:flex;gap:14px;margin-top:14px;font-size:11px;flex-wrap:wrap;color:var(--muted)">
       <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(16,185,129,0.85);border-radius:2px;display:inline-block"></span>Arrivals</span>
       <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(245,158,11,0.85);border-radius:2px;display:inline-block"></span>Departures</span>
       <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(0,180,216,0.85);border-radius:2px;display:inline-block"></span>Onsite</span>
       <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(139,92,246,0.85);border-radius:2px;display:inline-block"></span>Laboral date</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(236,72,153,0.85);border-radius:2px;display:inline-block"></span>Medical appointment</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(236,72,153,0.85);border-radius:2px;display:inline-block"></span>Medical</span>
+    </div>
+    <!-- Day popup -->
+    <div id="cal-day-popup" style="display:none;position:fixed;z-index:500;background:#1a1a2e;border:1px solid rgba(0,180,216,0.4);border-radius:12px;padding:16px;min-width:240px;max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.6)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div id="cal-popup-title" style="font-weight:700;font-size:14px;color:var(--accent)"></div>
+        <button onclick="document.getElementById('cal-day-popup').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1">×</button>
+      </div>
+      <div id="cal-popup-body" style="font-size:12px;display:flex;flex-direction:column;gap:8px"></div>
     </div>
   </div>
 </div>
@@ -791,6 +802,8 @@ async function loadData() {
              .map(p => p.nombre)
     );
     buildStats();
+    buildDeptKPIs();
+    buildProxTimeline();
     buildFilters();
     renderDir();
     renderProximos();
@@ -1254,13 +1267,14 @@ function buildStats() {
       return s && s <= mk && e >= mk;
     }).length;
   });
-  // Build projection months (next 6 months after today)
+  // Build projection months until end of 2027
   const todayKeyLine = monthKey(new Date().toLocaleDateString('en-CA'));
   const projMonths = [];
   {
     let [py, pm] = todayKeyLine.split("-").map(Number);
-    for (let i = 1; i <= 6; i++) {
+    while (!(py === 2027 && pm === 12)) {
       pm++; if (pm > 12) { pm = 1; py++; }
+      if (py > 2027) break;
       projMonths.push(`${py}-${String(pm).padStart(2,"0")}`);
     }
   }
@@ -1334,13 +1348,14 @@ function buildStats() {
   const allDepts2 = [...new Set(allData.map(p=>p.departamento).filter(Boolean))].sort();
   allDepts2.forEach((d,i) => DEPT_COLORS_MAP[d] = DEPT_COLOR_PALETTE[i % DEPT_COLOR_PALETTE.length]);
 
-  // Projection for dept chart (next 6 months)
+  // Projection for dept chart until end of 2027
   const todayKeyDept = monthKey(new Date().toLocaleDateString('en-CA'));
   const projMonthsDept = [];
   {
     let [py, pm] = todayKeyDept.split("-").map(Number);
-    for (let i = 1; i <= 6; i++) {
+    while (!(py === 2027 && pm === 12)) {
       pm++; if (pm > 12) { pm = 1; py++; }
+      if (py > 2027) break;
       projMonthsDept.push(`${py}-${String(pm).padStart(2,"0")}`);
     }
   }
@@ -1664,6 +1679,52 @@ function sortBy(col) {
   document.querySelectorAll("table.main thead th").forEach(th=>th.classList.remove("sorted"));
   event.target.classList.add("sorted"); renderDir();
 }
+function buildDeptKPIs() {
+  const bar = document.getElementById("dept-kpi-bar");
+  if (!bar || !allData.length) return;
+
+  const depts = {};
+  active.forEach(p => { const d = p.departamento||"—"; depts[d]=(depts[d]||0)+1; });
+  const sorted = Object.entries(depts).sort((a,b)=>b[1]-a[1]);
+  const total = active.length || 1;
+  const activeDeptCount = sorted.length;
+
+  const DEPT_COLORS_KPI = [
+    "#00b4d8","#10b981","#f59e0b","#8b1a4a","#6366f1",
+    "#ec4899","#14b8a6","#f97316","#a855f7","#84cc16",
+    "#ef4444","#06b6d4","#e11d48","#0ea5e9","#d97706",
+    "#7c3aed","#059669","#2563eb","#d946ef","#16a34a"
+  ];
+
+  const kpiCard = `<div class="kpi" style="min-width:160px;flex-shrink:0;align-self:stretch;display:flex;flex-direction:column;justify-content:center">
+    <div class="kpi-value" style="font-size:52px">${activeDeptCount}</div>
+    <div class="kpi-label">Active departments</div>
+  </div>`;
+
+  const shareRows = sorted.map(([d,n],i) => {
+    const pct = Math.round(n/total*100);
+    const color = DEPT_COLORS_KPI[i % DEPT_COLORS_KPI.length];
+    return `<div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12px">
+      <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></div>
+      <div style="flex:1;color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px">${d}</div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <div style="width:60px;height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:${color};border-radius:3px"></div>
+        </div>
+        <div style="color:var(--muted);font-size:11px;min-width:28px;text-align:right">${pct}%</div>
+        <div style="color:var(--white);font-weight:600;font-size:11px;min-width:18px;text-align:right">${n}</div>
+      </div>
+    </div>`;
+  }).join("");
+
+  const shareCard = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;flex:1">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:10px;font-weight:600">Staff share by department</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0 16px">${shareRows}</div>
+  </div>`;
+
+  bar.innerHTML = kpiCard + shareCard;
+}
+
 function renderDir() {
   const query=(document.getElementById("search").value||"").toLowerCase().trim();
   let filtered=active.filter(p=>{
@@ -1701,6 +1762,132 @@ function renderDir() {
 }
 
 // PRÓXIMOS
+function buildProxTimeline() {
+  const container = document.getElementById("prox-timeline");
+  if (!container || !allData.length) return;
+
+  const year = new Date().getFullYear();
+  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const TYPES = [
+    { key:"inicio",       label:"Arrivals",   color:"#10b981" },
+    { key:"finEstimado",  label:"Departures", color:"#f59e0b" },
+    { key:"inicioOnSite", label:"Onsite",     color:"#00b4d8" },
+    { key:"laboralDate",  label:"Laboral",    color:"#8b5cf6" },
+    { key:"citasMedicas", label:"Medical",    color:"#ec4899" },
+  ];
+
+  const data = {};
+  TYPES.forEach(t => {
+    allData.forEach(p => {
+      const v = p[t.key];
+      if (!v) return;
+      const d = new Date(v + "T00:00:00");
+      if (d.getFullYear() !== year) return;
+      const m = d.getMonth();
+      if (!data[m]) data[m] = {};
+      data[m][t.key] = (data[m][t.key]||0)+1;
+    });
+  });
+
+  const grandTotal = Object.values(data).reduce((s,m)=>s+Object.values(m).reduce((a,b)=>a+b,0),0);
+  const monthTotals = Array.from({length:12},(_,m)=>TYPES.reduce((s,t)=>s+(data[m]?.[t.key]||0),0));
+  const maxMonthTotal = Math.max(...monthTotals, 1);
+
+  // Fixed pixel dimensions — no viewBox scaling so fonts stay crisp
+  const cW     = 76;   // column width px
+  const pad    = 6;
+  const barH   = 110;  // max bar height
+  const topPad = 20;   // above bars (total label)
+  const botPad = 34;   // below baseline (month + pct)
+  const totalW = cW * 12;
+  const totalH = topPad + barH + botPad;
+
+  const todayM  = new Date().getMonth();
+  const todayD  = new Date().getDate();
+  const dInM    = new Date(year, todayM+1, 0).getDate();
+
+  let defs = `<defs>`;
+  TYPES.forEach((t,i) => {
+    defs += `<linearGradient id="ptg${i}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${t.color}" stop-opacity="1"/>
+      <stop offset="100%" stop-color="${t.color}" stop-opacity="0.4"/>
+    </linearGradient>`;
+  });
+  defs += `</defs>`;
+
+  let svg = `<svg width="100%" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}" preserveAspectRatio="xMidYMid meet" style="display:block;min-height:${totalH}px">` + defs;
+
+  // Subtle grid
+  [0.25,0.5,0.75,1].forEach(f => {
+    const y = topPad + barH*(1-f);
+    svg += `<line x1="0" y1="${y.toFixed(1)}" x2="${totalW}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="2,4"/>`;
+  });
+
+  // Grand total
+  svg += `<text x="${totalW}" y="10" text-anchor="end" font-size="10" font-family="sans-serif" fill="rgba(255,255,255,0.3)">Total: ${grandTotal}</text>`;
+
+  for (let m = 0; m < 12; m++) {
+    const x      = m * cW;
+    const isNow  = m === todayM;
+    const isPast = m < todayM;
+    const evs    = data[m] || {};
+    const mTotal = monthTotals[m];
+    const mPct   = grandTotal > 0 ? Math.round(mTotal/grandTotal*100) : 0;
+    const alpha  = isPast ? 0.4 : 1;
+    const bx     = x + pad;
+    const bw     = cW - pad*2;
+
+    // Today highlight bg
+    if (isNow) svg += `<rect x="${x}" y="${topPad}" width="${cW}" height="${barH}" fill="rgba(0,180,216,0.06)" rx="3"/>`;
+
+    // Stacked bars bottom-up
+    const scaledH = mTotal > 0 ? Math.round(mTotal/maxMonthTotal * barH) : 0;
+    let yBase = topPad + barH;
+
+    TYPES.forEach((t,ti) => {
+      const cnt = evs[t.key]||0;
+      if (!cnt || !scaledH) return;
+      const h = Math.max(Math.round(cnt/mTotal * scaledH), 2);
+      yBase -= h;
+      svg += `<rect x="${bx}" y="${yBase}" width="${bw}" height="${h}" fill="url(#ptg${ti})" rx="2" opacity="${alpha}">
+        <title>${t.label}: ${cnt} (${Math.round(cnt/mTotal*100)}%)</title>
+      </rect>`;
+      // Label inside bar only if enough space (>=14px)
+      if (h >= 14) {
+        svg += `<text x="${bx+bw/2}" y="${yBase+h/2+3.5}" text-anchor="middle" font-size="9" font-family="sans-serif" fill="rgba(0,0,0,0.8)" font-weight="700">${cnt}</text>`;
+      }
+    });
+
+    // Total above bar
+    if (mTotal > 0) {
+      const barTop = topPad + barH - scaledH;
+      svg += `<text x="${x+cW/2}" y="${Math.max(barTop-3, 11)}" text-anchor="middle" font-size="10" font-family="sans-serif" fill="${isPast?"rgba(255,255,255,0.25)":"rgba(255,255,255,0.8)"}" font-weight="600">${mTotal}</text>`;
+    }
+
+    // Month label
+    const mc = isNow ? "#00b4d8" : isPast ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.6)";
+    svg += `<text x="${x+cW/2}" y="${topPad+barH+13}" text-anchor="middle" font-size="11" font-family="sans-serif" fill="${mc}" font-weight="${isNow?"700":"400"}">${MONTHS[m]}</text>`;
+
+    // Pct below month
+    if (mPct > 0) {
+      const pc = isNow ? "#00b4d8" : isPast ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.35)";
+      svg += `<text x="${x+cW/2}" y="${topPad+barH+24}" text-anchor="middle" font-size="9.5" font-family="sans-serif" fill="${pc}">${mPct}%</text>`;
+    }
+
+    // Today vertical line
+    if (isNow) {
+      const tx = x + (todayD/dInM)*cW;
+      svg += `<line x1="${tx}" y1="${topPad}" x2="${tx}" y2="${topPad+barH}" stroke="#00b4d8" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>`;
+      svg += `<circle cx="${tx}" cy="${topPad+barH}" r="2.5" fill="#00b4d8"/>`;
+    }
+  }
+
+  // Baseline
+  svg += `<line x1="0" y1="${topPad+barH}" x2="${totalW}" y2="${topPad+barH}" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>`;
+  svg += `</svg>`;
+  container.innerHTML = svg;
+}
+
 function renderProximos() {
   const hoy  = allData.filter(p=>daysFrom(p.inicio)===0).sort((a,b)=>a.nombre.localeCompare(b.nombre));
   const entr = allData.filter(p=>{const d=daysFrom(p.inicio);return d!==null&&d>0&&d<=30;}).sort((a,b)=>new Date(a.inicio)-new Date(b.inicio));
@@ -2447,13 +2634,29 @@ function buildOrbitalUniverse() {
       if(fi>0){const b=document.createElement("div");b.style.cssText=`position:absolute;top:-4px;right:-4px;background:#10b981;color:#000;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:4`;b.textContent="+"+fi;b.onclick=e=>{e.stopPropagation();openModal(dept+" — arriving (90d)",allData.filter(p=>{const d=daysFrom(p.inicio);return(p.departamento||"?")===dept&&d!==null&&d>0&&d<=90;}),"inicio");};planet.appendChild(b);}
       if(fo>0){const b=document.createElement("div");b.style.cssText=`position:absolute;bottom:-4px;right:-4px;background:#f59e0b;color:#000;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:4`;b.textContent="-"+fo;b.onclick=e=>{e.stopPropagation();openModal(dept+" — departing (90d)",allData.filter(p=>{const d=daysFrom(p.finEstimado);return(p.departamento||"?")===dept&&d!==null&&d>=0&&d<=90;}),"finEstimado");};planet.appendChild(b);}
 
-      planet.onmouseenter=()=>{
+      wrap.onmouseenter=()=>{
         planet.style.transform="scale(1.2)";
-        const nivCount={};activos.filter(p=>(p.departamento||"?")===dept).forEach(p=>{const nv=p.nivel||"?";nivCount[nv]=(nivCount[nv]||0)+1;});
-        tip.innerHTML=`<div style="font-weight:700;color:${color};margin-bottom:6px">${dept}</div><div style="color:white">👥 Active: <b>${n}</b></div><div style="font-size:11px;color:#6b7280">${Object.entries(nivCount).map(([nv,c])=>`${nv}: ${c}`).join(" · ")||"—"}</div><div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.1);color:#6b7280;font-size:11px">📚 Historical: ${hist[dept]||0}${fi?`<br><span style="color:#10b981">+${fi} arriving</span>`:""}${fo?`<br><span style="color:#f59e0b">-${fo} departing</span>`:""}</div>`;
+        const deptPeople = activos.filter(p=>(p.departamento||"?")===dept);
+        const nivCount={};
+        deptPeople.forEach(p=>{const nv=p.nivel||"?";nivCount[nv]=(nivCount[nv]||0)+1;});
+        const nivStr=Object.entries(nivCount).sort((a,b)=>b[1]-a[1]).map(([nv,c])=>`<span style="color:#e5e7eb">${nv}:</span> ${c}`).join(" · ")||"—";
+        const genders={M:0,F:0,O:0};
+        deptPeople.forEach(p=>{if(p.genero==="M")genders.M++;else if(p.genero==="F")genders.F++;else genders.O++;});
+        const nats=[...new Set(deptPeople.map(p=>p.nacionalidad).filter(Boolean))].slice(0,4).join(", ")||"—";
+        const nextIn=allData.filter(p=>(p.departamento||"?")===dept&&daysFrom(p.inicio)!==null&&daysFrom(p.inicio)>0&&daysFrom(p.inicio)<=90).sort((a,b)=>new Date(a.inicio)-new Date(b.inicio));
+        const nextOut=allData.filter(p=>(p.departamento||"?")===dept&&daysFrom(p.finEstimado)!==null&&daysFrom(p.finEstimado)>=0&&daysFrom(p.finEstimado)<=90).sort((a,b)=>new Date(a.finEstimado)-new Date(b.finEstimado));
+        tip.innerHTML=`
+          <div style="font-weight:700;color:${color};margin-bottom:6px;font-size:13px">${icon} ${dept}</div>
+          <div style="color:white;margin-bottom:3px">👥 Active: <b>${n}</b> &nbsp;·&nbsp; 📚 Historical: ${hist[dept]||0}</div>
+          <div style="font-size:10px;color:#9ca3af;margin-bottom:6px">${nivStr}</div>
+          <div style="font-size:10px;color:#9ca3af;margin-bottom:6px">♂ ${genders.M} &nbsp;♀ ${genders.F}${genders.O?` · other ${genders.O}`:""} &nbsp;·&nbsp; 🌍 ${nats}</div>
+          ${nextIn.length?`<div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:6px;margin-top:2px"><div style="color:#10b981;font-size:10px;font-weight:600;margin-bottom:2px">↑ Arriving (90d)</div>${nextIn.slice(0,3).map(p=>`<div style="font-size:10px;color:#d1fae5">• ${p.nombre} <span style="color:#6b7280">${p.inicio}</span></div>`).join("")}</div>`:""}
+          ${nextOut.length?`<div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:6px;margin-top:4px"><div style="color:#f59e0b;font-size:10px;font-weight:600;margin-bottom:2px">↓ Departing (90d)</div>${nextOut.slice(0,3).map(p=>`<div style="font-size:10px;color:#fde68a">• ${p.nombre} <span style="color:#6b7280">${p.finEstimado}</span></div>`).join("")}</div>`:""}
+          <div style="font-size:9px;color:var(--accent);margin-top:6px;border-top:1px solid rgba(255,255,255,0.08);padding-top:5px">Click to see full list →</div>
+        `;
         tip.style.display="block";
       };
-      planet.onmouseleave=()=>{planet.style.transform="";tip.style.display="none";};
+      wrap.onmouseleave=()=>{planet.style.transform="";tip.style.display="none";};
       planet.onclick=()=>openModal(dept+" — active",activos.filter(p=>(p.departamento||"?")===dept),"inicio");
 
       const lbl=document.createElement("div");
@@ -2574,60 +2777,119 @@ function buildUniverso() {
   const grid = document.getElementById("universo-grid");
   if (!grid) return;
 
-  grid.innerHTML = sorted.map((dept) => {
+  // Build grid cards as SVG donut + center number
+  const NIV_ORDER = ["Trainee","Junior","Mid","Senior","Lead","Supervisor","Director","Producer","Coordinator","CG Supervisor"];
+  const NIV_COLORS = ["#6366f1","#00b4d8","#10b981","#f59e0b","#ec4899","#a855f7","#f97316","#84cc16","#ef4444","#06b6d4"];
+
+  function buildDonutSVG(nivCount, color, r, stroke) {
+    const entries = Object.entries(nivCount).sort((a,b)=>NIV_ORDER.indexOf(a[0])-NIV_ORDER.indexOf(b[0]));
+    const total = entries.reduce((s,[,v])=>s+v,0)||1;
+    const cx2=r+stroke, cy2=r+stroke, circumf=2*Math.PI*r;
+    let offset=0;
+    const segments = entries.map(([nv,cnt],i)=>{
+      const frac=cnt/total, dash=frac*circumf, gap=circumf-dash;
+      const c=NIV_COLORS[NIV_ORDER.indexOf(nv)%NIV_COLORS.length]||NIV_COLORS[i%NIV_COLORS.length];
+      const seg=`<circle cx="${cx2}" cy="${cy2}" r="${r}" fill="none" stroke="${c}" stroke-width="${stroke}" stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}" stroke-dashoffset="${(-offset*circumf).toFixed(2)}" stroke-linecap="butt"/>`;
+      offset+=frac;
+      return seg;
+    });
+    return segments.join("");
+  }
+
+  grid.innerHTML = "";
+  sorted.forEach((dept) => {
     const n     = present[dept]||0;
-    const h     = hist[dept]||0;
     const fi    = futIn[dept]||0;
     const fo    = futOut[dept]||0;
     const color = COLORS[depts.indexOf(dept)%COLORS.length];
     const icon  = DEPT_ICONS[dept.toUpperCase()]||DEPT_ICONS["DEFAULT"];
-    const soft  = 0.4 + 0.6*(n/maxPresent);
-    const size  = Math.round(100 + 80*soft);
 
-    // Planet texture layers via CSS
-    const planetStyle = `
-      width:${size}px;height:${size}px;border-radius:50%;
-      background:
-        radial-gradient(circle at 30% 25%, ${color}ff 0%, ${color}cc 30%, ${color}88 55%, ${color}33 75%, ${color}11 100%),
-        radial-gradient(circle at 70% 70%, rgba(0,0,0,0.4) 0%, transparent 60%);
-      box-shadow:
-        0 0 ${6+fi*4}px ${fi>0?color+"bb":"transparent"},
-        0 0 ${20+fi*8}px ${fi>0?color+"44":"transparent"},
-        inset -${size*0.15}px -${size*0.1}px ${size*0.3}px rgba(0,0,0,0.5),
-        inset ${size*0.05}px ${size*0.05}px ${size*0.15}px rgba(255,255,255,0.15);
-      border: ${fo>0?"2px solid rgba(150,150,180,0.4)":"1px solid "+color+"55"};
-      cursor:pointer;
-      transition:transform 0.25s cubic-bezier(.34,1.56,.64,1), box-shadow 0.25s;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      position:relative;margin:auto;flex-shrink:0;
-    `;
+    // Proportional size based on dept size
+    const soft = 0.3 + 0.7 * (n / maxPresent);
+    const svgSize = Math.round(60 + 80 * soft); // 60px min, 140px max
+    const stroke = Math.round(svgSize * 0.12);
+    const r = Math.round(svgSize / 2 - stroke - 1);
 
+    const deptPeople = active.filter(p=>(p.departamento||"?")===dept);
     const nivCount = {};
-    active.filter(p=>(p.departamento||"?")===dept).forEach(p=>{
-      const nv=p.nivel||"?"; nivCount[nv]=(nivCount[nv]||0)+1;
-    });
-    const nivStr = Object.entries(nivCount).map(([nv,c])=>`${nv}: ${c}`).join(" · ")||"—";
+    deptPeople.forEach(p=>{ const nv=p.nivel||"Other"; nivCount[nv]=(nivCount[nv]||0)+1; });
+    const donutSegs = buildDonutSVG(nivCount, color, r, stroke);
 
-    // Escape for inline onclick
+    // Background track
+    const trackCircle = `<circle cx="${r+stroke}" cy="${r+stroke}" r="${r}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="${stroke}"/>`;
+
     const deptSafe = dept.replace(/'/g,"\'");
-    const tipHtml = `<div style='font-weight:700;color:${color};margin-bottom:6px'>${dept}</div><div>👥 Active: <b>${n}</b></div><div style='font-size:11px;color:var(--muted);margin-top:2px'>${nivStr}</div><div style='border-top:1px solid rgba(255,255,255,.1);margin-top:6px;padding-top:6px;color:var(--muted)'>📚 Histórico: ${h}${fi?`<br>✨ Ingresan (90d): <span style='color:var(--green)'>${fi}</span>`:''}${fo?`<br>🌑 Salen (90d): <span style='color:var(--amber)'>${fo}</span>`:''}</div><div style='font-size:10px;color:var(--accent);margin-top:6px'>Clic para ver lista →</div>`;
 
-    return `<div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 4px">
-      <div
-        onclick="openModal('${deptSafe} — active', active.filter(p=>(p.departamento||'?')==='${deptSafe}'), 'inicio')"
-        onmouseover="this.style.transform='scale(1.14) translateY(-4px)';this.style.boxShadow='0 8px 32px ${color}99, inset -${Math.round(size*0.15)}px -${Math.round(size*0.1)}px ${Math.round(size*0.3)}px rgba(0,0,0,0.5), inset ${Math.round(size*0.05)}px ${Math.round(size*0.05)}px ${Math.round(size*0.15)}px rgba(255,255,255,0.2)';document.getElementById('universo-tooltip').style.display='block';document.getElementById('universo-tooltip').innerHTML=\`${tipHtml.replace(/`/g,"'")}\`;"
-        onmousemove="var t=document.getElementById('universo-tooltip');t.style.left=(event.clientX+14)+'px';t.style.top=(event.clientY-10)+'px';"
-        onmouseleave="this.style.transform='';this.style.boxShadow='';document.getElementById('universo-tooltip').style.display='none';"
-        style="${planetStyle}"
-      >
-        <div style="font-size:${Math.round(size*0.3)}px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5))">${icon}</div>
-        <div style="font-size:${Math.round(size*0.22)}px;font-weight:800;color:white;line-height:1;text-shadow:0 1px 4px rgba(0,0,0,0.8)">${n}</div>
-        ${fi>0?`<div onclick="event.stopPropagation();openModal('${deptSafe} — ingresan próx. 90d', allData.filter(p=>{const d=daysFrom(p.inicio);return (p.departamento||'?')==='${deptSafe}'&&d!==null&&d>0&&d<=90;}), 'inicio')" style="position:absolute;top:-5px;right:-5px;background:var(--green);color:#000;border-radius:50%;width:20px;height:20px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 8px var(--green);cursor:pointer;z-index:2" title="Ver ingresos">+${fi}</div>`:''}
-        ${fo>0?`<div onclick="event.stopPropagation();openModal('${deptSafe} — salen próx. 90d', allData.filter(p=>{const d=daysFrom(p.finEstimado);return (p.departamento||'?')==='${deptSafe}'&&d!==null&&d>=0&&d<=90;}), 'finEstimado')" style="position:absolute;bottom:-5px;right:-5px;background:var(--amber);color:#000;border-radius:50%;width:20px;height:20px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2" title="Ver salidas">-${fo}</div>`:''}
-      </div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.8);text-align:center;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,0.9);max-width:${size+20}px">${dept}</div>
-    </div>`;
-  }).join("");
+    // Tooltip content
+    const nivStr = Object.entries(nivCount).sort((a,b)=>b[1]-a[1]).map(([nv,c])=>`${nv}: ${c}`).join(" · ")||"—";
+    const nextIn  = allData.filter(p=>(p.departamento||"?")===dept&&daysFrom(p.inicio)!==null&&daysFrom(p.inicio)>0&&daysFrom(p.inicio)<=90).sort((a,b)=>new Date(a.inicio)-new Date(b.inicio));
+    const nextOut = allData.filter(p=>(p.departamento||"?")===dept&&daysFrom(p.finEstimado)!==null&&daysFrom(p.finEstimado)>=0&&daysFrom(p.finEstimado)<=90).sort((a,b)=>new Date(a.finEstimado)-new Date(b.finEstimado));
+
+    const card = document.createElement("div");
+    card.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;cursor:pointer;transition:transform 0.2s";
+    card.onmouseover = () => card.style.transform = "translateY(-4px) scale(1.06)";
+    card.onmouseleave = () => { card.style.transform = ""; document.getElementById("universo-tooltip").style.display = "none"; };
+    card.onmousemove = (e) => {
+      const t = document.getElementById("universo-tooltip");
+      let x=e.clientX+14, y=e.clientY-10;
+      if(x+230>innerWidth) x=e.clientX-235;
+      if(y+180>innerHeight) y=innerHeight-185;
+      t.style.left=x+"px"; t.style.top=y+"px";
+    };
+    card.onmouseenter = () => {
+      const t = document.getElementById("universo-tooltip");
+      t.style.display = "block";
+      t.innerHTML = `<div style='font-weight:700;color:${color};margin-bottom:5px;font-size:13px'>${icon} ${dept}</div>
+        <div style='color:white'>👥 Active: <b>${n}</b></div>
+        <div style='font-size:10px;color:#9ca3af;margin:3px 0'>${nivStr}</div>
+        ${nextIn.length?`<div style='color:#10b981;font-size:11px;margin-top:5px'>↑ Arriving (90d):<br>${nextIn.slice(0,3).map(p=>`• ${p.nombre} <span style='color:#6b7280'>${p.inicio}</span>`).join("<br>")}</div>`:""}
+        ${nextOut.length?`<div style='color:#f59e0b;font-size:11px;margin-top:4px'>↓ Departing (90d):<br>${nextOut.slice(0,3).map(p=>`• ${p.nombre} <span style='color:#6b7280'>${p.finEstimado}</span>`).join("<br>")}</div>`:""}
+        <div style='font-size:10px;color:var(--accent);margin-top:6px'>Click to see list →</div>`;
+    };
+    card.onclick = () => openModal(dept+" — active", deptPeople, "inicio");
+
+    // SVG donut
+    const svgWrap = document.createElement("div");
+    svgWrap.style.cssText = `position:relative;width:${svgSize}px;height:${svgSize}px`;
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+    svg.setAttribute("width", svgSize); svg.setAttribute("height", svgSize);
+    svg.innerHTML = trackCircle + donutSegs;
+    svg.style.transform = "rotate(-90deg)";
+
+    // Center label
+    const center = document.createElement("div");
+    center.style.cssText = `position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none`;
+    center.innerHTML = `<div style='font-size:${Math.round(svgSize*0.22)}px;line-height:1'>${icon}</div><div style='font-size:${Math.round(svgSize*0.18)}px;font-weight:800;color:white;line-height:1'>${n}</div>`;
+
+    svgWrap.appendChild(svg);
+    svgWrap.appendChild(center);
+
+    // Badges +in / -out
+    if(fi>0){
+      const b=document.createElement("div");
+      b.style.cssText=`position:absolute;top:-2px;right:-2px;background:#10b981;color:#000;border-radius:50%;width:18px;height:18px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:4;box-shadow:0 0 6px #10b981`;
+      b.textContent="+"+fi;
+      b.onclick=e=>{e.stopPropagation();openModal(dept+" — arriving 90d",allData.filter(p=>{const d=daysFrom(p.inicio);return(p.departamento||"?")===dept&&d!==null&&d>0&&d<=90;}),"inicio");};
+      svgWrap.appendChild(b);
+    }
+    if(fo>0){
+      const b=document.createElement("div");
+      b.style.cssText=`position:absolute;bottom:-2px;right:-2px;background:#f59e0b;color:#000;border-radius:50%;width:18px;height:18px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:4`;
+      b.textContent="-"+fo;
+      b.onclick=e=>{e.stopPropagation();openModal(dept+" — departing 90d",allData.filter(p=>{const d=daysFrom(p.finEstimado);return(p.departamento||"?")===dept&&d!==null&&d>=0&&d<=90;}),"finEstimado");};
+      svgWrap.appendChild(b);
+    }
+
+    // Dept name label
+    const lbl = document.createElement("div");
+    lbl.style.cssText = `font-size:${Math.round(Math.max(9, svgSize*0.1))}px;color:rgba(255,255,255,0.75);text-align:center;line-height:1.2;max-width:${svgSize+10}px;text-shadow:0 1px 3px rgba(0,0,0,0.9)`;
+    lbl.textContent = dept.length>14 ? dept.slice(0,14)+"…" : dept;
+
+    card.appendChild(svgWrap);
+    card.appendChild(lbl);
+    grid.appendChild(card);
+  });
 }
 
 
@@ -2752,42 +3014,35 @@ function renderProxCalendar() {
   const grid = document.getElementById("prox-calendar");
   const firstDay = new Date(proxCalYear, proxCalMonth, 1);
   const lastDay  = new Date(proxCalYear, proxCalMonth + 1, 0);
-  const startDow = (firstDay.getDay() + 6) % 7; // Mon=0
+  const startDow = (firstDay.getDay() + 6) % 7;
   const todayISO = new Date().toLocaleDateString("en-CA");
 
-  // Build event map for this month
-  // Types: arrivals(green), departures(amber), onsite(blue), laboral(purple), medical(pink)
+  // Build event map
   const events = {};
   const addEvent = (date, type, person) => {
     if (!date) return;
     const d = new Date(date + "T00:00:00");
     if (d.getFullYear() !== proxCalYear || d.getMonth() !== proxCalMonth) return;
-    if (!events[date]) events[date] = {arrivals:[], departures:[], onsite:[], laboral:[], medical:[]};
+    if (!events[date]) events[date] = {arrivals:[],departures:[],onsite:[],laboral:[],medical:[]};
     events[date][type].push(person);
   };
   allData.forEach(p => {
-    addEvent(p.inicio,        "arrivals",   p);
-    addEvent(p.finEstimado,   "departures", p);
-    addEvent(p.inicioOnSite,  "onsite",     p);
-    // laboralDate and citasMedicas from inout sheet (if available)
-    addEvent(p.laboralDate,   "laboral",    p);
-    addEvent(p.citasMedicas,  "medical",    p);
+    addEvent(p.inicio,       "arrivals",   p);
+    addEvent(p.finEstimado,  "departures", p);
+    addEvent(p.inicioOnSite, "onsite",     p);
+    addEvent(p.laboralDate,  "laboral",    p);
+    addEvent(p.citasMedicas, "medical",    p);
   });
 
   // Day headers
-  let html = DAYS.map((d, i) => {
-    const isWknd = i >= 5;
-    return `<div style="text-align:center;font-size:10px;color:${isWknd?"rgba(255,255,255,0.3)":"var(--muted)"};padding:6px 0;font-weight:600;letter-spacing:0.04em">${d}</div>`;
-  }).join("");
-
-  // Empty cells before first day
+  let html = DAYS.map((d, i) => `<div style="text-align:center;font-size:10px;color:${i>=5?"rgba(255,255,255,0.3)":"var(--muted)"};padding:6px 0;font-weight:600;letter-spacing:0.04em">${d}</div>`).join("");
   for (let i = 0; i < startDow; i++) html += `<div></div>`;
 
   for (let day = 1; day <= lastDay.getDate(); day++) {
     const iso = `${proxCalYear}-${String(proxCalMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
-    const dow = (startDow + day - 1) % 7; // 0=Mon, 6=Sun
+    const dow = (startDow + day - 1) % 7;
     const isWknd = dow >= 5;
-    const ev  = events[iso] || {};
+    const ev = events[iso] || {};
     const hasArr = ev.arrivals?.length > 0;
     const hasDep = ev.departures?.length > 0;
     const hasOn  = ev.onsite?.length > 0;
@@ -2796,43 +3051,82 @@ function renderProxCalendar() {
     const isToday = iso === todayISO;
     const hasSome = hasArr || hasDep || hasOn || hasLab || hasMed;
 
-    const pills = [
-      hasArr ? `<div style="background:rgba(16,185,129,0.9);color:#000;border-radius:3px;padding:1px 5px;font-size:8px;font-weight:700;white-space:nowrap">+${ev.arrivals.length} in</div>` : "",
-      hasDep ? `<div style="background:rgba(245,158,11,0.9);color:#000;border-radius:3px;padding:1px 5px;font-size:8px;font-weight:700;white-space:nowrap">-${ev.departures.length} out</div>` : "",
-      hasOn  ? `<div style="background:rgba(0,180,216,0.85);color:#000;border-radius:3px;padding:1px 5px;font-size:8px;font-weight:700;white-space:nowrap">●${ev.onsite.length} onsite</div>` : "",
-      hasLab ? `<div style="background:rgba(139,92,246,0.85);color:#fff;border-radius:3px;padding:1px 5px;font-size:8px;font-weight:700;white-space:nowrap">⚖ ${ev.laboral.length}</div>` : "",
-      hasMed ? `<div style="background:rgba(236,72,153,0.85);color:#fff;border-radius:3px;padding:1px 5px;font-size:8px;font-weight:700;white-space:nowrap">🏥 ${ev.medical.length}</div>` : "",
+    const dots = [
+      hasArr ? `<span style="width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block" title="Arrivals"></span>` : "",
+      hasDep ? `<span style="width:7px;height:7px;border-radius:50%;background:#f59e0b;display:inline-block" title="Departures"></span>` : "",
+      hasOn  ? `<span style="width:7px;height:7px;border-radius:50%;background:#00b4d8;display:inline-block" title="Onsite"></span>` : "",
+      hasLab ? `<span style="width:7px;height:7px;border-radius:50%;background:#8b5cf6;display:inline-block" title="Laboral"></span>` : "",
+      hasMed ? `<span style="width:7px;height:7px;border-radius:50%;background:#ec4899;display:inline-block" title="Medical"></span>` : "",
     ].filter(Boolean).join("");
 
-    const bgColor = isToday ? "rgba(0,180,216,0.18)" : isWknd ? "rgba(255,255,255,0.01)" : hasSome ? "rgba(255,255,255,0.05)" : "transparent";
-    const borderColor = isToday ? "rgba(0,180,216,0.6)" : hasSome ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)";
+    const count = (ev.arrivals?.length||0)+(ev.departures?.length||0)+(ev.onsite?.length||0)+(ev.laboral?.length||0)+(ev.medical?.length||0);
+    const bgColor = isToday ? "rgba(0,180,216,0.18)" : hasSome ? "rgba(255,255,255,0.05)" : isWknd ? "rgba(255,255,255,0.01)" : "transparent";
+    const borderColor = isToday ? "rgba(0,180,216,0.6)" : hasSome ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.04)";
     const dayColor = isToday ? "var(--accent)" : isWknd ? "rgba(255,255,255,0.3)" : "var(--white)";
 
     html += `<div
-      onclick="proxCalDayClick('${iso}')"
-      style="min-height:68px;border-radius:7px;padding:6px 7px;font-size:12px;background:${bgColor};border:1px solid ${borderColor};cursor:${hasSome?"pointer":"default"};transition:background 0.15s;display:flex;flex-direction:column;gap:3px"
-      ${hasSome ? `onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseleave="this.style.background='${bgColor}'"` : ""}
+      onclick="${hasSome ? `proxCalDayClick('${iso}', event)` : ""}"
+      style="min-height:72px;border-radius:8px;padding:8px;background:${bgColor};border:1px solid ${borderColor};cursor:${hasSome?"pointer":"default"};transition:all 0.15s;display:flex;flex-direction:column;justify-content:space-between"
+      ${hasSome ? `onmouseover="this.style.background='rgba(255,255,255,0.09)'" onmouseleave="this.style.background='${bgColor}'"` : ""}
     >
-      <div style="font-weight:${isToday?"700":"500"};color:${dayColor};font-size:13px;line-height:1">${day}</div>
-      <div style="display:flex;flex-direction:column;gap:2px;flex:1">${pills}</div>
+      <div style="font-weight:${isToday?"700":"500"};color:${dayColor};font-size:14px">${day}</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:3px">
+        <div style="display:flex;gap:3px;flex-wrap:wrap">${dots}</div>
+        ${hasSome ? `<div style="font-size:9px;color:rgba(255,255,255,0.4)">${count} event${count>1?"s":""}</div>` : ""}
+      </div>
     </div>`;
   }
 
   grid.innerHTML = html;
 }
 
-function proxCalDayClick(iso) {
-  const ev = {};
+function proxCalDayClick(iso, evt) {
+  const ev = {arrivals:[],departures:[],onsite:[],laboral:[],medical:[]};
   allData.forEach(p => {
-    if (p.inicio === iso)       { if (!ev.arrivals)   ev.arrivals   = []; ev.arrivals.push(p); }
-    if (p.finEstimado === iso)  { if (!ev.departures) ev.departures = []; ev.departures.push(p); }
-    if (p.inicioOnSite === iso) { if (!ev.onsite)     ev.onsite     = []; ev.onsite.push(p); }
-    if (p.laboralDate === iso)  { if (!ev.laboral)    ev.laboral    = []; ev.laboral.push(p); }
-    if (p.citasMedicas === iso) { if (!ev.medical)    ev.medical    = []; ev.medical.push(p); }
+    if (p.inicio === iso)       ev.arrivals.push(p);
+    if (p.finEstimado === iso)  ev.departures.push(p);
+    if (p.inicioOnSite === iso) ev.onsite.push(p);
+    if (p.laboralDate === iso)  ev.laboral.push(p);
+    if (p.citasMedicas === iso) ev.medical.push(p);
   });
-  const all = [...new Set([...(ev.arrivals||[]), ...(ev.departures||[]), ...(ev.onsite||[]), ...(ev.laboral||[]), ...(ev.medical||[])])];
-  if (!all.length) return;
-  openModal(`Events on ${iso}`, all, "inicio");
+  const total = ev.arrivals.length+ev.departures.length+ev.onsite.length+ev.laboral.length+ev.medical.length;
+  if (!total) return;
+
+  const popup = document.getElementById("cal-day-popup");
+  const d = new Date(iso+"T00:00:00");
+  document.getElementById("cal-popup-title").textContent = d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
+
+  const section = (label, color, people) => people.length ? `
+    <div style="border-left:3px solid ${color};padding-left:8px">
+      <div style="font-size:10px;font-weight:700;color:${color};margin-bottom:4px">${label}</div>
+      ${people.map(p=>`<div style="color:#e5e7eb;padding:2px 0">${p.nombre} <span style="color:#6b7280">· ${p.departamento||"—"} · ${p.nivel||"—"}</span></div>`).join("")}
+    </div>` : "";
+
+  document.getElementById("cal-popup-body").innerHTML = [
+    section("↑ Arrivals", "#10b981", ev.arrivals),
+    section("↓ Departures", "#f59e0b", ev.departures),
+    section("● Onsite start", "#00b4d8", ev.onsite),
+    section("⚖ Laboral date", "#8b5cf6", ev.laboral),
+    section("🏥 Medical", "#ec4899", ev.medical),
+  ].filter(Boolean).join("");
+
+  // Position popup near click
+  let x = evt.clientX + 12, y = evt.clientY - 10;
+  if (x + 340 > innerWidth)  x = evt.clientX - 340;
+  if (y + 300 > innerHeight) y = innerHeight - 305;
+  popup.style.left = x + "px";
+  popup.style.top  = y + "px";
+  popup.style.display = "block";
+
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener("click", function closePopup(e) {
+      if (!popup.contains(e.target)) {
+        popup.style.display = "none";
+        document.removeEventListener("click", closePopup);
+      }
+    });
+  }, 10);
 }
 
 function simSearchEmployee(q) {
@@ -4283,200 +4577,20 @@ const RULES_LANG_CONFIG = {
 let currentRulesLang = 'ES';
 const rulesHistory = [];
 
-function setRulesLang(lang) {
-  currentRulesLang = lang;
-  ['ES','EN','FR','IT'].forEach(l => {
-    const btn = document.getElementById('rules-lang-'+l);
-    if(btn) btn.classList.toggle('active', l===lang);
-  });
-  const cfg = RULES_LANG_CONFIG[lang];
-  const input = document.getElementById('chat-input-rules');
-  if(input) input.placeholder = cfg.placeholder;
-  rulesHistory.length = 0;
-  const msgs = document.getElementById('chat-messages-rules');
-  if(msgs) msgs.innerHTML = `<div class="chat-msg chat-msg-assistant">${cfg.welcome}</div>`;
-}
 
-function switchChatTab(tab) {
-  ['equipo','rules','atlantis'].forEach(t => {
-    const panel = document.getElementById('chat-'+t+'-panel');
-    const btn   = document.getElementById('chat-tab-'+t);
-    if(panel) panel.style.display = t===tab ? 'flex' : 'none';
-    if(btn)   btn.classList.toggle('active', t===tab);
-  });
-}
 
-function handleChatKey(e, tab) {
-  if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendChat(tab); }
-}
+
+
 
 // ── CHAT: búsqueda local sin API ─────────────────────────────
 
-function sendChat(tab) {
-  const input   = document.getElementById('chat-input-' + tab);
-  const msgs    = document.getElementById('chat-messages-' + tab);
-  const userMsg = input.value.trim();
-  if (!userMsg) return;
-  input.value = '';
-  msgs.innerHTML += `<div class="chat-msg chat-msg-user">${userMsg}</div>`;
 
-  let reply = '';
 
-  if (tab === 'equipo') {
-    reply = searchTeam(userMsg);
-  } else if (tab === 'rules') {
-    reply = searchRules(userMsg);
-  } else if (tab === 'atlantis') {
-    reply = searchAtlantis(userMsg);
-  }
 
-  msgs.innerHTML += `<div class="chat-msg chat-msg-assistant">${reply}</div>`;
-  msgs.scrollTop = msgs.scrollHeight;
-}
 
-function searchTeam(q) {
-  if (!allData.length) return "⚠️ Datos aún no cargados. Espera un momento y vuelve a intentarlo.";
-  const ql = q.toLowerCase();
 
-  // Keywords
-  const isActive    = /activ|active|current|actuales?/i.test(q);
-  const isCount     = /cuántos|cuantos|how many|total|número|numero|count/i.test(q);
-  const isDept      = /departamento|department|dept/i.test(q);
-  const isLevel     = /nivel|level|senior|junior|mid|trainee/i.test(q);
-  const isLocation  = /location|ubicacion|onsite|hybrid|remote/i.test(q);
-  const isGender    = /género|genero|gender|hombre|mujer|male|female/i.test(q);
-  const isNac       = /nacionalidad|nationality|país|pais|country/i.test(q);
-  const isArrival   = /ingresa|llega|arriv|empieza|start/i.test(q);
-  const isDeparture = /sale|salida|depart|termina|end|finish/i.test(q);
 
-  const pool = isActive ? active : allData;
 
-  // Search by name
-  const byName = allData.filter(p => p.nombre && p.nombre.toLowerCase().includes(ql));
-  if (byName.length && !isCount && !isDept && !isLevel && !isGender && !isNac) {
-    return byName.map(p => {
-      const status = active.includes(p) ? '🟢 Active' : '🔴 Inactive';
-      return `<b>${p.nombre}</b> — ${p.departamento||'—'} · ${p.nivel||'—'} · ${p.location||'—'}<br>
-        Start: ${p.inicio||'—'} · End: ${p.finEstimado||'—'} · ${status}`;
-    }).join('<br><br>');
-  }
-
-  // Count queries
-  if (isCount) {
-    if (isDept) {
-      const counts = {};
-      pool.forEach(p => { const d = p.departamento||'No dept'; counts[d]=(counts[d]||0)+1; });
-      return '👥 ' + (isActive?'Active':'Total') + ' by department:<br>' +
-        Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([d,n])=>`<b>${d}</b>: ${n}`).join('<br>');
-    }
-    if (isLevel) {
-      const counts = {};
-      pool.forEach(p => { const l = p.nivel||'No level'; counts[l]=(counts[l]||0)+1; });
-      return '📊 ' + (isActive?'Active':'Total') + ' by level:<br>' +
-        Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([l,n])=>`<b>${l}</b>: ${n}`).join('<br>');
-    }
-    if (isGender) {
-      const m = pool.filter(p=>p.genero==='M').length;
-      const f = pool.filter(p=>p.genero==='F').length;
-      const o = pool.filter(p=>p.genero!=='M'&&p.genero!=='F').length;
-      return `👥 ${isActive?'Active':'Total'} by gender:<br><b>Male</b>: ${m}<br><b>Female</b>: ${f}<br><b>Not specified</b>: ${o}`;
-    }
-    if (isNac) {
-      const counts = {};
-      pool.forEach(p => { const n = p.nacionalidad||'No data'; counts[n]=(counts[n]||0)+1; });
-      return '🌍 ' + (isActive?'Active':'Total') + ' by nationality:<br>' +
-        Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([n,c])=>`<b>${n}</b>: ${c}`).join('<br>');
-    }
-    return `👥 ${isActive?'Active':'Total'} staff: <b>${pool.length}</b>`;
-  }
-
-  // Arrivals next 30 days
-  if (isArrival) {
-    const list = allData.filter(p=>{ const d=daysFrom(p.inicio); return d!==null&&d>0&&d<=30; })
-      .sort((a,b)=>new Date(a.inicio)-new Date(b.inicio));
-    if (!list.length) return '✅ No arrivals in the next 30 days.';
-    return '📅 Arriving in the next 30 days:<br>' + list.map(p=>`<b>${p.nombre}</b> — ${p.departamento||'—'} · ${p.inicio}`).join('<br>');
-  }
-
-  // Departures next 30 days
-  if (isDeparture) {
-    const list = allData.filter(p=>{ const d=daysFrom(p.finEstimado); return d!==null&&d>=0&&d<=30; })
-      .sort((a,b)=>new Date(a.finEstimado)-new Date(b.finEstimado));
-    if (!list.length) return '✅ No departures in the next 30 days.';
-    return '📅 Departing in the next 30 days:<br>' + list.map(p=>`<b>${p.nombre}</b> — ${p.departamento||'—'} · ${p.finEstimado}`).join('<br>');
-  }
-
-  // Search by dept
-  const deptMatch = [...new Set(allData.map(p=>p.departamento).filter(Boolean))]
-    .find(d => d.toLowerCase().includes(ql));
-  if (deptMatch) {
-    const list = pool.filter(p=>(p.departamento||'')===deptMatch);
-    return `<b>${deptMatch}</b> — ${list.length} ${isActive?'active':'total'}:<br>` +
-      list.map(p=>`• ${p.nombre} · ${p.nivel||'—'} · ${p.location||'—'}`).join('<br>');
-  }
-
-  // Search by level
-  const levelMatch = ['Senior','Mid','Junior','Trainee','Lead','Supervisor','Director','Producer','Coordinator']
-    .find(l => ql.includes(l.toLowerCase()));
-  if (levelMatch) {
-    const list = pool.filter(p=>(p.nivel||'').toLowerCase().includes(levelMatch.toLowerCase()));
-    return `<b>${levelMatch}</b> — ${list.length} ${isActive?'active':'total'}:<br>` +
-      list.map(p=>`• ${p.nombre} · ${p.departamento||'—'}`).join('<br>');
-  }
-
-  return `🔍 No encontré resultados para "<b>${q}</b>".<br><br>
-    Puedes preguntar por:<br>
-    • Nombre de una persona<br>
-    • "¿Cuántos activos hay?" / "¿Cuántos por departamento?"<br>
-    • "¿Quién llega esta semana?" / "¿Quién sale este mes?"<br>
-    • Nombre de un departamento o nivel`;
-}
-
-function searchRules(q) {
-  if (!RULES_KNOWLEDGE || RULES_KNOWLEDGE.length < 100) {
-    return "⚠️ Documentos de normas no disponibles. Asegúrate de que estén cargados en la pestaña Company Rules.";
-  }
-  const ql = q.toLowerCase();
-  // Split knowledge into paragraphs and find relevant ones
-  const paragraphs = RULES_KNOWLEDGE.split(/\n{2,}/).filter(p => p.trim().length > 30);
-  const scored = paragraphs.map(p => {
-    const pl = p.toLowerCase();
-    const words = ql.split(/\s+/).filter(w => w.length > 3);
-    const score = words.reduce((s, w) => s + (pl.includes(w) ? 1 : 0), 0);
-    return { p, score };
-  }).filter(x => x.score > 0).sort((a,b) => b.score - a.score);
-
-  if (!scored.length) {
-    return `🔍 No encontré información sobre "<b>${q}</b>" en los documentos internos.<br><br>
-      Prueba con términos como: vacaciones, remoto, IT, seguridad, onboarding, confidencialidad, acoso, etc.`;
-  }
-  const top = scored.slice(0, 3).map(x => x.p.trim()).join('<br><br>');
-  return `📋 <b>Sobre "${q}":</b><br><br>${top}`;
-}
-
-function searchAtlantis(q) {
-  const ql = q.toLowerCase();
-  const info = {
-    estudio: "🎬 <b>ATLANTIS Animation</b> es un estudio boutique de animación 3D premium con sede en Santa Cruz de Tenerife, Islas Canarias. Producimos series animadas de alta calidad y trabajamos con partners internacionales.",
-    tenerife: "🌊 ATLANTIS Animation está ubicado en <b>Santa Cruz de Tenerife</b>, Islas Canarias, España. Nuestro posicionamiento está fuertemente conectado a la identidad canaria.",
-    equipo: `👥 El equipo ATLANTIS cuenta con <b>${active.length}</b> personas activas de múltiples nacionalidades, trabajando en distintas disciplinas de la animación 3D.`,
-    valores: "✨ Los valores de ATLANTIS: <b>creativo, humano, inteligente, premium, ágil, orientado al detalle</b> y profundamente conectado con las Islas Canarias.",
-    proyecto: `🚀 Actualmente trabajamos en producciones de animación 3D para plataformas internacionales. El equipo activo es de <b>${active.length}</b> personas.`,
-    contacto: "📧 Para contactar con ATLANTIS Animation, escribe a través de los canales internos o consulta el directorio de empleados.",
-  };
-
-  for (const [key, val] of Object.entries(info)) {
-    if (ql.includes(key) || (key==='estudio' && (ql.includes('atlantis')||ql.includes('studio')||ql.includes('estudio')))
-      || (key==='equipo' && (ql.includes('team')||ql.includes('equipo')||ql.includes('personas')))
-      || (key==='valores' && (ql.includes('valor')||ql.includes('value')||ql.includes('filosofi')))
-      || (key==='proyecto' && (ql.includes('project')||ql.includes('proyecto')||ql.includes('producc')))
-    ) {
-      return val;
-    }
-  }
-  return `🎬 <b>ATLANTIS Animation</b> — estudio boutique de animación 3D premium en Tenerife.<br><br>
-    Puedes preguntarme sobre: el estudio, el equipo, los valores, proyectos, ubicación, contacto.`;
-}
 
 </script>
 
@@ -4495,7 +4609,7 @@ function searchAtlantis(q) {
       <p style="font-size:12px;color:var(--muted);margin-top:4px">Cada planeta = un departamento · Tamaño = persons activas · Clic para ver lista</p>
     </div>
     <div id="universo-tooltip" style="display:none;position:fixed;background:rgba(15,25,40,0.97);border:1px solid rgba(0,180,216,0.3);border-radius:10px;padding:12px 16px;font-size:13px;z-index:200;pointer-events:none;max-width:220px"></div>
-    <div id="universo-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:28px;align-items:center"></div>
+    <div id="universo-grid" style="display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:center"></div>
   </div>
   </div><!-- end uv-grid-view -->
 
@@ -4720,59 +4834,6 @@ function searchAtlantis(q) {
         <div class="chart-title" style="margin-bottom:10px">Contract info</div>
         <div id="sim-contract-lines" style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:6px"></div>
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- CHATS -->
-<div id="page-chats" class="page">
-  <div class="chat-tabs">
-    <button id="chat-tab-equipo"   class="chat-tab active"  onclick="switchChatTab('equipo')">🧑‍💼 Team Chat</button>
-    <button id="chat-tab-rules"    class="chat-tab"         onclick="switchChatTab('rules')">📋 Company Rules</button>
-    <button id="chat-tab-atlantis" class="chat-tab"         onclick="switchChatTab('atlantis')">🎬 ATLANTIS Chat</button>
-  </div>
-
-  <!-- Team Chat -->
-  <div id="chat-equipo-panel" class="chat-panel" style="display:flex">
-    <div class="chat-messages" id="chat-messages-equipo">
-      <div class="chat-msg chat-msg-assistant">Hola, soy el asistente del equipo ATLANTIS. Puedo ayudarte a encontrar información sobre cualquier persona, departamento, fechas de contrato, y más. ¿Qué necesitas?</div>
-    </div>
-    <div class="chat-input-row">
-      <textarea id="chat-input-equipo" class="chat-input" placeholder="E.g.: Who are the SENIOR staff in Animation?" onkeydown="handleChatKey(event,'equipo')" rows="1"></textarea>
-      <button class="chat-send" onclick="sendChat('equipo')">↑</button>
-    </div>
-  </div>
-
-  <!-- Company Rules Chat -->
-  <div id="chat-rules-panel" class="chat-panel" style="display:none">
-    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap">
-      <span style="font-size:12px;color:var(--muted)">Language / Idioma / Langue / Lingua:</span>
-      <div style="display:flex;gap:6px">
-        <button onclick="setRulesLang('ES')" id="rules-lang-ES" class="filter-btn active" style="padding:4px 12px;font-size:12px">🇪🇸 ES</button>
-        <button onclick="setRulesLang('EN')" id="rules-lang-EN" class="filter-btn"        style="padding:4px 12px;font-size:12px">🇬🇧 EN</button>
-        <button onclick="setRulesLang('FR')" id="rules-lang-FR" class="filter-btn"        style="padding:4px 12px;font-size:12px">🇫🇷 FR</button>
-        <button onclick="setRulesLang('IT')" id="rules-lang-IT" class="filter-btn"        style="padding:4px 12px;font-size:12px">🇮🇹 IT</button>
-      </div>
-    </div>
-    <div class="chat-messages" id="chat-messages-rules">
-      <div class="chat-msg chat-msg-assistant" id="rules-welcome-msg">
-        Hola 👋 Soy el asistente de normas internas de ATLANTIS Animation. Puedo responder preguntas sobre políticas de la empresa, normas del estudio, vacaciones, trabajo remoto, IT, seguridad y más. ¿En qué te puedo ayudar?
-      </div>
-    </div>
-    <div class="chat-input-row">
-      <textarea id="chat-input-rules" class="chat-input" placeholder="Pregunta sobre las normas del estudio…" onkeydown="handleChatKey(event,'rules')" rows="1"></textarea>
-      <button class="chat-send" onclick="sendChat('rules')">↑</button>
-    </div>
-  </div>
-
-  <!-- ATLANTIS Chat -->
-  <div id="chat-atlantis-panel" class="chat-panel" style="display:none">
-    <div class="chat-messages" id="chat-messages-atlantis">
-      <div class="chat-msg chat-msg-assistant">Hi! I'm the ATLANTIS Animation assistant. I can tell you about the studio, our projects, our creative philosophy and much more. How can I help you?</div>
-    </div>
-    <div class="chat-input-row">
-      <textarea id="chat-input-atlantis" class="chat-input" placeholder="E.g.: What projects has ATLANTIS worked on?" onkeydown="handleChatKey(event,'atlantis')" rows="1"></textarea>
-      <button class="chat-send" onclick="sendChat('atlantis')">↑</button>
     </div>
   </div>
 </div>
