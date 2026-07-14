@@ -2562,6 +2562,59 @@ function buildOrbitalUniverse() {
 
   const maxP=Math.max(...depts.map(d=>present[d]||0),1);
   const sorted=[...depts].sort((a,b)=>(present[b]||0)-(present[a]||0));
+
+  // ── Build time index: active count per dept per month ─────────
+  // Collect all months that appear in data (from earliest inicio to today+12m)
+  const allDates = allData.map(p=>p.inicio).filter(Boolean).sort();
+  const firstDate = allDates[0] ? new Date(allDates[0]+"T00:00:00") : new Date();
+  const now = new Date();
+  const endDate = new Date(now.getFullYear()+1, now.getMonth(), 1);
+  window._orbTimeMonths = [];
+  let cur = new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
+  while (cur <= endDate) {
+    window._orbTimeMonths.push(new Date(cur));
+    cur.setMonth(cur.getMonth()+1);
+  }
+  // For each month, count active per dept
+  window._orbTimeData = window._orbTimeMonths.map(mo => {
+    const mk = `${mo.getFullYear()}-${String(mo.getMonth()+1).padStart(2,"0")}`;
+    const counts = {};
+    allData.forEach(p => {
+      if (!p.inicio) return;
+      const s = p.inicio.slice(0,7);
+      const e = p.finEstimado ? p.finEstimado.slice(0,7) : "9999-12";
+      if (s <= mk && e >= mk) {
+        const d = p.departamento||"?";
+        counts[d] = (counts[d]||0)+1;
+      }
+    });
+    return counts;
+  });
+
+  // Init slider
+  const slider = document.getElementById("uv-tl-slider");
+  const rangeLabel = document.getElementById("uv-tl-range-label");
+  const monthsDiv  = document.getElementById("uv-tl-months");
+  const nowIdx = window._orbTimeMonths.length - 1 - 12; // approx "today" index
+  const todayIdx = Math.max(0, window._orbTimeMonths.findIndex(m => {
+    return m.getFullYear() === now.getFullYear() && m.getMonth() === now.getMonth();
+  }));
+  slider.max = window._orbTimeMonths.length - 1;
+  slider.value = todayIdx >= 0 ? todayIdx : slider.max;
+  rangeLabel.textContent = window._orbTimeMonths[0]?.toLocaleDateString("en",{month:"short",year:"numeric"}) + " →";
+
+  // Build tick marks for slider
+  const MNAMES = ["J","F","M","A","M","J","J","A","S","O","N","D"];
+  monthsDiv.innerHTML = window._orbTimeMonths.map((m,i) => {
+    const isJan = m.getMonth() === 0;
+    const isNow = i === todayIdx;
+    const label = isJan ? m.getFullYear() : (m.getMonth()===6 ? MNAMES[m.getMonth()] : "");
+    return `<span style="font-size:8px;color:${isNow?"#a78bfa":isJan?"rgba(255,255,255,0.4)":"rgba(255,255,255,0.15)"};font-weight:${isJan||isNow?"700":"400"};flex:1;text-align:center">${label}</span>`;
+  }).join("");
+
+  window._orbSorted = sorted;
+  window._orbDepts  = depts;
+  window._orbMaxP   = maxP;
   const rings=[[],[],[],[]];
   sorted.forEach((d,i)=>rings[Math.min(i<2?0:i<5?1:i<10?2:3,3)].push(d));
   const maxR=Math.min(W,H)/2*0.95;
@@ -2600,9 +2653,12 @@ function buildOrbitalUniverse() {
       const animDelay=(pi*0.4).toFixed(1);
 
       const wrap=document.createElement("div");
-      wrap.style.cssText=`position:absolute;left:${px}px;top:${py}px;transform:translate(-50%,-50%);z-index:3`;
+      wrap.dataset.dept = dept;
+      wrap.style.cssText=`position:absolute;left:${px}px;top:${py}px;transform:translate(-50%,-50%);z-index:3;transition:opacity 0.5s ease,transform 0.6s cubic-bezier(0.34,1.56,0.64,1);transform-origin:center`;
 
       const planet=document.createElement("div");
+      planet.className = "orb-planet";
+      planet.dataset.baseSize = size;
       // 3D sphere via CSS: base color + light highlight + specular dot + shadow
       const sz=size, c=color;
       const glow=Math.round(sz*0.6);
@@ -2618,8 +2674,7 @@ function buildOrbitalUniverse() {
           0 0 ${glow}px ${c}88, 0 ${Math.round(sz*0.2)}px ${Math.round(sz*0.4)}px rgba(0,0,0,0.4);
         display:flex;align-items:center;justify-content:center;
         font-size:${Math.round(sz*0.38)}px;
-        animation:float${ri%3} ${animDur}s ease-in-out ${animDelay}s infinite;
-        transition:transform 0.2s;
+        transition:transform 0.5s cubic-bezier(0.34,1.56,0.64,1);
         overflow:visible;
       `;
       // specular highlight dot
@@ -2627,8 +2682,16 @@ function buildOrbitalUniverse() {
       spec.style.cssText=`position:absolute;top:${Math.round(sz*0.14)}px;left:${Math.round(sz*0.18)}px;width:${Math.round(sz*0.22)}px;height:${Math.round(sz*0.14)}px;border-radius:50%;background:rgba(255,255,255,0.6);filter:blur(${Math.round(sz*0.04)}px);pointer-events:none;z-index:2;transform:rotate(-20deg)`;
       planet.appendChild(spec);
       const iconEl=document.createElement("div");
-      iconEl.style.cssText=`position:relative;z-index:3;font-size:${Math.round(sz*0.38)}px;line-height:1;text-shadow:0 1px 3px rgba(0,0,0,0.4)`;
-      iconEl.textContent=icon;
+      iconEl.style.cssText=`position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:1px`;
+      const iconSpan=document.createElement("span");
+      iconSpan.style.cssText=`font-size:${Math.round(sz*0.32)}px;line-height:1;text-shadow:0 1px 3px rgba(0,0,0,0.4)`;
+      iconSpan.textContent=icon;
+      const countEl=document.createElement("span");
+      countEl.className="orb-count";
+      countEl.style.cssText=`font-size:${Math.round(sz*0.2)}px;font-weight:800;color:white;line-height:1;text-shadow:0 1px 3px rgba(0,0,0,0.6)`;
+      countEl.textContent=n;
+      iconEl.appendChild(iconSpan);
+      iconEl.appendChild(countEl);
       planet.appendChild(iconEl);
 
       if(fi>0){const b=document.createElement("div");b.style.cssText=`position:absolute;top:-4px;right:-4px;background:#10b981;color:#000;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:4`;b.textContent="+"+fi;b.onclick=e=>{e.stopPropagation();openModal(dept+" — arriving (90d)",allData.filter(p=>{const d=daysFrom(p.inicio);return(p.departamento||"?")===dept&&d!==null&&d>0&&d<=90;}),"inicio");};planet.appendChild(b);}
@@ -2660,7 +2723,8 @@ function buildOrbitalUniverse() {
       planet.onclick=()=>openModal(dept+" — active",activos.filter(p=>(p.departamento||"?")===dept),"inicio");
 
       const lbl=document.createElement("div");
-      lbl.style.cssText=`text-align:center;font-size:10px;color:rgba(255,255,255,0.8);margin-top:3px;white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,0.9);pointer-events:none`;
+      lbl.className="orb-label";
+      lbl.style.cssText=`text-align:center;font-size:10px;color:rgba(255,255,255,0.8);margin-top:3px;white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,0.9);pointer-events:none;transition:opacity 0.4s`;
       lbl.textContent=dept.length>11?dept.slice(0,11)+"…":dept;
 
       wrap.appendChild(planet);
@@ -2699,6 +2763,47 @@ function buildOrbitalUniverse() {
   };
 
 } // end buildOrbitalUniverse
+
+function orbitalTimeSlide(val) {
+  const idx = parseInt(val);
+  const months = window._orbTimeMonths;
+  if (!months || !months[idx]) return;
+
+  const mo = months[idx];
+  const now = new Date();
+  const isNow = mo.getFullYear()===now.getFullYear() && mo.getMonth()===now.getMonth();
+
+  // Update label
+  document.getElementById("uv-tl-label").textContent = isNow ? "Now" : mo.toLocaleDateString("en",{month:"short",year:"numeric"});
+
+  // Get counts for this month
+  const counts = window._orbTimeData?.[idx] || {};
+  const sorted = window._orbSorted || [];
+  const maxP = Math.max(...sorted.map(d=>counts[d]||0), 1);
+
+  // Find all planet wraps by data-dept attribute
+  document.querySelectorAll("[data-dept]").forEach(wrap => {
+    const dept = wrap.dataset.dept;
+    const n = counts[dept]||0;
+    const planet = wrap.querySelector(".orb-planet");
+    const labelEl = wrap.querySelector(".orb-label");
+    const countEl = wrap.querySelector(".orb-count");
+
+    if (n === 0) {
+      wrap.style.opacity = "0.12";
+      wrap.style.transform = "translate(-50%,-50%) scale(0.3)";
+    } else {
+      const soft = 0.35 + 0.65*(n/maxP);
+      const targetSize = Math.round(34+42*soft);
+      const baseSize = parseInt(planet?.dataset?.baseSize||60);
+      const ratio = targetSize / baseSize;
+      wrap.style.opacity = "1";
+      wrap.style.transform = `translate(-50%,-50%) scale(${ratio.toFixed(3)})`;
+      if (countEl) countEl.textContent = n;
+    }
+    if (labelEl) labelEl.style.opacity = n===0?"0":"1";
+  });
+}
 
 let _orbitalResizeTimer;
 window.addEventListener('resize', () => {
@@ -4620,6 +4725,18 @@ const rulesHistory = [];
     <div id="uv-planets" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:2"></div>
     <div id="uv-core" style="position:absolute;transform:translate(-50%,-50%);pointer-events:none;z-index:6"></div>
     <div id="uv-tip" style="display:none;position:fixed;background:rgba(10,5,25,0.97);border:1px solid rgba(140,80,255,0.4);border-radius:12px;padding:14px 16px;font-size:12px;z-index:200;pointer-events:none;max-width:200px"></div>
+
+    <!-- Time slider -->
+    <div id="uv-timeline" style="position:absolute;bottom:28px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:8px;width:min(700px,85%)">
+      <div style="display:flex;align-items:center;gap:12px;width:100%">
+        <div id="uv-tl-label" style="font-size:12px;font-weight:700;color:#a78bfa;min-width:72px;text-align:center;background:rgba(10,5,25,0.8);border:1px solid rgba(140,80,255,0.3);border-radius:6px;padding:3px 8px">Now</div>
+        <input id="uv-tl-slider" type="range" min="0" max="100" value="100"
+          style="flex:1;height:4px;accent-color:#7c3aed;cursor:pointer"
+          oninput="orbitalTimeSlide(this.value)">
+        <div style="font-size:10px;color:rgba(255,255,255,0.3);min-width:60px;text-align:right" id="uv-tl-range-label"></div>
+      </div>
+      <div id="uv-tl-months" style="display:flex;justify-content:space-between;width:100%;padding:0 2px"></div>
+    </div>
   </div>
 </div>
 
