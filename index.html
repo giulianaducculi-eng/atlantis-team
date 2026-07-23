@@ -1222,9 +1222,10 @@ function buildStats() {
   active.forEach(p=>{const n=p.nivel||"No level";nivelActive[n]=(nivelActive[n]||0)+1;});
 
   makeDonut("chart-location-active", Object.keys(locActive), Object.values(locActive), l=>active.filter(p=>(p.location||"No data")===l));
-  makeDonut("chart-nivel-active",    Object.keys(nivelActive), Object.values(nivelActive), l=>active.filter(p=>(p.nivel||"No level")===l));
+  const getNivelColorS = nv => { const s=(nv||"").toLowerCase(); return s.includes("trainee")?"#6366f1":s.includes("junior")?"#00b4d8":s.includes("mid")?"#10b981":s.includes("senior")?"#f59e0b":s.includes("lead")?"#ec4899":s.includes("supervisor")?"#a855f7":s.includes("director")?"#f97316":s.includes("producer")?"#84cc16":s.includes("coordinator")?"#ef4444":s.includes("cg")?"#06b6d4":"#9ca3af"; };
+  makeDonut("chart-nivel-active",    Object.keys(nivelActive), Object.values(nivelActive), l=>active.filter(p=>(p.nivel||"No level")===l), Object.keys(nivelActive).map(getNivelColorS));
   makeDonut("chart-location-total",  Object.keys(locTotal), Object.values(locTotal), l=>allData.filter(p=>(p.location||"No data")===l));
-  makeDonut("chart-nivel-total",     Object.keys(nivelTotal), Object.values(nivelTotal), l=>allData.filter(p=>(p.nivel||"No level")===l));
+  makeDonut("chart-nivel-total",     Object.keys(nivelTotal), Object.values(nivelTotal), l=>allData.filter(p=>(p.nivel||"No level")===l), Object.keys(nivelTotal).map(getNivelColorS));
 
   // Gender chart
   const generoActive = {};
