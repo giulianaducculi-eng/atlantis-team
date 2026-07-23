@@ -1257,9 +1257,27 @@ function buildStats() {
     });
     const nivCount = {};
     gPeople.forEach(p => { const nv = p.nivel||"N/A"; nivCount[nv]=(nivCount[nv]||0)+1; });
-    const nls = Object.keys(nivCount).sort();
-    const NIVEL_COLORS = ["#6366f1","#00b4d8","#10b981","#f59e0b","#ec4899","#a855f7","#f97316","#84cc16","#ef4444","#06b6d4"];
-    const colors = nls.map((_,i)=>NIVEL_COLORS[i%NIVEL_COLORS.length]);
+    const NIV_ORDER_LOCAL = ["Trainee","Junior","Mid","Senior","Lead","Supervisor","Director","Producer","Coordinator","CG Supervisor"];
+    const getNivelColorL = nv => {
+      const s = (nv||"").toLowerCase();
+      if (s.includes("trainee"))    return "#6366f1";
+      if (s.includes("junior"))     return "#00b4d8";
+      if (s.includes("mid"))        return "#10b981";
+      if (s.includes("senior"))     return "#f59e0b";
+      if (s.includes("lead"))       return "#ec4899";
+      if (s.includes("supervisor")) return "#a855f7";
+      if (s.includes("director"))   return "#f97316";
+      if (s.includes("producer"))   return "#84cc16";
+      if (s.includes("coordinator"))return "#ef4444";
+      if (s.includes("cg"))         return "#06b6d4";
+      return "#9ca3af";
+    };
+    const nls = Object.keys(nivCount).sort((a,b)=>{
+      const ai = NIV_ORDER_LOCAL.indexOf(a), bi = NIV_ORDER_LOCAL.indexOf(b);
+      if (ai===-1&&bi===-1) return a.localeCompare(b);
+      return (ai===-1?99:ai)-(bi===-1?99:bi);
+    });
+    const colors = nls.map(nv => getNivelColorL(nv));
     if (charts[canvasId]) charts[canvasId].destroy();
     const el = document.getElementById(canvasId);
     if (!el || gPeople.length === 0) return;
@@ -2480,14 +2498,31 @@ function buildDeptStatsPanel(dept) {
   function buildDeptNivelByGender(canvasId, people) {
     const nivC={};
     people.forEach(p=>{const n=p.nivel||"N/A";nivC[n]=(nivC[n]||0)+1;});
-    const nls=Object.keys(nivC).sort();
+    const NIV_ORDER_D=["Trainee","Junior","Mid","Senior","Lead","Supervisor","Director","Producer","Coordinator","CG Supervisor"];
+    const getNivelColorD = nv => {
+      const s=(nv||"").toLowerCase();
+      if(s.includes("trainee"))    return "#6366f1";
+      if(s.includes("junior"))     return "#00b4d8";
+      if(s.includes("mid"))        return "#10b981";
+      if(s.includes("senior"))     return "#f59e0b";
+      if(s.includes("lead"))       return "#ec4899";
+      if(s.includes("supervisor")) return "#a855f7";
+      if(s.includes("director"))   return "#f97316";
+      if(s.includes("producer"))   return "#84cc16";
+      if(s.includes("coordinator"))return "#ef4444";
+      if(s.includes("cg"))         return "#06b6d4";
+      return "#9ca3af";
+    };
+    const nls=Object.keys(nivC).sort((a,b)=>{
+      const ai=NIV_ORDER_D.indexOf(a),bi=NIV_ORDER_D.indexOf(b);
+      return (ai===-1?99:ai)-(bi===-1?99:bi);
+    });
     if(deptCharts[canvasId]) deptCharts[canvasId].destroy();
     const el=document.getElementById(canvasId);
     if(!el||!nls.length) return;
-    const NIV_COLORS=["#6366f1","#00b4d8","#10b981","#f59e0b","#ec4899","#a855f7","#f97316","#84cc16","#ef4444","#06b6d4"];
     deptCharts[canvasId]=new Chart(el,{
       type:"doughnut",
-      data:{labels:nls,datasets:[{data:nls.map(n=>nivC[n]),backgroundColor:nls.map((_,i)=>NIV_COLORS[i%NIV_COLORS.length]),borderWidth:0}]},
+      data:{labels:nls,datasets:[{data:nls.map(n=>nivC[n]),backgroundColor:nls.map(nv=>getNivelColorD(nv)),borderWidth:0}]},
       options:{responsive:true,cutout:"50%",plugins:{
         legend:{position:"bottom",labels:{color:"#9ca3af",boxWidth:8,font:{size:9}}},
         tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw}`}}
@@ -2985,6 +3020,7 @@ function buildUniverso() {
   // Build grid cards as SVG donut + center number
   const NIV_ORDER = ["Trainee","Junior","Mid","Senior","Lead","Supervisor","Director","Producer","Coordinator","CG Supervisor"];
   const NIV_COLORS = ["#6366f1","#00b4d8","#10b981","#f59e0b","#ec4899","#a855f7","#f97316","#84cc16","#ef4444","#06b6d4"];
+  const NIV_COLOR_MAP_G = {"Trainee":"#6366f1","Junior":"#00b4d8","Mid":"#10b981","Senior":"#f59e0b","Lead":"#ec4899","Supervisor":"#a855f7","Director":"#f97316","Producer":"#84cc16","Coordinator":"#ef4444","CG Supervisor":"#06b6d4"};
 
   function buildDonutSVG(nivCount, color, r, stroke) {
     const entries = Object.entries(nivCount).sort((a,b)=>NIV_ORDER.indexOf(a[0])-NIV_ORDER.indexOf(b[0]));
@@ -2993,7 +3029,8 @@ function buildUniverso() {
     let offset=0;
     const segments = entries.map(([nv,cnt],i)=>{
       const frac=cnt/total, dash=frac*circumf, gap=circumf-dash;
-      const c=NIV_COLORS[NIV_ORDER.indexOf(nv)%NIV_COLORS.length]||NIV_COLORS[i%NIV_COLORS.length];
+      const s2=(nv||"").toLowerCase();
+      const c=s2.includes("trainee")?"#6366f1":s2.includes("junior")?"#00b4d8":s2.includes("mid")?"#10b981":s2.includes("senior")?"#f59e0b":s2.includes("lead")?"#ec4899":s2.includes("supervisor")?"#a855f7":s2.includes("director")?"#f97316":s2.includes("producer")?"#84cc16":s2.includes("coordinator")?"#ef4444":s2.includes("cg")?"#06b6d4":NIV_COLORS[i%NIV_COLORS.length];
       const seg=`<circle cx="${cx2}" cy="${cy2}" r="${r}" fill="none" stroke="${c}" stroke-width="${stroke}" stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}" stroke-dashoffset="${(-offset*circumf).toFixed(2)}" stroke-linecap="butt"/>`;
       offset+=frac;
       return seg;
